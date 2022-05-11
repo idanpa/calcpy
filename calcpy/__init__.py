@@ -245,17 +245,17 @@ def update_currency_job(ip:IPython.InteractiveShell):
         sleep(60*60*12)
 
 def print_more_info(ip:IPython.InteractiveShell, result):
+    terminal_size = shutil.get_terminal_size()
+    page = terminal_size.columns * terminal_size.lines
     try:
         if isinstance(result, sympy.core.expr.Expr):
             print(f'\n{sympy.printing.pretty(sympy.diff(result))} = diff(_)')
             print(f'\n{sympy.printing.pretty(sympy.integrate(result))} = integrate(_)')
             solutions = sympy.solve(result)
-            terminal_size = shutil.get_terminal_size()
-            page = terminal_size.columns * terminal_size.lines
-            if len(sympy.printing.pretty(solutions)) < page:
-                print(f'\n{sympy.printing.pretty(sympy.solve(result))} = solve(_)')
-            else:
-                print(f'\n{sympy.printing.pretty(list(map(sympy.N, solutions)))} = solve(_)')
+            solutions_print = sympy.printing.pretty(solutions)
+            if len(solutions_print) > page:
+                solutions_print = sympy.printing.pretty(list(map(sympy.N, solutions)))
+            print(f'\n{solutions_print} = solve(_)')
             simple = sympy.simplify(result)
             if simple != result:
                 print(f'\n{sympy.printing.pretty(sympy.simplify(result))} = simplify(_)')
@@ -268,8 +268,17 @@ def print_more_info(ip:IPython.InteractiveShell, result):
                 except:
                     pass
                 print(f'\n{sympy.printing.pretty(result.charpoly())} = _.charpoly()')
-                print(f'\n{sympy.printing.pretty(result.eigenvects())} = _.eigenvects() # ((eval, mult, evec),...')
-                print(f'\n{sympy.printing.pretty(result.diagonalize())} = _.diagonalize() # (P,D) with _==PDP^-1')
+                evs = result.eigenvects()
+                evs_print = sympy.printing.pretty(evs)
+                if len(evs_print) > page:
+                    evs = [(sympy.N(ev[0]), ev[1], tuple(map(sympy.N, ev[2]))) for ev in evs]
+                    evs_print = sympy.printing.pretty(evs)
+                print(f'\n{evs_print} = _.eigenvects() # ((eval, mult, evec),...')
+                diag = result.diagonalize()
+                diag_print = sympy.printing.pretty(diag)
+                if len(diag_print) > page:
+                    diag_print = sympy.printing.pretty(list(map(sympy.N, diag)))
+                print(f'\n{diag_print} = _.diagonalize() # (P,D) with _==PDP^-1')
             else:
                 print(f'\n{sympy.printing.pretty(sympy.rank(result))} = rank(_)')
                 print(f'\n{sympy.printing.pretty(result.pinv())} = _.pinv()')
