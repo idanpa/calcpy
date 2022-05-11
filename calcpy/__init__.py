@@ -277,6 +277,24 @@ def print_more_info(ip:IPython.InteractiveShell, result):
     except Exception as e:
         print(e)
 
+def calcpy_monkey_patching(ip:IPython.InteractiveShell):
+    ip.show_usage = show_usage
+
+    def sympy_expr_call(self, *args):
+        # single non-constant expression, interpret as product
+        if len(args) == 1 and isinstance(args[0], sympy.core.expr.Expr) and not args[0].is_constant():
+                return self.__rmul__(args[0])
+        # else, substitute
+        sorted_symbols = sorted(self.free_symbols, key=lambda s: s.name)
+        if len(args) != len(sorted_symbols):
+            raise TypeError(f'Expected {len(sorted_symbols)} arguments {sorted_symbols}')
+        return self.subs(zip(sorted_symbols, args))
+
+    sympy.core.expr.Expr.__call__ = sympy_expr_call
+
+    sympy.core.expr.Expr.__xor__ = sympy.core.expr.Expr.__pow__
+    sympy.core.expr.Expr.__rxor__ = sympy.core.expr.Expr.__rpow__
+
 def load_ipython_extension(ip:IPython.InteractiveShell):
     if ip.profile != CALCPY_PROFILE_NAME:
         print(f"warning: Not using the pycalc profile (current profile is {ip.profile}")
@@ -299,20 +317,7 @@ def load_ipython_extension(ip:IPython.InteractiveShell):
         logger.setLevel(logging.DEBUG)
     logger.addHandler(sh)
 
-    # monkey patching
-    ip.show_usage = show_usage
-
-    def sympy_expr_call(self, *args):
-        # single non-constant expression, interpret as product
-        if len(args) == 1 and isinstance(args[0], sympy.core.expr.Expr) and not args[0].is_constant():
-                return self.__rmul__(args[0])
-        # else, substitute
-        sorted_symbols = sorted(self.free_symbols, key=lambda s: s.name)
-        if len(args) != len(sorted_symbols):
-            raise TypeError(f'Expected {len(sorted_symbols)} arguments {sorted_symbols}')
-        return self.subs(zip(sorted_symbols, args))
-
-    sympy.core.expr.Expr.__call__ = sympy_expr_call
+    calcpy_monkey_patching(ip)
 
     # init user
     ip.push(importlib.import_module('calcpy.user').__dict__, interactive=False)
