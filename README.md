@@ -21,6 +21,7 @@ $ calcpy
 * Complex numbers (`j`/`i`)
 
 [IPython](https://ipython.org) features:
+* Get last result with `_`, or using cell number `_4` (`Out[4]` works too) 
 * `func_name?` show docs for func_name
 * `who_ls` see all defined variables
 * Prompt history with `up`/`down`, search with `ctrl+r`
@@ -37,7 +38,7 @@ CalcPy features:
 * `?` prefix would provide some basic analysis of expression `?((1,2),(3,4))` `?x**2+1` 
 * Implicit multiplication (`2x`, `(x+1)(x-1)` are valid)
 * All variables stored and restored between sessions (so you can set your own constants e.g. `speed_of_light = 299792458`)
-* Currency conversion `10USD` (`base_currency='EUR'` to change base currency)
+* Currency conversion `10USD` (`calcpy.base_currency='EUR'` to change base currency)
 * Strings automatically converted to datetime `"yesterday at 9 am" - "1990-1-30 9:20"` (using [dateparser](https://github.com/scrapinghub/dateparser))
 * Unit prefixes `G`, `M`, `k`, `m`, `u`, `n`, `p`, `KB`, `MB`, `GB`, `TB` (so `4MB-32KB` or `4G/32n` are valid)
 * Implicit lambda `f(a,b)=a**2+b**2`

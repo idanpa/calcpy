@@ -24,6 +24,7 @@ import requests
 import shutil
 import warnings
 from time import sleep
+from contextlib import redirect_stdout
 
 try:
     import dateparser
@@ -39,7 +40,7 @@ debug = logger.debug
 
 def show_usage():
     print('''
-CalcPy
+CalcPy - https://github.com/idanpa/calcpy
 ''')
 
 @IPython.core.magic.magics_class
@@ -58,14 +59,8 @@ class CalcPy(IPython.core.magic.Magics):
         self.init_state = 0
         self.info_asked = False
 
-class DisablePrints:
-    def __enter__(self):
-        self._original_stdout = sys.stdout
-        sys.stdout = open(os.devnull, 'w')
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        sys.stdout.close()
-        sys.stdout = self._original_stdout
+    base_currency = property(calcpy.currency.get_base_currency, calcpy.currency.set_base_currency)
+    common_currencies = property(calcpy.currency.get_common_currencies, calcpy.currency.set_common_currencies)
 
 def _bin_pad(bin_string, pad_every=4):
         return ' '.join(bin_string[i:i+pad_every] for i in range(0, len(bin_string), pad_every))
@@ -220,7 +215,7 @@ def store_all_user_vars(ip:IPython.InteractiveShell):
         if t in [types.FunctionType, types.ModuleType, type]:
             continue
         try:
-            with DisablePrints(): # can't stop store from printing
+            with redirect_stdout(None): # can't stop store from printing
                 ip.run_line_magic('store', f'{variable_name}')
         except Exception as e:
             debug(f'Storing variable {variable_name}={ip.user_ns[variable_name]} of type {type(ip.user_ns[variable_name])}\n'+
@@ -237,7 +232,7 @@ def post_run_cell(result:IPython.core.interactiveshell.ExecutionResult, ip, jobs
 def update_currency_job(ip:IPython.InteractiveShell):
     while True:
         try:
-            calcpy.currency.set_rates(ip)
+            calcpy.currency.set_rates(ip.calcpy)
         except requests.exceptions.ConnectionError:
             pass  # offline
         except Exception as e:
@@ -314,7 +309,7 @@ def load_ipython_extension(ip:IPython.InteractiveShell):
     ip.register_magics(ip.calcpy)
 
     if isinstance(ip.config.InteractiveShellApp.code_to_run, traitlets.config.loader.LazyConfigValue): # better way to check this?
-        print(f"CalcPy {__version__} (Python {platform.python_version()} IPython {IPython.__version__}) ('??' for help)")
+        print(f"CalcPy {__version__} (Python {platform.python_version()} IPython {IPython.__version__} SymPy {sympy.__version__}) ('??' for help)")
     jobs = IPython.lib.backgroundjobs.BackgroundJobManager()
     jobs.new(update_currency_job, ip, daemon=True)
 

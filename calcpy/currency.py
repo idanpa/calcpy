@@ -1,7 +1,7 @@
 import requests
 from xml.etree import ElementTree
-import IPython
-import numpy as np
+import sympy
+from contextlib import redirect_stdout
 
 country_to_currency = {
     # ISO2 country code, currency # country name ISO3 currency name
@@ -254,24 +254,48 @@ country_to_currency = {
 # currencies supported by european central bank api:
 # USD, JPY, BGN, CZK, DKK, GBP, HUF, PLN, RON, SEK, CHF, ISK, NOK, HRK, TRY, AUD, BRL, CAD, CNY, HKD, IDR, ILS, INR, KRW, MXN, MYR, NZD, PHP, SGD, THB, ZAR
 
-def get_base_currency(ip: IPython.InteractiveShell):
-    base_currency_var_name = 'base_currency'
-    base_curr = ip.user_ns.get(base_currency_var_name, None)
+BASE_CURRENCY_VAR_NAME = 'base_currency'
+COMMON_CURRENCIES_VAR_NAME = 'common_currencies'
+
+def set_base_currency(calcpy, base_curr, update=True):
+    base_curr = base_curr.upper()
+    calcpy.shell.push({BASE_CURRENCY_VAR_NAME: base_curr})
+    with redirect_stdout(None):
+        calcpy.shell.run_line_magic('store', BASE_CURRENCY_VAR_NAME)
+    if update:
+        set_rates(calcpy)
+
+def get_base_currency(calcpy):
+    base_curr = calcpy.shell.user_ns.get(BASE_CURRENCY_VAR_NAME, None)
     if base_curr is not None:
         return base_curr
 
     resp = requests.get('http://ipinfo.io/json')
     country = resp.json()['country']
-
     base_curr = country_to_currency.get(country, 'USD')
 
-    ip.push({base_currency_var_name: base_curr})
-    ip.run_line_magic('store', base_currency_var_name)
-
-    print(f'Base currency was set to {base_curr}, you can change it by setting the \'base_currency\' variable')
+    set_base_currency(calcpy, base_curr, update=False)
+    print(f'Base currency was set to \'{base_curr}\', you can change it by setting calcpy.base_currency')
 
     return base_curr
 
+def set_common_currencies(calcpy, comm_currs, update=True):
+    comm_currs = list(map(str.upper, comm_currs))
+    calcpy.shell.push({COMMON_CURRENCIES_VAR_NAME: comm_currs})
+    with redirect_stdout(None):
+        calcpy.shell.run_line_magic('store', COMMON_CURRENCIES_VAR_NAME)
+    if update:
+        set_rates(calcpy)
+
+def get_common_currencies(calcpy):
+    comm_currs = calcpy.shell.user_ns.get(COMMON_CURRENCIES_VAR_NAME, None)
+    if comm_currs is not None:
+        return comm_currs
+
+    comm_currs = ["USD", "EUR", "GBP", "CNY" , "JPY"]
+    set_common_currencies(calcpy, comm_currs, update=False)
+
+    return comm_currs
 
 def get_rates():
     ns_cube = '{http://www.ecb.int/vocabulary/2002-08-01/eurofxref}Cube'
@@ -285,13 +309,19 @@ def get_rates():
         rates[child.attrib['currency']] = float(child.attrib['rate'])
     return rates
 
-def set_rates(ip: IPython.InteractiveShell):
-    base_curr = get_base_currency(ip)
+def set_rates(calcpy):
+    base_curr = calcpy.base_currency
+    comm_currs = list(filter(base_curr.__ne__, calcpy.common_currencies))
+
     rates = get_rates()
     base_rate = rates[base_curr]
-    # TODO: once we have nice array printing, add table of common currencies here
-    ip.push({key: base_rate/value for key, value in rates.items()})
-    ip.push({base_curr: np.array([])})
+    calcpy.shell.push({key: base_rate/value for key, value in rates.items()})
+    calcpy.shell.push({key.lower(): base_rate/value for key, value in rates.items()})
+    base_table = sympy.Matrix([
+            [f'{base_curr}_to_{curr}' for curr in comm_currs],
+            [rates[curr]/base_rate for curr in comm_currs]])
+    calcpy.shell.push({base_curr: base_table})
+    calcpy.shell.push({base_curr.lower(): base_table})
 
 
 
