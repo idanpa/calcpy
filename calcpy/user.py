@@ -7,7 +7,7 @@ import sympy
 from sympy.parsing.latex import parse_latex
 from sympy import *
 e = E                   # avoid conflict with sympy.stats expectation
-Re = re                 # avoid conflict wity python re
+Re = re                 # avoid conflict with python re
 Im = im
 import re
 from sympy.stats import *
@@ -31,7 +31,8 @@ deg = pi/180
 i = 1j
 j = 1j
 
-x, y, z, t = symbols('x y z t')
+x, y, t = symbols('x y t', real=True)
+z = symbols('z', complex=True)
 m, n, l = symbols('m n l', integer=True)
 
 def popcount(x):

@@ -8,9 +8,9 @@ IPython and SymPy with tweeks to make it usable as a calculator.
 pip install git+https://github.com/idanpa/calcpy
 ```
 requirements: ipython sympy matplotlib   
-optional: dateparser antlr-python-runtime numpy
+optional: dateparser antlr-python-runtime numpy  
+[Android installation](docs/android.md)
 ## Usage
-Launch a session: 
 ```
 $ calcpy
 ```
@@ -25,17 +25,20 @@ $ calcpy
 * `func_name?` show docs for func_name
 * `who_ls` see all defined variables
 * Prompt history with `up`/`down`, search with `ctrl+r`
+* Autocomplete with `tab`
 
 [SymPy](https://www.sympy.org) features:
 * All the elementary (and non-elementry) math functions - `ln`, `sin` etc. 
-* Partial list of usefull functions: `diff`, `integrate`, `limit`, `Sum`, `solve`, `plot`, `plot_implicit`
+* Usefull functions: `diff`, `integrate`, `limit`, `Sum`, `solve`, `plot`, `plot_implicit`
 
 CalcPy features:
-* Everything is imported and ready to use (see [user.py](calcpy/user.py))
+* Everything is imported and ready to use (see [user.py](calcpy/user.py))  
+  `x`,`y`,`t` are real, `z` is complex, `m`,`n`,`l` are integers (affects plotting and other)
 * Display both symbolic and numeric solutions
-* Integers displayed on hex and binary
+* Integers displayed as decimal, hex and binary
 * Tuples are matrices `((1,2),(3,4))**2`        
-* `?` prefix would provide some basic analysis of expression `?((1,2),(3,4))` `?x**2+1` 
+* `?` prefix would provide some basic analysis of expression (similar to [WolframAlpha](https://www.wolframalpha.com/))  
+`?((1,2),(3,4))`, `?x**2+1`, `?234` 
 * Implicit multiplication (`2x`, `(x+1)(x-1)` are valid)
 * All variables stored and restored between sessions (so you can set your own constants e.g. `speed_of_light = 299792458`)
 * Currency conversion `10USD` (`calcpy.base_currency='EUR'` to change base currency)

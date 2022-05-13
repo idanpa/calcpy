@@ -4,7 +4,7 @@
 ```
 pkg install python 
 pkg install matplotlib
-pip install numpy sympy
+pip install numpy sympy requests
 LDFLAGS="-L/system/lib64/" CFLAGS="-I/data/data/com.termux/files/usr/include/" pip install Pillow
 ```
 3. Then install calcpy

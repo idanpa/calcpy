@@ -23,13 +23,13 @@ import importlib
 import requests
 import shutil
 import warnings
+import datetime
 from time import sleep
 from contextlib import redirect_stdout
 
 try:
     import dateparser
     dateparsing = True
-    import datetime
 except ModuleNotFoundError:
     dateparsing = False
 
@@ -96,10 +96,12 @@ def str_formatter(s, printer, cycle):
     printer.text(s)
 
 def sympy_expr_formatter(s, printer, cycle):
-    if isinstance(s, (sympy.core.numbers.Integer, sympy.core.numbers.Float)):
-        printer.text(f'{sympy.printing.pretty(s)}')
-    else:
-        printer.text(f'{sympy.printing.pretty(s)} ≈ {sympy.N(s)}')
+    pretty_s = sympy.printing.pretty(s)
+    printer.text(f'{pretty_s}')
+    if not isinstance(s, (sympy.core.numbers.Integer, sympy.core.numbers.Float)):
+        evaluated = sympy.N(s)
+        if (pretty_s != str(evaluated)):
+            printer.text(f' ≈ {evaluated}')
 
 def calcpy_input_transformer_cleanup(lines):
     ip = IPython.get_ipython()
@@ -115,8 +117,10 @@ def calcpy_input_transformer_post(lines):
     var_p = r'[^\d\W]\w*' # match any valid variable name
 
     def re_sub_mult_replace(match, vars):
+        if match[2] is None or match[2].lower() == 'e': # 2e-4 is ambiguous, leave as-is.
+            return match[0]
         if match[2] in vars:
-            return f'{match[1]}*{match[2]}'
+            return f'({match[1]}*{match[2]})'
         return match[0]
 
     user_vars = list(ip.ev("locals().keys()"))
@@ -137,8 +141,9 @@ def calcpy_input_transformer_post(lines):
             lines[i] = lines[i].replace(match, f'({hash(match)})')
 
         if ip.calcpy.implicit_multiply: # asterisk-free multiplication: 4MB => 4*MB
-            re_sub_mult_pattern = rf'(0x[0-9a-f]*|0X[0-9A-F]*|-?\d*\.?\d+e-?\d+|-?\d*\.?\d+)({var_p})'
-            lines[i] = re.sub(re_sub_mult_pattern, partial(re_sub_mult_replace, vars=user_vars), lines[i])
+            # pattern is (hex number | engineering number | number)(lazy var name)
+            mult_pat = rf'(0x[0-9a-f]*|0X[0-9A-F]*|\d*\.?\d+e-?\d+|\d*\.?\d+)({var_p})?'
+            lines[i] = re.sub(mult_pat, partial(re_sub_mult_replace, vars=user_vars), lines[i])
 
         for match in latex_matches:
             lines[i] = lines[i].replace(f'({hash(match)})', f'parse_latex(r"{match[1:-1]}")')
@@ -251,7 +256,9 @@ def print_more_info(ip:IPython.InteractiveShell, res):
             if len(res.free_symbols) == 1:
                 sym = list(res.free_symbols)[0]
                 print(f'\n{sympy.printing.pretty(sympy.diff(res))} = diff(_)')
-                print(f'\n{sympy.printing.pretty(sympy.integrate(res))} = integrate(_)')
+                integral = sympy.integrate(res)
+                if integral != sympy.Integral(res):
+                    print(f'\n{sympy.printing.pretty(integral)} = integrate(_)')
                 periodic = sympy.periodicity(res, sym)
                 if periodic is not None:
                     print(f'\n{sympy.printing.pretty(periodic)} = periodic(_, {sym})')
