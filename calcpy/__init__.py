@@ -175,12 +175,16 @@ class ReplaceIntegerDivisionWithRational(ast.NodeTransformer):
 
 class ReplaceTupleWithMatrices(ast.NodeTransformer):
     def visit_Tuple(self, node):
+        # skip empty tuples and non-nested tuples (e.g some functions uses tuples to represent ranges)
+        if len(node.elts) == 0 or not all(isinstance(el, ast.Tuple) for el in node.elts):
+            return self.generic_visit(node)
+
         matrix_ast = ast.Call(func=ast.Name(id='Matrix', ctx=ast.Load()), args=[node], keywords=[])
         matrix_code = compile(ast.fix_missing_locations(ast.Expression(matrix_ast)), '<string>', 'eval')
         ip = IPython.get_ipython()
 
-        # sympy would warn if there is a non expression object, use this warning to fallback:
         try:
+            # sympy would warn if there is a non expression object, use this warning to fallback:
             with warnings.catch_warnings():
                 warnings.simplefilter("error")
                 matrix = ip.ev(matrix_code)
@@ -298,6 +302,7 @@ def calcpy_monkey_patching(ip:IPython.InteractiveShell):
 
     sympy.core.expr.Expr.__xor__ = sympy.core.expr.Expr.__pow__
     sympy.core.expr.Expr.__rxor__ = sympy.core.expr.Expr.__rpow__
+    sympy.matrices.common.MatrixArithmetic.__xor__ = sympy.matrices.common.MatrixArithmetic.__pow__
 
 def load_ipython_extension(ip:IPython.InteractiveShell):
     if ip.profile != CALCPY_PROFILE_NAME:
