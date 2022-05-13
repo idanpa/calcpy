@@ -350,10 +350,6 @@ def calcpy_monkey_patching(ip:IPython.InteractiveShell):
 
     sympy.core.expr.Expr.__call__ = sympy_expr_call
 
-    sympy.core.expr.Expr.__xor__ = sympy.core.expr.Expr.__pow__
-    sympy.core.expr.Expr.__rxor__ = sympy.core.expr.Expr.__rpow__
-    sympy.matrices.common.MatrixArithmetic.__xor__ = sympy.matrices.common.MatrixArithmetic.__pow__
-
 def load_ipython_extension(ip:IPython.InteractiveShell):
     if ip.profile != CALCPY_PROFILE_NAME:
         print(f"warning: Not using the pycalc profile (current profile is {ip.profile}")
