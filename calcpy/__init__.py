@@ -50,8 +50,9 @@ class CalcPy(IPython.core.magic.Magics):
     auto_lambda = traitlets.Bool(True, config=True)
     auto_prev_ans = traitlets.Bool(True, config=True)
     auto_store_vars = traitlets.Bool(True, config=True)
+    auto_matrix = traitlets.Bool(True, config=True)
+    auto_date = traitlets.Bool(True, config=True)
     parse_latex = traitlets.Bool(True, config=True)
-    dateparser = traitlets.Bool(True, config=True)
     bitwidth = traitlets.Int(0, config=True)
 
     def __init__(self, shell=None, **kwargs):
@@ -105,7 +106,7 @@ def sympy_expr_formatter(s, printer, cycle):
 
 def calcpy_input_transformer_cleanup(lines):
     ip = IPython.get_ipython()
-    if (lines[0] != '?' and lines[0][0] == '?'):
+    if (lines[0] != '?\n' and lines[0][0] == '?'):
         ip.calcpy.info_asked = True
         lines[0] = lines[0][1:]
     else:
@@ -180,13 +181,15 @@ class ReplaceIntegerDivisionWithRational(ast.NodeTransformer):
 
 class ReplaceTupleWithMatrices(ast.NodeTransformer):
     def visit_Tuple(self, node):
+        ip = IPython.get_ipython()
         # skip empty tuples and non-nested tuples (e.g some functions uses tuples to represent ranges)
-        if len(node.elts) == 0 or not all(isinstance(el, ast.Tuple) for el in node.elts):
+        if not ip.calcpy.auto_matrix or \
+           len(node.elts) == 0 or \
+           not all(isinstance(el, ast.Tuple) for el in node.elts):
             return self.generic_visit(node)
 
         matrix_ast = ast.Call(func=ast.Name(id='Matrix', ctx=ast.Load()), args=[node], keywords=[])
         matrix_code = compile(ast.fix_missing_locations(ast.Expression(matrix_ast)), '<string>', 'eval')
-        ip = IPython.get_ipython()
 
         try:
             # sympy would warn if there is a non expression object, use this warning to fallback:
@@ -201,6 +204,9 @@ class ReplaceTupleWithMatrices(ast.NodeTransformer):
 class ReplaceStringsWithDates(ast.NodeTransformer):
     def visit_Constant(self, node):
         if isinstance(node, ast.Str):
+            ip = IPython.get_ipython()
+            if not ip.calcpy.auto_date:
+                return self.generic_visit(node)
             dt = dateparser.parse(node.s, settings={'STRICT_PARSING': True})
             if dt:
                 return ast.Call(
@@ -395,7 +401,7 @@ def load_ipython_extension(ip:IPython.InteractiveShell):
     # transformers
     ip.ast_transformers.append(ReplaceIntegerDivisionWithRational())
     ip.ast_transformers.append(ReplaceTupleWithMatrices())
-    if ip.calcpy.dateparser and dateparsing:
+    if dateparsing:
         ip.ast_transformers.append(ReplaceStringsWithDates())
     ip.input_transformers_cleanup.append(calcpy_input_transformer_cleanup)
     ip.input_transformers_post.append(calcpy_input_transformer_post)
