@@ -261,7 +261,7 @@ def print_more_info(ip:IPython.InteractiveShell, res):
     terminal_size = shutil.get_terminal_size()
     page = terminal_size.columns * terminal_size.lines
     try:
-        if isinstance(res, sympy.core.expr.Expr):
+        if isinstance(res, sympy.Expr):
             if len(res.free_symbols) == 1:
                 sym = list(res.free_symbols)[0]
                 print(f'\n{sympy.printing.pretty(sympy.diff(res))} = diff(_)')
@@ -349,7 +349,7 @@ def calcpy_monkey_patching(ip:IPython.InteractiveShell):
 
     def sympy_expr_call(self, *args):
         # single non-constant expression, interpret as product
-        if len(args) == 1 and isinstance(args[0], sympy.core.expr.Expr) and not args[0].is_constant():
+        if len(args) == 1 and isinstance(args[0], sympy.Expr) and not args[0].is_constant():
                 return self.__rmul__(args[0])
         # else, substitute
         sorted_symbols = sorted(self.free_symbols, key=lambda s: s.name)
@@ -357,7 +357,19 @@ def calcpy_monkey_patching(ip:IPython.InteractiveShell):
             raise TypeError(f'Expected {len(sorted_symbols)} arguments {sorted_symbols}')
         return self.subs(zip(sorted_symbols, args))
 
-    sympy.core.expr.Expr.__call__ = sympy_expr_call
+    sympy.Expr.__call__ = sympy_expr_call
+
+    # use IPython's float precision
+    from sympy.printing.pretty.pretty import PrettyPrinter
+    from sympy.printing.pretty.stringpict import prettyForm
+
+    def print_float(self, e):
+        ipython = IPython.get_ipython()
+        form = ipython.display_formatter.formatters['text/plain']
+        return prettyForm(form.float_format % e)
+
+    PrettyPrinter._print_Float = print_float
+    PrettyPrinter._print_float = print_float
 
 def load_ipython_extension(ip:IPython.InteractiveShell):
     if ip.profile != CALCPY_PROFILE_NAME:
@@ -398,7 +410,7 @@ def load_ipython_extension(ip:IPython.InteractiveShell):
     formatter.for_type(int, int_formatter)
     formatter.for_type(complex, complex_formatter)
     formatter.for_type(datetime.datetime, datetime_formatter)
-    formatter.for_type(sympy.core.expr.Expr, sympy_expr_formatter)
+    formatter.for_type(sympy.Expr, sympy_expr_formatter)
     formatter.for_type(sympy.core.function.FunctionClass, IPython.lib.pretty._function_pprint)
 
     # transformers
