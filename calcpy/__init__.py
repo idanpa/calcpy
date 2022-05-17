@@ -118,10 +118,13 @@ def calcpy_input_transformer_post(lines):
     var_p = r'[^\d\W]\w*' # match any valid variable name
 
     def re_sub_mult_replace(match, vars):
-        if match[2] is None or match[2].lower() == 'e': # 2e-4 is ambiguous, leave as-is.
+        # check var is not none, vae not e (since 2e-4 is ambiguous) and this is not a format specifier
+        if match[3] is None or \
+           match[3].lower() == 'e' or \
+           match[1] is not None:
             return match[0]
-        if match[2] in vars:
-            return f'({match[1]}*{match[2]})'
+        if match[3] in vars:
+            return f'({match[2]}*{match[3]})'
         return match[0]
 
     user_vars = list(ip.ev("locals().keys()"))
@@ -142,8 +145,8 @@ def calcpy_input_transformer_post(lines):
             lines[i] = lines[i].replace(match, f'({hash(match)})')
 
         if ip.calcpy.implicit_multiply: # asterisk-free multiplication: 4MB => 4*MB
-            # pattern is (hex number | engineering number | number)(lazy var name)
-            mult_pat = rf'(0x[0-9a-f]*|0X[0-9A-F]*|\d*\.?\d+e-?\d+|\d*\.?\d+)({var_p})?'
+            # pattern is (format string detection)?(hex number | engineering number | number)(var name)?
+            mult_pat = rf'(% ?)?(0x[0-9a-f]*|0X[0-9A-F]*|\d*\.?\d+e-?\d+|\d*\.?\d+)({var_p})?'
             lines[i] = re.sub(mult_pat, partial(re_sub_mult_replace, vars=user_vars), lines[i])
 
         for match in latex_matches:
