@@ -12,7 +12,6 @@ import IPython.lib.backgroundjobs
 import traitlets
 import sympy
 import platform
-import logging
 import types
 import sys
 from functools import partial
@@ -23,9 +22,6 @@ from contextlib import redirect_stdout
 import calcpy.currency
 import calcpy.formatters
 import calcpy.transformers
-
-logger = logging.getLogger('calcpy')
-debug = logger.debug
 
 def show_usage():
     print('''CalcPy - https://github.com/idanpa/calcpy''')
@@ -64,8 +60,9 @@ def store_all_user_vars(ip:IPython.InteractiveShell):
             with redirect_stdout(None): # can't stop store from printing
                 ip.run_line_magic('store', f'{variable_name}')
         except Exception as e:
-            debug(f'Storing variable {variable_name}={ip.user_ns[variable_name]} of type {type(ip.user_ns[variable_name])}\n'+
-                  f'failed with: {e}')
+            if ip.calcpy.debug:
+                print(f'Storing variable {variable_name}={ip.user_ns[variable_name]} of type {type(ip.user_ns[variable_name])}\n'+
+                      f'failed with: {e}')
             ip.run_line_magic('store', f'-d {variable_name}')
 
 def post_run_cell(result:IPython.core.interactiveshell.ExecutionResult, ip):
@@ -184,14 +181,6 @@ def load_ipython_extension(ip:IPython.InteractiveShell):
     if isinstance(ip.config.InteractiveShellApp.code_to_run, traitlets.config.loader.LazyConfigValue): # better way to check this?
         print(f"CalcPy {__version__} (Python {platform.python_version()} IPython {IPython.__version__} SymPy {sympy.__version__}) ('??' for help)")
     ip.calcpy.jobs = IPython.lib.backgroundjobs.BackgroundJobManager()
-
-    # logging:
-    sh = logging.StreamHandler()
-    sh.addFilter(logging.Filter('calcpy'))
-    if ip.calcpy.debug:
-        sh.setLevel(logging.DEBUG)
-        logger.setLevel(logging.DEBUG)
-    logger.addHandler(sh)
 
     ip.show_usage = show_usage
 
