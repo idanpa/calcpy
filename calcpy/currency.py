@@ -2,6 +2,7 @@ import requests
 from xml.etree import ElementTree
 import sympy
 from contextlib import redirect_stdout
+from time import sleep
 
 country_to_currency = {
     # ISO2 country code, currency # country name ISO3 currency name
@@ -322,6 +323,19 @@ def set_rates(calcpy):
     calcpy.shell.push({base_curr: base_table})
     calcpy.shell.push({base_curr.lower(): base_table})
 
+def update_currency_job(ip):
+    while True:
+        try:
+            set_rates(ip.calcpy)
+        except requests.exceptions.ConnectionError:
+            pass  # offline
+        except Exception as e:
+            print(e)
+        sleep(60*60*12)
+
+def init(ip):
+    type(ip.calcpy).base_currency = property(get_base_currency, set_base_currency)
+    type(ip.calcpy).common_currencies = property(get_common_currencies, set_common_currencies)
 
 
 
