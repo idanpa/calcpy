@@ -39,9 +39,7 @@ logger = logging.getLogger('calcpy')
 debug = logger.debug
 
 def show_usage():
-    print('''
-CalcPy - https://github.com/idanpa/calcpy
-''')
+    print('''CalcPy - https://github.com/idanpa/calcpy''')
 
 @IPython.core.magic.magics_class
 class CalcPy(IPython.core.magic.Magics):
@@ -100,9 +98,9 @@ def sympy_expr_formatter(s, printer, cycle):
     pretty_s = sympy.printing.pretty(s)
     printer.text(f'{pretty_s}')
     if not isinstance(s, (sympy.core.numbers.Integer, sympy.core.numbers.Float)):
-        evaluated = sympy.N(s)
-        if (pretty_s != str(evaluated)):
-            printer.text(f' ≈ {evaluated}')
+        evaluated_s = sympy.printing.pretty(sympy.N(s))
+        if pretty_s != evaluated_s:
+            printer.text(f' ≈ {evaluated_s}')
 
 def calcpy_input_transformer_cleanup(lines):
     ip = IPython.get_ipython()
@@ -244,8 +242,8 @@ def post_run_cell(result:IPython.core.interactiveshell.ExecutionResult, ip, jobs
     ip = IPython.get_ipython()
     if ip.calcpy.auto_store_vars:
         store_all_user_vars(IPython.get_ipython())
-    if ip.calcpy.info_asked:
-        jobs.new(print_more_info, ip, result.result, daemon=True)
+    if ip.calcpy.info_asked and result.success and result.result is not None:
+        jobs.new(print_more_info, result.result, daemon=True)
 
 def update_currency_job(ip:IPython.InteractiveShell):
     while True:
@@ -257,7 +255,7 @@ def update_currency_job(ip:IPython.InteractiveShell):
             print(e)
         sleep(60*60*12)
 
-def print_more_info(ip:IPython.InteractiveShell, res):
+def print_more_info(res):
     terminal_size = shutil.get_terminal_size()
     page = terminal_size.columns * terminal_size.lines
     try:
@@ -285,21 +283,23 @@ def print_more_info(ip:IPython.InteractiveShell, res):
                 for sym in res.free_symbols:
                     print(f'\n{sympy.printing.pretty(sympy.calculus.util.minimum(res, sym))} = calculus.util.minimum(_, {sym})')
                     print(f'{sympy.printing.pretty(sympy.calculus.util.maximum(res, sym))} = calculus.util.maximum(_, {sym})')
-            except NotImplementedError:
+            except:
                 pass
 
             try:
                 for sym in res.free_symbols:
                     print(f'\n{sympy.printing.pretty(sympy.calculus.util.continuous_domain(res, sym, sympy.S.Reals))} = calculus.util.continuous_domain(_, {sym}, S.Reals)')
                     print(f'\n{sympy.printing.pretty(sympy.calculus.util.function_range(res, sym, sympy.S.Reals))} = calculus.util.function_range(_, {sym}, S.Reals)')
-            except NotImplementedError:
+            except:
                 pass
 
-            solutions = sympy.solve(res)
-            solutions_print = sympy.printing.pretty(solutions)
-            if len(solutions_print) > page:
-                solutions_print = sympy.printing.pretty(list(map(sympy.N, solutions)))
-            print(f'\n{solutions_print} = solve(_)')
+            if len(res.free_symbols) > 0:
+                solutions = sympy.solve(res)
+                solutions_print = sympy.printing.pretty(solutions)
+                if len(solutions_print) > page:
+                    solutions_print = sympy.printing.pretty(list(map(sympy.N, solutions)))
+                print(f'\n{solutions_print} = solve(_)')
+
             simple = sympy.simplify(res)
             if simple != res:
                 print(f'\n{sympy.printing.pretty(sympy.simplify(res))} = simplify(_)')
@@ -330,6 +330,8 @@ def print_more_info(ip:IPython.InteractiveShell, res):
             pass
         elif isinstance(res, (float, sympy.core.numbers.Float)):
             print(f'\n{sympy.printing.pretty(sympy.Rational(res))} = Rational(_)')
+        elif isinstance(res, (complex, sympy.core.numbers.Float)):
+            pass
         elif isinstance(res, (int, sympy.core.numbers.Integer)):
             f_dict = sympy.factorint(res)
             f_expr = None
@@ -340,6 +342,12 @@ def print_more_info(ip:IPython.InteractiveShell, res):
                 else:
                     f_expr = sympy.Mul(f_expr, pow, evaluate=False)
             print(f'\n{sympy.printing.pretty(f_expr)}       {sympy.printing.pretty(f_dict)} = _.factorint()')
+        elif res is not None:
+            try:
+                res = sympy.sympify(res)
+                print_more_info(res)
+            except sympy.SympifyError:
+                pass
 
     except Exception as e:
         print(e)
@@ -376,7 +384,7 @@ def load_ipython_extension(ip:IPython.InteractiveShell):
         print(f"warning: Not using the pycalc profile (current profile is {ip.profile}")
 
     ip.calcpy = CalcPy(ip)
-    ip.push({'calcpy': ip.calcpy})
+    ip.push({'calcpy': ip.calcpy}, interactive=False)
     # this is where the configuration is loaded:
     ip.register_magics(ip.calcpy)
 
