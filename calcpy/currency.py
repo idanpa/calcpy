@@ -315,11 +315,10 @@ def set_rates(calcpy):
 
     rates = get_rates()
     base_rate = rates[base_curr]
-    calcpy.shell.push({key: base_rate/value for key, value in rates.items()})
-    calcpy.shell.push({key.lower(): base_rate/value for key, value in rates.items()})
+    calcpy.shell.push({key: (base_rate/value)*sympy.Symbol(base_curr) for key, value in rates.items()})
+    calcpy.shell.push({key.lower(): (base_rate/value)*sympy.Symbol(base_curr) for key, value in rates.items()})
     base_table = sympy.Matrix([
-            [f'{base_curr}_to_{curr}' for curr in comm_currs],
-            [rates[curr]/base_rate for curr in comm_currs]])
+            [(rates[curr]/base_rate)*sympy.Symbol(curr) for curr in comm_currs]])
     calcpy.shell.push({base_curr: base_table})
     calcpy.shell.push({base_curr.lower(): base_table})
 
