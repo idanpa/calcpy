@@ -135,14 +135,22 @@ def init(ip: IPython.InteractiveShell):
     ip.input_transformers_post.append(calcpy_input_transformer_post)
 
     def sympy_expr_call(self, *args):
-        # single non-constant expression, interpret as product
-        if len(args) == 1 and isinstance(args[0], sympy.Expr) and not args[0].is_constant():
-                return self.__rmul__(args[0])
-        # else, substitute
+        if len(args) != 1:
+            raise ValueError('Implicit multiply of sympy expression expects a single argument')
+        return self.__rmul__(args[0])
+
+    def sympy_expr_getitem(self, args):
+        if not isinstance(args, tuple):
+            args = (args,)
         sorted_symbols = sorted(self.free_symbols, key=lambda s: s.name)
         if len(args) != len(sorted_symbols):
             raise TypeError(f'Expected {len(sorted_symbols)} arguments {sorted_symbols}')
         return self.subs(zip(sorted_symbols, args))
 
     sympy.Expr.__call__ = sympy_expr_call
+    sympy.Expr.__getitem__ = sympy_expr_getitem
+    # don't consider expressions as iterables: (see iterable() in sympy\utilities\iterables.py)
+    sympy.Expr._iterable = False
+    sympy.Expr.real = property(sympy.re)
+    sympy.Expr.imag = property(sympy.im)
 
