@@ -126,8 +126,7 @@ class ReplaceStringsWithDates(ast.NodeTransformer):
                     keywords=[])
         return self.generic_visit(node)
 
-
-def init(ip):
+def init(ip: IPython.InteractiveShell):
     ip.ast_transformers.append(ReplaceIntegerDivisionWithRational())
     ip.ast_transformers.append(ReplaceTupleWithMatrices())
     if dateparsing:

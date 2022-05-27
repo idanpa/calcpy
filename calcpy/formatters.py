@@ -1,6 +1,7 @@
 import IPython
 import sympy
 import datetime
+import shutil
 
 def _bin_pad(bin_string, pad_every=4):
         return ' '.join(bin_string[i:i+pad_every] for i in range(0, len(bin_string), pad_every))
@@ -43,7 +44,14 @@ def sympy_expr_formatter(s, printer, cycle):
         if pretty_s != evaluated_s:
             printer.text(f' ≈ {evaluated_s}')
 
-def init(ip):
+
+def init(ip: IPython.InteractiveShell):
+    sympy.interactive.printing.init_printing(
+        pretty_print=True,
+        use_latex='mathjax',
+        num_columns=shutil.get_terminal_size().columns,
+        ip=ip)
+
     formatter = ip.display_formatter.formatters['text/plain']
     formatter.for_type(str, str_formatter)
     formatter.for_type(int, int_formatter)

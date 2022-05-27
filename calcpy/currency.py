@@ -1,5 +1,6 @@
 import requests
 from xml.etree import ElementTree
+import IPython
 import sympy
 from contextlib import redirect_stdout
 from time import sleep
@@ -333,9 +334,11 @@ def update_currency_job(ip):
             print(e)
         sleep(60*60*12)
 
-def init(ip):
+def init(ip:IPython.InteractiveShell):
     type(ip.calcpy).base_currency = property(get_base_currency, set_base_currency)
     type(ip.calcpy).common_currencies = property(get_common_currencies, set_common_currencies)
+
+    ip.calcpy.jobs.new(update_currency_job, ip, daemon=True)
 
 
 
