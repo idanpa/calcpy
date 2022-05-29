@@ -312,26 +312,28 @@ def get_rates():
     return rates
 
 def set_rates(calcpy):
-    base_curr = calcpy.base_currency
-    comm_currs = list(filter(base_curr.__ne__, calcpy.common_currencies))
+    try:
+        base_curr = calcpy.base_currency
+        comm_currs = list(filter(base_curr.__ne__, calcpy.common_currencies))
+        rates = get_rates()
+    except requests.exceptions.ConnectionError:
+        print("Can't update currency rates (connection error)")
+        return
 
-    rates = get_rates()
     base_rate = rates[base_curr]
-    calcpy.shell.push({key: (base_rate/value)*sympy.Symbol(base_curr) for key, value in rates.items()})
-    calcpy.shell.push({key.lower(): (base_rate/value)*sympy.Symbol(base_curr) for key, value in rates.items()})
-    base_table = sympy.Matrix([
-            [(rates[curr]/base_rate)*sympy.Symbol(curr) for curr in comm_currs]])
-    calcpy.shell.push({base_curr: base_table})
-    calcpy.shell.push({base_curr.lower(): base_table})
+    rates_vars = {key: (base_rate/value)*sympy.Symbol(base_curr) for key, value in rates.items()}
+    calcpy.shell.push(rates_vars, interactive=False)
+    calcpy.shell.push({k.lower(): v for k, v in rates_vars.items()}, interactive=False)
+    base_table = sympy.Matrix([[(rates[curr]/base_rate)*sympy.Symbol(curr) for curr in comm_currs]])
+    calcpy.shell.push({base_curr: base_table}, interactive=False)
+    calcpy.shell.push({base_curr.lower(): base_table}, interactive=False)
 
 def update_currency_job(ip):
     while True:
         try:
             set_rates(ip.calcpy)
-        except requests.exceptions.ConnectionError:
-            pass  # offline
         except Exception as e:
-            print(e)
+            print(f'update currency job failed with: {e}')
         sleep(60*60*12)
 
 def init(ip:IPython.InteractiveShell):
