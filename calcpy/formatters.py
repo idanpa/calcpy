@@ -1,7 +1,8 @@
+import shutil
+import datetime
 import IPython
 import sympy
-import datetime
-import shutil
+from sympy.printing.pretty.stringpict import stringPict
 
 def _bin_pad(bin_string, pad_every=4):
         return ' '.join(bin_string[i:i+pad_every] for i in range(0, len(bin_string), pad_every))
@@ -38,11 +39,30 @@ def str_formatter(s, printer, cycle):
 
 def sympy_expr_formatter(s, printer, cycle):
     pretty_s = sympy.printing.pretty(s)
-    printer.text(f'{pretty_s}')
+    sp = stringPict(pretty_s)
+    sp.baseline = sp.height()//2
     if not isinstance(s, (sympy.core.numbers.Integer, sympy.core.numbers.Float)):
-        evaluated_s = sympy.printing.pretty(sympy.N(s))
-        if pretty_s != evaluated_s:
-            printer.text(f' ≈ {evaluated_s}')
+        simpl_s = sympy.printing.pretty(sympy.simplify(s))
+        if pretty_s != simpl_s:
+            sp = stringPict(*sp.right(" = "))
+            simpl_sp = stringPict(simpl_s)
+            simpl_sp.baseline = simpl_sp.height()//2
+            sp = stringPict(*sp.right(simpl_sp))
+
+        try:
+            evalu = sympy.N(s)
+        except Exception as e:
+            if IPython.get_ipython().calcpy.debug:
+                print(f'eval exception {e}')
+        else:
+            evalu_s = sympy.printing.pretty(evalu)
+            if evalu_s != simpl_s:
+                sp = stringPict(*sp.right(" ≈ "))
+                evalu_sp = stringPict(evalu_s)
+                evalu_sp.baseline = evalu_sp.height()//2
+                sp = stringPict(*sp.right(evalu_sp))
+
+    printer.text(sp.render(wrap_line=True, num_columns=None))
 
 
 def init(ip: IPython.InteractiveShell):
