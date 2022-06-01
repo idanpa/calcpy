@@ -49,7 +49,7 @@ def load_ipython_extension(ip:IPython.InteractiveShell):
 
     ip.register_magics(ip.calcpy) # register_magics loads the traitlets configuration
 
-    if isinstance(ip.config.InteractiveShellApp.code_to_run, traitlets.config.loader.LazyConfigValue): # better way to check this?
+    if isinstance(ip.config.InteractiveShellApp.code_to_run, traitlets.config.loader.LazyConfigValue):
         print(f"CalcPy {__version__} (Python {platform.python_version()} IPython {IPython.__version__} SymPy {sympy.__version__}) ('??' for help)")
     ip.calcpy.jobs = IPython.lib.backgroundjobs.BackgroundJobManager()
 

@@ -37,7 +37,7 @@ def print_more_info(res):
             try:
                 for sym in res.free_symbols:
                     print(f'\n{sympy.printing.pretty(sympy.calculus.util.continuous_domain(res, sym, sympy.S.Reals))} = calculus.util.continuous_domain(_, {sym}, S.Reals)')
-                    print(f'\n{sympy.printing.pretty(sympy.calculus.util.function_range(res, sym, sympy.S.Reals))} = calculus.util.function_range(_, {sym}, S.Reals)')
+                    print(f'{sympy.printing.pretty(sympy.calculus.util.function_range(res, sym, sympy.S.Reals))} = calculus.util.function_range(_, {sym}, S.Reals)')
             except:
                 pass
 
@@ -70,7 +70,7 @@ def print_more_info(res):
                 diag_print = sympy.printing.pretty(diag)
                 if len(diag_print) > page:
                     diag_print = sympy.printing.pretty(list(map(sympy.N, diag)))
-                print(f'\n{diag_print} = _.diagonalize() # (P,D) with _==PDP^-1')
+                print(f'\n{diag_print} = _.diagonalize() # (P,D) so _=PDP^-1')
             else:
                 print(f'\n{sympy.printing.pretty(sympy.rank(res))} = rank(_)')
                 print(f'\n{sympy.printing.pretty(res.pinv())} = _.pinv()')
