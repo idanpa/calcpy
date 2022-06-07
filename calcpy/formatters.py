@@ -75,6 +75,7 @@ def init(ip: IPython.InteractiveShell):
     formatter = ip.display_formatter.formatters['text/plain']
     formatter.for_type(str, str_formatter)
     formatter.for_type(int, int_formatter)
+    formatter.for_type(sympy.Integer, int_formatter)
     formatter.for_type(complex, complex_formatter)
     formatter.for_type(datetime.datetime, datetime_formatter)
     formatter.for_type(sympy.Expr, sympy_expr_formatter)
@@ -91,3 +92,9 @@ def init(ip: IPython.InteractiveShell):
 
     PrettyPrinter._print_Float = print_float
     PrettyPrinter._print_float = print_float
+
+    # for sympy.Integer to support all int's format specifiers:
+    def integer__format__(self, format_spec):
+        return int.__format__(int(self), format_spec)
+    sympy.Integer.__format__ = integer__format__
+

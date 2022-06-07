@@ -75,6 +75,7 @@ def calcpy_input_transformer_post(lines):
 
     return lines
 
+'''
 class ReplaceIntegerDivisionWithRational(ast.NodeTransformer):
     def visit_BinOp(self, node):
         def is_integer(x):
@@ -90,6 +91,14 @@ class ReplaceIntegerDivisionWithRational(ast.NodeTransformer):
         if (isinstance(node.op, ast.Div) and is_integer(node.left) and is_integer(node.right)):
             return ast.Call(func=ast.Name(id='Rational', ctx=ast.Load()),
                             args=[node.left, node.right], keywords=[])
+        return self.generic_visit(node)
+'''
+
+class ReplaceIntWithInteger(ast.NodeTransformer):
+    def visit_Constant(self, node):
+        if isinstance(node, ast.Num) and isinstance(node.n, int):
+            return ast.Call(func=ast.Name(id='Integer', ctx=ast.Load()),
+                            args=[node], keywords=[])
         return self.generic_visit(node)
 
 class ReplaceTupleWithMatrices(ast.NodeTransformer):
@@ -130,7 +139,8 @@ class ReplaceStringsWithDates(ast.NodeTransformer):
         return self.generic_visit(node)
 
 def init(ip: IPython.InteractiveShell):
-    ip.ast_transformers.append(ReplaceIntegerDivisionWithRational())
+    # ip.ast_transformers.append(ReplaceIntegerDivisionWithRational())
+    ip.ast_transformers.append(ReplaceIntWithInteger())
     ip.ast_transformers.append(ReplaceTupleWithMatrices())
     if dateparsing:
         ip.ast_transformers.append(ReplaceStringsWithDates())

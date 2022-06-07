@@ -32,8 +32,8 @@ TB = 2**40
 
 deg = pi/180
 
-i = 1j
-j = 1j
+i = I
+j = I
 
 x, y, t = symbols('x y t', real=True)
 z = symbols('z', complex=True)
