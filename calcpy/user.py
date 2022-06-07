@@ -17,20 +17,29 @@ import re
 from sympy.stats import *
 import datetime
 
-G = 1e9
-M = 1e6
-k = 1e3
-m = 1e-3
-u = 1e-6
-n = 1e-9
-p = 1e-12
+class UnitPrefix():
+    is_unit_prefix = True
+class IntegerUnitPrefix(Integer, UnitPrefix):
+    pass
+class PowUnitPrefix(Pow, UnitPrefix):
+    pass
+class MulUnitPrefix(Mul, UnitPrefix):
+    pass
 
-KB = 2**10
-MB = 2**20
-GB = 2**30
-TB = 2**40
+G = IntegerUnitPrefix(1e9)
+M = IntegerUnitPrefix(1e6)
+k = IntegerUnitPrefix(1e3)
+m = PowUnitPrefix(10, -3)
+u = PowUnitPrefix(10, -6)
+n = PowUnitPrefix(10, -9)
+p = PowUnitPrefix(10, -12)
 
-deg = pi/180
+KB = IntegerUnitPrefix(2**10)
+MB = IntegerUnitPrefix(2**20)
+GB = IntegerUnitPrefix(2**30)
+TB = IntegerUnitPrefix(2**40)
+
+deg = MulUnitPrefix(1/Integer(180), pi)
 
 i = I
 j = I

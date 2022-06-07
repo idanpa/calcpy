@@ -31,18 +31,18 @@ def calcpy_input_transformer_post(lines):
            match[1] is not None:
             return match[0]
         if match[3] in vars:
-            if match[4] is None:
+            if getattr(vars[match[3]], 'is_unit_prefix', False):
                 return f'({match[2]}*{match[3]})'
             else:
-                return f'{match[2]}*{match[3]}{match[4]}'
+                return f'{match[2]}*{match[3]}'
         return match[0]
 
-    user_vars = list(ip.ev("locals().keys()"))
+    user_vars = ip.ev("locals()")
     for i in range(len(lines)):
         var_def_pattern = rf'^({var_p})\s*=(.*)'
         vars_match = re.match(var_def_pattern, lines[i])
         if vars_match:
-            user_vars.append(vars_match[1])
+            user_vars[vars_match[1]] = None
 
         latex_pattern = rf'(\$[^$]*\$)'
         if ip.calcpy.parse_latex:
@@ -55,8 +55,8 @@ def calcpy_input_transformer_post(lines):
             lines[i] = lines[i].replace(match, f'({hash(match)})')
 
         if ip.calcpy.implicit_multiply: # asterisk-free multiplication: 4MB => 4*MB
-            # pattern is (format string detection)?(hex number | engineering number | number)(var name)?(operator with higher precedence)?
-            mult_pat = rf'(% ?)?(0x[0-9a-f]*|0X[0-9A-F]*|\d*\.?\d+e-?\d+|\d*\.?\d+)({var_p})?\s*(\*\*|\[|\.)?'
+            # pattern is (format string detection)?(hex number | engineering number | number)(var name)?
+            mult_pat = rf'(% ?)?(0x[0-9a-f]*|0X[0-9A-F]*|\d*\.?\d+e-?\d+|\d*\.?\d+)({var_p})?'
             lines[i] = re.sub(mult_pat, partial(re_sub_mult_replace, vars=user_vars), lines[i])
 
         for match in latex_matches:
