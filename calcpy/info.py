@@ -50,7 +50,16 @@ def print_more_info(res):
 
             simple = sympy.simplify(res)
             if simple != res:
-                print(f'\n{sympy.printing.pretty(sympy.simplify(res))} = simplify(_)')
+                print(f'\n{sympy.printing.pretty(simple)} = simplify(_)')
+
+            trigsimp = sympy.trigsimp(res)
+            if trigsimp != res:
+                print(f'\n{sympy.printing.pretty(trigsimp)} = trigsimp(_)')
+
+            expand_trig = sympy.expand_trig(res)
+            if expand_trig != res:
+                print(f'\n{sympy.printing.pretty(expand_trig)} = expand_trig(_)')
+
         elif isinstance(res, sympy.matrices.common.MatrixCommon):
             if res.rows == res.cols:
                 print(f'\n{sympy.printing.pretty(sympy.det(res))} = det(_)')
