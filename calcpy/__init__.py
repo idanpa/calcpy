@@ -56,7 +56,10 @@ def load_ipython_extension(ip:IPython.InteractiveShell):
     ip.show_usage = show_usage
 
     ip.push(importlib.import_module('calcpy.user').__dict__, interactive=False)
-    ip.enable_pylab(gui='qt', import_all=False)
+    try:
+        ip.enable_pylab(gui='qt', import_all=False)
+    except ImportError:
+        pass # no gui
 
     calcpy.formatters.init(ip)
     calcpy.transformers.init(ip)
