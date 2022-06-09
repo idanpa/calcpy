@@ -43,7 +43,7 @@ def sympy_expr_formatter(s, printer, cycle):
     sp.baseline = sp.height()//2
     if not isinstance(s, (sympy.core.numbers.Integer, sympy.core.numbers.Float)):
         simpl_s = sympy.printing.pretty(sympy.simplify(s))
-        if pretty_s != simpl_s:
+        if simpl_s != pretty_s:
             sp = stringPict(*sp.right(" = "))
             simpl_sp = stringPict(simpl_s)
             simpl_sp.baseline = simpl_sp.height()//2
@@ -56,7 +56,7 @@ def sympy_expr_formatter(s, printer, cycle):
                 print(f'eval exception {e}')
         else:
             evalu_s = sympy.printing.pretty(evalu)
-            if evalu_s != simpl_s:
+            if evalu_s != simpl_s and evalu_s != pretty_s:
                 sp = stringPict(*sp.right(" ≈ "))
                 evalu_sp = stringPict(evalu_s)
                 evalu_sp.baseline = evalu_sp.height()//2
