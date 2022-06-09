@@ -14,7 +14,25 @@ optional: dateparser antlr-python-runtime numpy
 ```
 $ calcpy
 ```
+[Examples](docs/examples.md) | [Try online](https://replit.com/@idanp/CalcPy?embed=true)
+
 ## Features
+
+* Everything is imported and ready to use (see [user.py](calcpy/user.py))  
+  `x`,`y`,`t` are real, `z` is complex, `m`,`n`,`l` are integers (affects plotting and other)
+* Display both symbolic and numeric solutions
+* Integers displayed as decimal, hex and binary
+* Tuples are matrices `((1,2),(3,4))**2`        
+* `?` prefix would provide some basic analysis of expression (similar to [WolframAlpha](https://www.wolframalpha.com/))  
+`?((1,2),(3,4))`, `?x**2+1`, `?234` 
+* Implicit multiplication (`2x`, `(x+1)(x-1)` are valid)
+* All variables stored and restored between sessions (so you can set your own constants e.g. `speed_of_light = 299792458`)
+* Currency conversion `10USD` (`calcpy.base_currency='EUR'` to change base currency)
+* Strings automatically converted to datetime `"yesterday at 9 am" - "1990-1-30 9:20"` (using [dateparser](https://github.com/scrapinghub/dateparser))
+* Unit prefixes `G`, `M`, `k`, `m`, `u`, `n`, `p`, `KB`, `MB`, `GB`, `TB` (so `4MB-32KB` or `4G/32n` are valid)
+* Implicit lambda `f(a,b)=a**2+b**2`
+* Latex input `plot($\frac{1,x}$)` (latex output with `latex(1/x)`)
+
 [Python](https://www.python.org/) features:
 * All the basic arithmetic (`+`,`-`,`*`,`/`,`**`)
 * Programmer: `0b10` binary input, `0x1F` hexadecimal input, `//` integer division, `%` modulo, `&` bitwise AND, `|` bitwise OR, `^` bitwise XOR, `~` bitwise not, `>>`/`<<` right/left shift. 
@@ -30,22 +48,6 @@ $ calcpy
 [SymPy](https://www.sympy.org) features:
 * All the elementary (and non-elementry) math functions - `ln`, `sin` etc. 
 * Usefull functions: `diff`, `integrate`, `limit`, `Sum`, `solve`, `plot`, `plot_implicit`
-
-CalcPy features:
-* Everything is imported and ready to use (see [user.py](calcpy/user.py))  
-  `x`,`y`,`t` are real, `z` is complex, `m`,`n`,`l` are integers (affects plotting and other)
-* Display both symbolic and numeric solutions
-* Integers displayed as decimal, hex and binary
-* Tuples are matrices `((1,2),(3,4))**2`        
-* `?` prefix would provide some basic analysis of expression (similar to [WolframAlpha](https://www.wolframalpha.com/))  
-`?((1,2),(3,4))`, `?x**2+1`, `?234` 
-* Implicit multiplication (`2x`, `(x+1)(x-1)` are valid)
-* All variables stored and restored between sessions (so you can set your own constants e.g. `speed_of_light = 299792458`)
-* Currency conversion `10USD` (`calcpy.base_currency='EUR'` to change base currency)
-* Strings automatically converted to datetime `"yesterday at 9 am" - "1990-1-30 9:20"` (using [dateparser](https://github.com/scrapinghub/dateparser))
-* Unit prefixes `G`, `M`, `k`, `m`, `u`, `n`, `p`, `KB`, `MB`, `GB`, `TB` (so `4MB-32KB` or `4G/32n` are valid)
-* Implicit lambda `f(a,b)=a**2+b**2`
-* Latex input `plot($\frac{1,x}$)` (latex output with `latex(1/x)`)
 
 ## Warranty
 Provided "as is", without warranty of any kind 😊
