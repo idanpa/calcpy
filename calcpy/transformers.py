@@ -60,7 +60,7 @@ def calcpy_input_transformer_post(lines):
             lines[i] = re.sub(mult_pat, partial(re_sub_mult_replace, vars=user_vars), lines[i])
 
         for match in latex_matches:
-            lines[i] = lines[i].replace(f'({hash(match)})', f'parse_latex(r"{match[1:-1]}")')
+            lines[i] = lines[i].replace(f'({hash(match)})', f'parse_latex(r"{match[1:-1]}").subs({{symbols("i"):i}})')
 
     if ip.calcpy.auto_prev_ans: # auto substitute previous answer: * a => _ * a
         if lines[0][0] in ['+', '*', '/']: # '-' is ambiguous
