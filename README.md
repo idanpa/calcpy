@@ -1,7 +1,6 @@
 # CalcPy 🧮 🐍
 
-Calculator and advanced math solver in the comfort of your terminal, using Python,   
-IPython and SymPy with tweeks to make it usable as a calculator.
+Calculator and advanced math solver in the comfort of your terminal, using Python, IPython and SymPy with tweeks to make it usable as a calculator.
 
 ## Installation 
 ```
@@ -18,8 +17,8 @@ $ calcpy
 
 ## Features
 
-* Everything is imported and ready to use (see [user.py](calcpy/user.py))  
-  `x`,`y`,`t` are real, `z` is complex, `m`,`n`,`l` are integers (affects plotting and other)
+* SymPy imported and ready to use
+  `x`,`y`,`t` are real, `z` is complex, `m`,`n`,`l` are integers
 * Display both symbolic and numeric solutions
 * Integers displayed as decimal, hex and binary
 * Tuples are matrices `((1,2),(3,4))**2`        
