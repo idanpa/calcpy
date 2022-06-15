@@ -7,12 +7,26 @@ def print_more_info(res):
     terminal_size = shutil.get_terminal_size()
     page = terminal_size.columns * terminal_size.lines
     try:
-        if isinstance(res, sympy.Expr):
+        if isinstance(res, (float, sympy.core.numbers.Float)):
+            print(f'\n{sympy.printing.pretty(sympy.Rational(res))} = Rational(_)')
+        elif isinstance(res, (complex, sympy.core.numbers.Float)):
+            pass
+        elif isinstance(res, (int, sympy.core.numbers.Integer)):
+            f_dict = sympy.factorint(res)
+            f_expr = None
+            for base, expo in f_dict.items():
+                pow = sympy.Pow(base, expo, evaluate=False)
+                if f_expr is None:
+                    f_expr = pow
+                else:
+                    f_expr = sympy.Mul(f_expr, pow, evaluate=False)
+            print(f'\n{sympy.printing.pretty(f_expr)}       {sympy.printing.pretty(f_dict)} = _.factorint()')
+        elif isinstance(res, sympy.Expr):
             if len(res.free_symbols) == 1:
                 sym = list(res.free_symbols)[0]
                 print(f'\n{sympy.printing.pretty(sympy.diff(res))} = diff(_)')
                 integral = sympy.integrate(res)
-                if integral != sympy.Integral(res):
+                if not isinstance(integral, sympy.integrals.integrals.Integral):
                     print(f'\n{sympy.printing.pretty(integral)} = integrate(_)')
                 periodic = sympy.periodicity(res, sym)
                 if periodic is not None:
@@ -80,25 +94,15 @@ def print_more_info(res):
                 if len(diag_print) > page:
                     diag_print = sympy.printing.pretty(list(map(sympy.N, diag)))
                 print(f'\n{diag_print} = _.diagonalize() # (P,D) so _=PDP^-1')
-            else:
-                print(f'\n{sympy.printing.pretty(sympy.rank(res))} = rank(_)')
+            elif res.rows > 1 and res.cols > 1:
+                print(f'\n{sympy.printing.pretty(res.rank())} = _.rank()')
                 print(f'\n{sympy.printing.pretty(res.pinv())} = _.pinv()')
+            else: # vector
+                norm = res.norm()
+                print(f'\n{sympy.printing.pretty(norm)} = _.norm()')
+                print(f'\n{sympy.printing.pretty(res/norm)} = _/_.norm()')
         elif isinstance(res, (list, tuple)):
             pass
-        elif isinstance(res, (float, sympy.core.numbers.Float)):
-            print(f'\n{sympy.printing.pretty(sympy.Rational(res))} = Rational(_)')
-        elif isinstance(res, (complex, sympy.core.numbers.Float)):
-            pass
-        elif isinstance(res, (int, sympy.core.numbers.Integer)):
-            f_dict = sympy.factorint(res)
-            f_expr = None
-            for base, expo in f_dict.items():
-                pow = sympy.Pow(base, expo, evaluate=False)
-                if f_expr is None:
-                    f_expr = pow
-                else:
-                    f_expr = sympy.Mul(f_expr, pow, evaluate=False)
-            print(f'\n{sympy.printing.pretty(f_expr)}       {sympy.printing.pretty(f_dict)} = _.factorint()')
         elif res is not None:
             try:
                 res = sympy.sympify(res)
