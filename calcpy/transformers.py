@@ -59,8 +59,8 @@ def calcpy_input_transformer_post(lines):
             lines[i] = lines[i].replace(match, f'({hash(match)})')
 
         if ip.calcpy.implicit_multiply: # asterisk-free multiplication: 4MB => 4*MB
-            # pattern is (format string detection)?(hex number | engineering number | number)(var name)?
-            mult_pat = rf'(% ?)?(0x[0-9a-f]*|0X[0-9A-F]*|\d*\.?\d+e-?\d+|\d*\.?\d+)({var_p})?'
+            # pattern is (format string detection)?(hex number | engineering number | number | parentheses)(var name)?
+            mult_pat = rf'(% ?)?(0x[0-9a-f]*|0X[0-9A-F]*|\d*\.?\d+e-?\d+|\d*\.?\d+|\))({var_p})?'
             lines[i] = re.sub(mult_pat, partial(re_sub_mult_replace, vars=user_vars), lines[i])
 
         for match in latex_matches:
