@@ -105,6 +105,15 @@ class ReplaceIntWithInteger(ast.NodeTransformer):
                             args=[node], keywords=[])
         return self.generic_visit(node)
 
+class ReplaceFloatWithRational(ast.NodeTransformer):
+    def visit_Constant(self, node):
+        if isinstance(node, ast.Num) and isinstance(node.n, float):
+            return ast.Call(func=ast.Name(id='Rational', ctx=ast.Load()),
+                            args=[ast.Call(func=ast.Name(id='str', ctx=ast.Load()),
+                                           args=[node], keywords=[])],
+                            keywords=[])
+        return self.generic_visit(node)
+
 class ReplaceTupleWithMatrices(ast.NodeTransformer):
     def visit_Tuple(self, node):
         ip = IPython.get_ipython()
@@ -145,6 +154,7 @@ class ReplaceStringsWithDates(ast.NodeTransformer):
 def init(ip: IPython.InteractiveShell):
     # ip.ast_transformers.append(ReplaceIntegerDivisionWithRational())
     ip.ast_transformers.append(ReplaceIntWithInteger())
+    ip.ast_transformers.append(ReplaceFloatWithRational())
     ip.ast_transformers.append(ReplaceTupleWithMatrices())
     if dateparsing:
         ip.ast_transformers.append(ReplaceStringsWithDates())
