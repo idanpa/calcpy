@@ -22,6 +22,7 @@ def int_formatter(integer, printer, cycle):
         if ip.calcpy.bitwidth > 0:
             bitwidth = ip.calcpy.bitwidth
         else:
+            # if calcpy.bitwidth
             for bitwidth in [8, 16, 32, 64, 128]:
                 # TODO: fix for negative numbers:
                 if (integer < (1 << bitwidth)):
@@ -62,33 +63,38 @@ def sympy_expr_formatter(s, printer, cycle):
     pretty_s = sympy.printing.pretty(s)
     sp = stringPict(pretty_s)
     sp.baseline = sp.height()//2
-    if not isinstance(s, (sympy.core.numbers.Integer, sympy.core.numbers.Float)):
-        simpl_s = sympy.printing.pretty(sympy.simplify(s))
-        if simpl_s != pretty_s:
-            sp = stringPict(*sp.right(" = "))
-            simpl_sp = stringPict(simpl_s)
-            simpl_sp.baseline = simpl_sp.height()//2
-            sp = stringPict(*sp.right(simpl_sp))
 
-        doit_s = sympy.printing.pretty(s.doit())
-        if doit_s != simpl_s and doit_s != pretty_s:
-            sp = stringPict(*sp.right(" = "))
-            doit_sp = stringPict(doit_s)
-            doit_sp.baseline = doit_sp.height()//2
-            sp = stringPict(*sp.right(doit_sp))
+    try:
+        if not isinstance(s, (sympy.core.numbers.Integer, sympy.core.numbers.Float)):
+            simpl_s = sympy.printing.pretty(sympy.simplify(s))
+            if simpl_s != pretty_s:
+                sp = stringPict(*sp.right(" = "))
+                simpl_sp = stringPict(simpl_s)
+                simpl_sp.baseline = simpl_sp.height()//2
+                sp = stringPict(*sp.right(simpl_sp))
 
-        try:
-            evalu = sympy.N(s)
-        except Exception as e:
-            if IPython.get_ipython().calcpy.debug:
-                print(f'eval exception {e}')
-        else:
-            evalu_s = sympy.printing.pretty(evalu)
-            if evalu_s != simpl_s and evalu_s != pretty_s:
-                sp = stringPict(*sp.right(" ≈ "))
-                evalu_sp = stringPict(evalu_s)
-                evalu_sp.baseline = evalu_sp.height()//2
-                sp = stringPict(*sp.right(evalu_sp))
+            doit_s = sympy.printing.pretty(s.doit())
+            if doit_s != simpl_s and doit_s != pretty_s:
+                sp = stringPict(*sp.right(" = "))
+                doit_sp = stringPict(doit_s)
+                doit_sp.baseline = doit_sp.height()//2
+                sp = stringPict(*sp.right(doit_sp))
+
+            try:
+                evalu = sympy.N(s)
+            except Exception as e:
+                if IPython.get_ipython().calcpy.debug:
+                    print(f'eval exception {e}')
+            else:
+                evalu_s = sympy.printing.pretty(evalu)
+                if evalu_s != simpl_s and evalu_s != pretty_s:
+                    sp = stringPict(*sp.right(" ≈ "))
+                    evalu_sp = stringPict(evalu_s)
+                    evalu_sp.baseline = evalu_sp.height()//2
+                    sp = stringPict(*sp.right(evalu_sp))
+    except Exception as e:
+        if IPython.get_ipython().calcpy.debug:
+            print(f'expr formatter failed: {e}')
 
     printer.text(sp.render(wrap_line=True, num_columns=None))
 
@@ -127,3 +133,14 @@ def init(ip: IPython.InteractiveShell):
         return int.__format__(int(self), format_spec)
     sympy.Integer.__format__ = integer__format__
 
+    # # fixing sympy prefixes:
+    # def prefix__str__(self):
+    #     return str(self.abbrev)
+    # sympy.physics.units.prefixes.Prefix.__str__ = prefix__str__
+    # sympy.physics.units.prefixes.Prefix.__repr__ = prefix__str__
+    # def prefix_evalf(self, prec=None, **options):
+    #     return self.scale_factor
+    # sympy.physics.units.prefixes.Prefix.evalf = prefix_evalf
+    # def evalf_prefix(expr: 'sympy.physics.units.prefixes.Prefix', prec: int, options: sympy.core.evalf.OPT_DICT) -> sympy.core.evalf.TMP_RES:
+    #     return sympy.core.evalf.evalf_pow(sympy.Pow(expr.base, expr._exponent, evaluate=False), prec, options)
+    # sympy.core.evalf.evalf_table[sympy.physics.units.prefixes.Prefix] = evalf_prefix
