@@ -33,7 +33,7 @@ class CalcPy(IPython.core.magic.Magics):
     auto_prev_ans = traitlets.Bool(True, config=True)
     auto_store_vars = traitlets.Bool(True, config=True)
     auto_matrix = traitlets.Bool(True, config=True)
-    auto_date = traitlets.Bool(True, config=True)
+    auto_date = traitlets.Bool(False, config=True)
     parse_latex = traitlets.Bool(True, config=True)
     bitwidth = traitlets.Int(0, config=True)
 
