@@ -152,6 +152,9 @@ class ReplaceStringsWithDates(ast.NodeTransformer):
         return self.generic_visit(node)
 
 def init(ip: IPython.InteractiveShell):
+    # python might warn about the syntax hacks (on user's code)
+    warnings.filterwarnings("ignore", category=SyntaxWarning)
+
     # ip.ast_transformers.append(ReplaceIntegerDivisionWithRational())
     ip.ast_transformers.append(ReplaceIntWithInteger())
     ip.ast_transformers.append(ReplaceFloatWithRational())
