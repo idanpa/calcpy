@@ -49,6 +49,13 @@ def sympy_expr_formatter(s, printer, cycle):
             simpl_sp.baseline = simpl_sp.height()//2
             sp = stringPict(*sp.right(simpl_sp))
 
+        doit_s = sympy.printing.pretty(s.doit())
+        if doit_s != simpl_s and doit_s != pretty_s:
+            sp = stringPict(*sp.right(" = "))
+            doit_sp = stringPict(doit_s)
+            doit_sp.baseline = doit_sp.height()//2
+            sp = stringPict(*sp.right(doit_sp))
+
         try:
             evalu = sympy.N(s)
         except Exception as e:
@@ -63,7 +70,6 @@ def sympy_expr_formatter(s, printer, cycle):
                 sp = stringPict(*sp.right(evalu_sp))
 
     printer.text(sp.render(wrap_line=True, num_columns=None))
-
 
 def init(ip: IPython.InteractiveShell):
     sympy.interactive.printing.init_printing(
