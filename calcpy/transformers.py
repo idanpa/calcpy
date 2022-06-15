@@ -39,6 +39,10 @@ def calcpy_input_transformer_post(lines):
 
     user_vars = ip.ev("locals()")
     for i in range(len(lines)):
+        lines[i] = lines[i].replace('⋅','*')
+        if ip.calcpy.caret_power:
+            lines[i] = lines[i].replace('^','**')
+
         var_def_pattern = rf'^({var_p})\s*=(.*)'
         vars_match = re.match(var_def_pattern, lines[i])
         if vars_match:
