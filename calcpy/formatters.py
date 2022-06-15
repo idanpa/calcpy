@@ -37,6 +37,27 @@ def datetime_formatter(dt, printer, cycle):
 def str_formatter(s, printer, cycle):
     printer.text(s)
 
+def sympy_list_formatter(s, printer, cycle):
+    pretty_s = sympy.printing.pretty(s)
+    sp = stringPict(pretty_s)
+    sp.baseline = sp.height()//2
+
+    try:
+        options = {}
+        n = 15
+        evalu = [el.evalf(n, **options) if hasattr(el, 'evalf') else el for el in s]
+        evalu_s = sympy.printing.pretty(evalu)
+        if evalu_s != pretty_s:
+            sp = stringPict(*sp.right(" ≈ "))
+            evalu_sp = stringPict(evalu_s)
+            evalu_sp.baseline = evalu_sp.height()//2
+            sp = stringPict(*sp.right(evalu_sp))
+    except Exception as e:
+        if IPython.get_ipython().calcpy.debug:
+            print(f'list formatter failed: {e}')
+
+    printer.text(sp.render(wrap_line=True, num_columns=None))
+
 def sympy_expr_formatter(s, printer, cycle):
     pretty_s = sympy.printing.pretty(s)
     sp = stringPict(pretty_s)
@@ -85,6 +106,8 @@ def init(ip: IPython.InteractiveShell):
     formatter.for_type(complex, complex_formatter)
     formatter.for_type(datetime.datetime, datetime_formatter)
     formatter.for_type(sympy.Expr, sympy_expr_formatter)
+    formatter.for_type(sympy.matrices.common.MatrixCommon, sympy_expr_formatter)
+    formatter.for_type(list, sympy_list_formatter)
     formatter.for_type(sympy.core.function.FunctionClass, IPython.lib.pretty._function_pprint)
 
     # use IPython's float precision
