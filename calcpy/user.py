@@ -39,7 +39,7 @@ MB = IntegerUnitPrefix(2**20)
 GB = IntegerUnitPrefix(2**30)
 TB = IntegerUnitPrefix(2**40)
 
-deg = MulUnitPrefix(1/Integer(180), pi)
+deg = MulUnitPrefix(Rational(1, 180), pi)
 
 i = I
 j = I

@@ -29,7 +29,6 @@ def post_run_cell(result:IPython.core.interactiveshell.ExecutionResult, ip):
     if ip.calcpy.auto_store_vars:
         store_all_user_vars(ip)
 
-
 def init(ip: IPython.InteractiveShell):
     ip.calcpy.init_state = 1
     ip.events.register('post_run_cell', partial(post_run_cell, ip=ip))
