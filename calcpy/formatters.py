@@ -1,3 +1,4 @@
+from functools import partial
 import shutil
 import datetime
 import IPython
@@ -39,7 +40,10 @@ def str_formatter(s, printer, cycle):
     printer.text(s)
 
 def sympy_list_formatter(s, printer, cycle):
-    pretty_s = sympy.printing.pretty(s)
+    terminal_size = shutil.get_terminal_size()
+    pretty = partial(sympy.printing.pretty, num_columns=terminal_size.columns)
+
+    pretty_s = pretty(s)
     sp = stringPict(pretty_s)
     sp.baseline = sp.height()//2
 
@@ -47,7 +51,7 @@ def sympy_list_formatter(s, printer, cycle):
         options = {}
         n = 15
         evalu = [el.evalf(n, **options) if hasattr(el, 'evalf') else el for el in s]
-        evalu_s = sympy.printing.pretty(evalu)
+        evalu_s = pretty(evalu)
         if evalu_s != pretty_s:
             sp = stringPict(*sp.right(" ≈ "))
             evalu_sp = stringPict(evalu_s)
@@ -57,23 +61,26 @@ def sympy_list_formatter(s, printer, cycle):
         if IPython.get_ipython().calcpy.debug:
             print(f'list formatter failed: {e}')
 
-    printer.text(sp.render(wrap_line=True, num_columns=None))
+    printer.text(sp.render(wrap_line=True, num_columns=terminal_size.columns))
 
 def sympy_expr_formatter(s, printer, cycle):
-    pretty_s = sympy.printing.pretty(s)
+    terminal_size = shutil.get_terminal_size()
+    pretty = partial(sympy.printing.pretty, num_columns=terminal_size.columns)
+
+    pretty_s = pretty(s)
     sp = stringPict(pretty_s)
     sp.baseline = sp.height()//2
 
     try:
         if not isinstance(s, (sympy.core.numbers.Integer, sympy.core.numbers.Float)):
-            simpl_s = sympy.printing.pretty(sympy.simplify(s))
+            simpl_s = pretty(sympy.simplify(s))
             if simpl_s != pretty_s:
                 sp = stringPict(*sp.right(" = "))
                 simpl_sp = stringPict(simpl_s)
                 simpl_sp.baseline = simpl_sp.height()//2
                 sp = stringPict(*sp.right(simpl_sp))
 
-            doit_s = sympy.printing.pretty(s.doit())
+            doit_s = pretty(s.doit())
             if doit_s != simpl_s and doit_s != pretty_s:
                 sp = stringPict(*sp.right(" = "))
                 doit_sp = stringPict(doit_s)
@@ -86,7 +93,7 @@ def sympy_expr_formatter(s, printer, cycle):
                 if IPython.get_ipython().calcpy.debug:
                     print(f'eval exception {e}')
             else:
-                evalu_s = sympy.printing.pretty(evalu)
+                evalu_s = pretty(evalu)
                 if evalu_s != simpl_s and evalu_s != pretty_s:
                     sp = stringPict(*sp.right(" ≈ "))
                     evalu_sp = stringPict(evalu_s)
@@ -96,7 +103,7 @@ def sympy_expr_formatter(s, printer, cycle):
         if IPython.get_ipython().calcpy.debug:
             print(f'expr formatter failed: {e}')
 
-    printer.text(sp.render(wrap_line=True, num_columns=None))
+    printer.text(sp.render(wrap_line=True, num_columns=terminal_size.columns))
 
 def init(ip: IPython.InteractiveShell):
     sympy.interactive.printing.init_printing(

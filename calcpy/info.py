@@ -6,9 +6,10 @@ import sympy
 def print_more_info(res):
     terminal_size = shutil.get_terminal_size()
     page = terminal_size.columns * terminal_size.lines
+    pretty = partial(sympy.printing.pretty, num_columns=terminal_size.columns)
     try:
         if isinstance(res, (float, sympy.core.numbers.Float)):
-            print(f'\n{sympy.printing.pretty(sympy.Rational(res))} = Rational(_)')
+            print(f'\n{pretty(sympy.Rational(res))} = Rational(_)')
         elif isinstance(res, (complex, sympy.core.numbers.Float)):
             pass
         elif isinstance(res, (int, sympy.core.numbers.Integer)):
@@ -20,87 +21,87 @@ def print_more_info(res):
                     f_expr = pow
                 else:
                     f_expr = sympy.Mul(f_expr, pow, evaluate=False)
-            print(f'\n{sympy.printing.pretty(f_expr)}       {sympy.printing.pretty(f_dict)} = _.factorint()')
+            print(f'\n{pretty(f_expr)}       {pretty(f_dict)} = _.factorint()')
         elif isinstance(res, sympy.Expr):
             if len(res.free_symbols) == 1:
                 sym = list(res.free_symbols)[0]
-                print(f'\n{sympy.printing.pretty(sympy.diff(res))} = diff(_)')
+                print(f'\n{pretty(sympy.diff(res))} = diff(_)')
                 integral = sympy.integrate(res)
                 if not isinstance(integral, sympy.integrals.integrals.Integral):
-                    print(f'\n{sympy.printing.pretty(integral)} = integrate(_)')
+                    print(f'\n{pretty(integral)} = integrate(_)')
                 periodic = sympy.periodicity(res, sym)
                 if periodic is not None:
-                    print(f'\n{sympy.printing.pretty(periodic)} = periodic(_, {sym})')
+                    print(f'\n{pretty(periodic)} = periodic(_, {sym})')
             elif len(res.free_symbols) > 1:
                 for sym in res.free_symbols:
-                    print(f'\n{sympy.printing.pretty(sympy.diff(res, sym))} = diff(_, {sym})')
+                    print(f'\n{pretty(sympy.diff(res, sym))} = diff(_, {sym})')
                 for sym in res.free_symbols:
-                    print(f'\n{sympy.printing.pretty(sympy.integrate(res, sym))} = integrate(_, {sym})')
+                    print(f'\n{pretty(sympy.integrate(res, sym))} = integrate(_, {sym})')
                 for sym in res.free_symbols:
                     periodic = sympy.periodicity(res, sym)
                     if periodic is not None:
-                        print(f'\n{sympy.printing.pretty(periodic)} = periodic(_, {sym})')
+                        print(f'\n{pretty(periodic)} = periodic(_, {sym})')
 
             try:
                 for sym in res.free_symbols:
-                    print(f'\n{sympy.printing.pretty(sympy.calculus.util.minimum(res, sym))} = calculus.util.minimum(_, {sym})')
-                    print(f'{sympy.printing.pretty(sympy.calculus.util.maximum(res, sym))} = calculus.util.maximum(_, {sym})')
+                    print(f'\n{pretty(sympy.calculus.util.minimum(res, sym))} = calculus.util.minimum(_, {sym})')
+                    print(f'{pretty(sympy.calculus.util.maximum(res, sym))} = calculus.util.maximum(_, {sym})')
             except:
                 pass
 
             try:
                 for sym in res.free_symbols:
-                    print(f'\n{sympy.printing.pretty(sympy.calculus.util.continuous_domain(res, sym, sympy.S.Reals))} = calculus.util.continuous_domain(_, {sym}, S.Reals)')
-                    print(f'{sympy.printing.pretty(sympy.calculus.util.function_range(res, sym, sympy.S.Reals))} = calculus.util.function_range(_, {sym}, S.Reals)')
+                    print(f'\n{pretty(sympy.calculus.util.continuous_domain(res, sym, sympy.S.Reals))} = calculus.util.continuous_domain(_, {sym}, S.Reals)')
+                    print(f'{pretty(sympy.calculus.util.function_range(res, sym, sympy.S.Reals))} = calculus.util.function_range(_, {sym}, S.Reals)')
             except:
                 pass
 
             if len(res.free_symbols) > 0:
                 solutions = sympy.solve(res)
-                solutions_print = sympy.printing.pretty(solutions)
+                solutions_print = pretty(solutions)
                 if len(solutions_print) > page:
-                    solutions_print = sympy.printing.pretty(list(map(sympy.N, solutions)))
+                    solutions_print = pretty(list(map(sympy.N, solutions)))
                 print(f'\n{solutions_print} = solve(_)')
 
             simple = sympy.simplify(res)
             if simple != res:
-                print(f'\n{sympy.printing.pretty(simple)} = simplify(_)')
+                print(f'\n{pretty(simple)} = simplify(_)')
 
             trigsimp = sympy.trigsimp(res)
             if trigsimp != res:
-                print(f'\n{sympy.printing.pretty(trigsimp)} = trigsimp(_)')
+                print(f'\n{pretty(trigsimp)} = trigsimp(_)')
 
             expand_trig = sympy.expand_trig(res)
             if expand_trig != res:
-                print(f'\n{sympy.printing.pretty(expand_trig)} = expand_trig(_)')
+                print(f'\n{pretty(expand_trig)} = expand_trig(_)')
 
         elif isinstance(res, sympy.matrices.common.MatrixCommon):
             if res.rows == res.cols:
-                print(f'\n{sympy.printing.pretty(sympy.det(res))} = det(_)')
-                print(f'{sympy.printing.pretty(sympy.trace(res))} = trace(_)')
+                print(f'\n{pretty(sympy.det(res))} = det(_)')
+                print(f'{pretty(sympy.trace(res))} = trace(_)')
                 try:
-                    print(f'\n{sympy.printing.pretty(res**-1)} = _**-1')
+                    print(f'\n{pretty(res**-1)} = _**-1')
                 except:
                     pass
-                print(f'\n{sympy.printing.pretty(res.charpoly().as_expr())} = _.charpoly().as_expr()')
+                print(f'\n{pretty(res.charpoly().as_expr())} = _.charpoly().as_expr()')
                 evs = res.eigenvects()
-                evs_print = sympy.printing.pretty(evs)
+                evs_print = pretty(evs)
                 if len(evs_print) > page:
                     evs = [(sympy.N(ev[0]), ev[1], tuple(map(sympy.N, ev[2]))) for ev in evs]
-                    evs_print = sympy.printing.pretty(evs)
+                    evs_print = pretty(evs)
                 print(f'\n{evs_print} = _.eigenvects() # ((eval, mult, evec),...')
                 diag = res.diagonalize()
-                diag_print = sympy.printing.pretty(diag)
+                diag_print = pretty(diag)
                 if len(diag_print) > page:
-                    diag_print = sympy.printing.pretty(list(map(sympy.N, diag)))
+                    diag_print = pretty(list(map(sympy.N, diag)))
                 print(f'\n{diag_print} = _.diagonalize() # (P,D) so _=PDP^-1')
             elif res.rows > 1 and res.cols > 1:
-                print(f'\n{sympy.printing.pretty(res.rank())} = _.rank()')
-                print(f'\n{sympy.printing.pretty(res.pinv())} = _.pinv()')
+                print(f'\n{pretty(res.rank())} = _.rank()')
+                print(f'\n{pretty(res.pinv())} = _.pinv()')
             else: # vector
                 norm = res.norm()
-                print(f'\n{sympy.printing.pretty(norm)} = _.norm()')
-                print(f'\n{sympy.printing.pretty(res/norm)} = _/_.norm()')
+                print(f'\n{pretty(norm)} = _.norm()')
+                print(f'\n{pretty(res/norm)} = _/_.norm()')
         elif isinstance(res, (list, tuple)):
             pass
         elif res is not None:
