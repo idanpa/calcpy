@@ -40,8 +40,7 @@ def calcpy_input_transformer_post(lines):
     user_vars = ip.ev("locals()")
     for i in range(len(lines)):
         lines[i] = lines[i].replace('⋅','*')
-        if ip.calcpy.caret_power:
-            lines[i] = lines[i].replace('^','**')
+        lines[i] = lines[i].replace('ⅈ','i') # for implicit mutiply to detect it
 
         var_def_pattern = rf'^({var_p})\s*=(.*)'
         vars_match = re.match(var_def_pattern, lines[i])
@@ -58,9 +57,13 @@ def calcpy_input_transformer_post(lines):
         for match in latex_matches:
             lines[i] = lines[i].replace(match, f'({hash(match)})')
 
+        # need to be here so we won't replace caret on latex
+        if ip.calcpy.caret_power:
+            lines[i] = lines[i].replace('^','**')
+
         if ip.calcpy.implicit_multiply: # asterisk-free multiplication: 4MB => 4*MB
-            # pattern is (format string detection)?(hex number | engineering number | number | parentheses)(var name)?
-            mult_pat = rf'(% ?)?(0x[0-9a-f]*|0X[0-9A-F]*|\d*\.?\d+e-?\d+|\d*\.?\d+|\))({var_p})?'
+            # pattern is (format string detection|middle of name detection)?(hex number | engineering number | number | parentheses)(var name)?
+            mult_pat = rf'(% *|[^\d\W])?(0x[0-9a-f]*|0X[0-9A-F]*|\d*\.?\d+e-?\d+|\d*\.?\d+|\))({var_p})?'
             lines[i] = re.sub(mult_pat, partial(re_sub_mult_replace, vars=user_vars), lines[i])
 
         for match in latex_matches:
