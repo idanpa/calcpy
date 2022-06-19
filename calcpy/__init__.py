@@ -67,9 +67,8 @@ def load_ipython_extension(ip:IPython.InteractiveShell):
     calcpy.currency.init(ip)
     calcpy.info.init(ip)
     calcpy.autostore.init(ip)
-
-    # terminal title:
-    sys.stdout.write("\x1b]2;CalcPy\x07")
+    if callable(ip.user_ns.get('user_startup', None)):
+        ip.ev('user_startup()')
 
 if __name__ == '__main__':
     load_ipython_extension(IPython.get_ipython())

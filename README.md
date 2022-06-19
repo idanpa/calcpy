@@ -43,6 +43,7 @@ $ calcpy
 * `who_ls` see all defined variables
 * Prompt history with `up`/`down`, search with `ctrl+r`
 * Autocomplete with `tab`
+* Edit custom startup script with `%edit user_startup`
 
 [SymPy](https://www.sympy.org) features:
 * All the elementary (and non-elementry) math functions - `ln`, `sin` etc. 

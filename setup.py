@@ -19,7 +19,7 @@ class post_setup(install):
             raise ValueError('IPython was not found, abort')
         p = subprocess.run(['ipython', 'locate', 'profile', calcpy.CALCPY_PROFILE_NAME], stdout=subprocess.PIPE)
         if p.returncode == 0:
-            calcpy_profile_path = p.stdout.decode()
+            calcpy_profile_path = p.stdout.decode().strip()
             print(f'calcpy profile already exist in {calcpy_profile_path}')
         else:
             print('CalcPy IPython profile was not found, creating profile.')
@@ -28,8 +28,13 @@ class post_setup(install):
                 raise ValueError('CalcPy IPython profile creation failed')
 
             p = subprocess.run(['ipython', 'locate', 'profile', calcpy.CALCPY_PROFILE_NAME], stdout=subprocess.PIPE)
-            calcpy_profile_path = p.stdout.decode()
+            calcpy_profile_path = p.stdout.decode().strip()
             print(f'calcpy profile is in {calcpy_profile_path}')
+        try:
+            with open(os.path.join(calcpy_profile_path, 'startup', 'user_startup.py'), 'x') as f:
+                f.write('def user_startup():\n    pass')
+        except FileExistsError:
+            pass
 
 with open('README.md', 'r', encoding="utf8") as f:
     long_description = f.read()
