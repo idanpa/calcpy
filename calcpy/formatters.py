@@ -39,13 +39,27 @@ def datetime_formatter(dt, printer, cycle):
 def str_formatter(s, printer, cycle):
     printer.text(s)
 
+def pretty_stack(str1, relation, str2, num_columns):
+    sp1 = stringPict(str1)
+    sp1.baseline = sp1.height()//2
+    sp2 = stringPict(str2)
+    sp2.baseline = sp2.height()//2
+    sp2 = stringPict(*sp2.left(relation))
+
+    if sp1.width() > .75*num_columns or \
+       sp2.width() > .75*num_columns  or \
+       sp1.width() + sp2.width() > num_columns:
+        return sp1.render(wrap_line=True, num_columns=num_columns) + '\n\n' + \
+               sp2.render(wrap_line=True, num_columns=num_columns)
+    else:
+        return stringPict(*sp1.right(sp2)).render(wrap_line=True, num_columns=num_columns)
+
 def sympy_list_formatter(s, printer, cycle):
-    terminal_size = shutil.get_terminal_size()
-    pretty = partial(sympy.printing.pretty, num_columns=terminal_size.columns)
+    num_columns = shutil.get_terminal_size().columns
+    pretty = partial(sympy.printing.pretty, num_columns=num_columns)
 
     pretty_s = pretty(s)
-    sp = stringPict(pretty_s)
-    sp.baseline = sp.height()//2
+    out = pretty_s
 
     try:
         options = {}
@@ -53,57 +67,39 @@ def sympy_list_formatter(s, printer, cycle):
         evalu = [el.evalf(n, **options) if hasattr(el, 'evalf') else el for el in s]
         evalu_s = pretty(evalu)
         if evalu_s != pretty_s:
-            sp = stringPict(*sp.right(" ≈ "))
-            evalu_sp = stringPict(evalu_s)
-            evalu_sp.baseline = evalu_sp.height()//2
-            sp = stringPict(*sp.right(evalu_sp))
+            out = pretty_stack(out, " ≈ ", evalu_s, num_columns)
     except Exception as e:
         if IPython.get_ipython().calcpy.debug:
             print(f'list formatter failed: {e}')
 
-    printer.text(sp.render(wrap_line=True, num_columns=terminal_size.columns))
+    printer.text(out)
 
 def sympy_expr_formatter(s, printer, cycle):
-    terminal_size = shutil.get_terminal_size()
-    pretty = partial(sympy.printing.pretty, num_columns=terminal_size.columns)
+    num_columns = shutil.get_terminal_size().columns
+    pretty = partial(sympy.printing.pretty, num_columns=num_columns)
 
     pretty_s = pretty(s)
-    sp = stringPict(pretty_s)
-    sp.baseline = sp.height()//2
+    out = pretty_s
 
     try:
         if not isinstance(s, (sympy.core.numbers.Integer, sympy.core.numbers.Float)):
             simpl_s = pretty(sympy.simplify(s))
             if simpl_s != pretty_s:
-                sp = stringPict(*sp.right(" = "))
-                simpl_sp = stringPict(simpl_s)
-                simpl_sp.baseline = simpl_sp.height()//2
-                sp = stringPict(*sp.right(simpl_sp))
+                out = pretty_stack(out, " = ", simpl_s, num_columns)
 
             doit_s = pretty(s.doit())
             if doit_s != simpl_s and doit_s != pretty_s:
-                sp = stringPict(*sp.right(" = "))
-                doit_sp = stringPict(doit_s)
-                doit_sp.baseline = doit_sp.height()//2
-                sp = stringPict(*sp.right(doit_sp))
+                out = pretty_stack(out, " = ", doit_s, num_columns)
 
-            try:
-                evalu = sympy.N(s)
-            except Exception as e:
-                if IPython.get_ipython().calcpy.debug:
-                    print(f'eval exception {e}')
-            else:
-                evalu_s = pretty(evalu)
-                if evalu_s != simpl_s and evalu_s != pretty_s:
-                    sp = stringPict(*sp.right(" ≈ "))
-                    evalu_sp = stringPict(evalu_s)
-                    evalu_sp.baseline = evalu_sp.height()//2
-                    sp = stringPict(*sp.right(evalu_sp))
+            evalu = sympy.N(s)
+            evalu_s = pretty(evalu)
+            if evalu_s != simpl_s and evalu_s != pretty_s:
+                out = pretty_stack(out, " ≈ ", evalu_s, num_columns)
     except Exception as e:
         if IPython.get_ipython().calcpy.debug:
             print(f'expr formatter failed: {e}')
 
-    printer.text(sp.render(wrap_line=True, num_columns=terminal_size.columns))
+    printer.text(out)
 
 def init(ip: IPython.InteractiveShell):
     sympy.interactive.printing.init_printing(
