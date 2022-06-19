@@ -2,10 +2,9 @@
 
 import setuptools
 from setuptools.command.install import install
-import subprocess
-import shutil
 import sys
 import os
+import IPython
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 import calcpy
@@ -13,23 +12,11 @@ import calcpy
 class post_setup(install):
     def run(self):
         install.run(self)
-        print('Installing calcpy profile')
-        # TODO: do it with the ipython module (in python), would make sure it is using the ipython of the existing env
-        if shutil.which('ipython') is None:
-            raise ValueError('IPython was not found, abort')
-        p = subprocess.run(['ipython', 'locate', 'profile', calcpy.CALCPY_PROFILE_NAME], stdout=subprocess.PIPE)
-        if p.returncode == 0:
-            calcpy_profile_path = p.stdout.decode().strip()
-            print(f'calcpy profile already exist in {calcpy_profile_path}')
-        else:
-            print('CalcPy IPython profile was not found, creating profile.')
-            p = subprocess.run(['ipython', 'profile', 'create', calcpy.CALCPY_PROFILE_NAME], stdout=subprocess.PIPE)
-            if p.returncode != 0:
-                raise ValueError('CalcPy IPython profile creation failed')
-
-            p = subprocess.run(['ipython', 'locate', 'profile', calcpy.CALCPY_PROFILE_NAME], stdout=subprocess.PIPE)
-            calcpy_profile_path = p.stdout.decode().strip()
-            print(f'calcpy profile is in {calcpy_profile_path}')
+        try:
+            calcpy_profile_path = IPython.paths.locate_profile(calcpy.CALCPY_PROFILE_NAME)
+        except OSError:
+            IPython.core.profiledir.ProfileDir.create_profile_dir_by_name(IPython.paths.get_ipython_dir(), calcpy.CALCPY_PROFILE_NAME)
+            calcpy_profile_path = IPython.paths.locate_profile(calcpy.CALCPY_PROFILE_NAME)
         try:
             with open(os.path.join(calcpy_profile_path, 'startup', 'user_startup.py'), 'x') as f:
                 f.write('def user_startup():\n    pass')
