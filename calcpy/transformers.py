@@ -66,6 +66,10 @@ def calcpy_input_transformer_post(lines):
             mult_pat = rf'(% *|[^\d\W])?(0x[0-9a-f]*|0X[0-9A-F]*|\d*\.?\d+e-?\d+|\d*\.?\d+|\))({var_p})?'
             lines[i] = re.sub(mult_pat, partial(re_sub_mult_replace, vars=user_vars), lines[i])
 
+            # pattern is (right parentheses)(hex number | engineering number | number)
+            mult_pat = rf'(\))(0x[0-9a-f]*|0X[0-9A-F]*|\d*\.?\d+e-?\d+|\d*\.?\d+)'
+            lines[i] = re.sub(mult_pat, rf'\1*\2', lines[i])
+
         for match in latex_matches:
             lines[i] = lines[i].replace(f'({hash(match)})', f'parse_latex(r"{match[1:-1]}").subs({{symbols("i"):i}})')
 
