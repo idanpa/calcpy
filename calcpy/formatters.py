@@ -83,15 +83,17 @@ def sympy_expr_formatter(s, printer, cycle):
 
     try:
         if not isinstance(s, (sympy.core.numbers.Integer, sympy.core.numbers.Float)):
-            simpl_s = pretty(sympy.simplify(s))
+            simpl = sympy.simplify(s)
+            simpl_s = pretty(simpl)
             if simpl_s != pretty_s:
                 out = pretty_stack(out, " = ", simpl_s, num_columns)
 
-            doit_s = pretty(s.doit())
+            doit = s.doit()
+            doit_s = pretty(doit)
             if doit_s != simpl_s and doit_s != pretty_s:
                 out = pretty_stack(out, " = ", doit_s, num_columns)
 
-            evalu = sympy.N(s)
+            evalu = sympy.N(simpl)
             evalu_s = pretty(evalu)
             if evalu_s != simpl_s and evalu_s != pretty_s:
                 out = pretty_stack(out, " ≈ ", evalu_s, num_columns)
