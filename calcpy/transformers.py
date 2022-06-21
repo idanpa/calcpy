@@ -74,6 +74,8 @@ def calcpy_input_transformer_post(lines):
             lines[0] = '_' + lines[0]
 
     def lambda_replace(match):
+        if match[1] in ip.user_ns_hidden:
+            raise ValueError(f"Can't override internal '{match[1]}'")
         return match[1] + '= lambda ' +  match[2] + ':' + match[3]
 
     if ip.calcpy.auto_lambda: # easier lambda: f(x,y) = x + y => f = lambda x, y : x + y
