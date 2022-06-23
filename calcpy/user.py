@@ -7,6 +7,7 @@ try:
     import matplotlib.pyplot as plt
 except ModuleNotFoundError:
     pass
+
 import sympy
 from sympy.parsing.latex import parse_latex
 from sympy import *
@@ -15,6 +16,8 @@ Re = re                 # avoid conflict with python re
 Im = im
 import re
 from sympy.stats import *
+from sympy.plotting import plot3d
+
 import datetime
 
 class UnitPrefix():
