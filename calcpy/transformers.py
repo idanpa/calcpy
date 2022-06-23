@@ -156,6 +156,20 @@ class ReplaceStringsWithDates(ast.NodeTransformer):
                     keywords=[])
         return self.generic_visit(node)
 
+def syntax_error_handler(ip: IPython.InteractiveShell, etype, value, tb, tb_offset=None):
+    if etype is SyntaxError and tb.tb_next and not tb.tb_next.tb_next:
+        if 'cannot assign to ' in str(value):
+            try:
+                code = ip.user_ns['In'][-1]
+            except (KeyError, IndexError):
+                pass
+            else:
+                code = re.sub(rf'(.*[^=])=([^=].*)', rf'solve(Eq(\1, \2))', code)
+                ip.run_cell(code, store_history=False)
+                return None
+    ip.showsyntaxerror()
+    return None
+
 def init(ip: IPython.InteractiveShell):
     # python might warn about the syntax hacks (on user's code)
     warnings.filterwarnings("ignore", category=SyntaxWarning)
@@ -168,6 +182,8 @@ def init(ip: IPython.InteractiveShell):
         ip.ast_transformers.append(ReplaceStringsWithDates())
     ip.input_transformers_cleanup.append(calcpy_input_transformer_cleanup)
     ip.input_transformers_post.append(calcpy_input_transformer_post)
+
+    ip.set_custom_exc((SyntaxError,), syntax_error_handler)
 
     def sympy_expr_call(self, *args):
         if len(args) != 1:
