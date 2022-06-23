@@ -77,6 +77,9 @@ def print_info_job(res):
             if expand_trig != res:
                 print(f'\n{pretty(expand_trig)} = expand_trig(_)')
 
+            doit = res.doit()
+            if doit != res:
+                print(f'\n{pretty(doit)} = _.doit()')
         elif isinstance(res, sympy.matrices.common.MatrixCommon):
             if res.rows == res.cols:
                 print(f'\n{pretty(sympy.det(res))} = det(_)')
