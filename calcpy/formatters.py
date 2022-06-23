@@ -88,11 +88,6 @@ def sympy_expr_formatter(s, printer, cycle):
             if simpl_s != pretty_s:
                 out = pretty_stack(out, " = ", simpl_s, num_columns)
 
-            doit = s.doit()
-            doit_s = pretty(doit)
-            if doit_s != simpl_s and doit_s != pretty_s:
-                out = pretty_stack(out, " = ", doit_s, num_columns)
-
             evalu = sympy.N(simpl)
             evalu_s = pretty(evalu)
             if evalu_s != simpl_s and evalu_s != pretty_s:
