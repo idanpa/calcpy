@@ -31,7 +31,6 @@ class CalcPy(IPython.core.magic.Magics):
     implicit_multiply = traitlets.Bool(True, config=True)
     caret_power = traitlets.Bool(False, config=True)
     auto_lambda = traitlets.Bool(True, config=True)
-    auto_prev_ans = traitlets.Bool(True, config=True)
     auto_store_vars = traitlets.Bool(True, config=True)
     auto_matrix = traitlets.Bool(True, config=True)
     auto_date = traitlets.Bool(False, config=True)

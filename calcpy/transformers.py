@@ -73,10 +73,6 @@ def calcpy_input_transformer_post(lines):
         for match in latex_matches:
             lines[i] = lines[i].replace(f'({hash(match)})', f'parse_latex(r"{match[1:-1]}").subs({{symbols("i"):i}})')
 
-    if ip.calcpy.auto_prev_ans: # auto substitute previous answer: * a => _ * a
-        if lines[0][0] in ['+', '*', '/']: # '-' is ambiguous
-            lines[0] = '_' + lines[0]
-
     def lambda_replace(match):
         if match[1] in ip.user_ns_hidden:
             raise ValueError(f"Can't override internal '{match[1]}'")
