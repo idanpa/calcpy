@@ -31,7 +31,7 @@ Out[1]:
 ```
 Detailed information about matrix:
 ```
-?((1,2),(2,3))
+In [1]: ?((1,2),(2,3))
 ```
 
 ## Calculus
@@ -43,23 +43,32 @@ Out[1]: cos(x)
 
 Detailed information about function:
 ```
-?e**(x**2)
+In [1]: ?e**(x**2)
+```
+
+This is equivalent to `solve(Eq(8x**2+2x-10,0))`
+```
+In [1]: 8x**2+2x-10 = 0
+Out[1]: [-5/4, 1] ≈ [-1.25, 1]
 ```
 
 ## Plotting
 ```
-plot(sin(x))
+In [1]: plot(sin(x))
 ```
 <!-- multiple plots on a single chart (set legend) -->
 save the last figure with
 ```
-plt.savefig('fig.png')
+In [1]: plt.savefig('fig.png')
 ```
 
 ## Programmer
 ```
 In [1]: (34MB - 7000KB)/2MB
-Out[1]: 13.58203125
+Out[1]:  
+3477
+──── ≈ 13.582
+256
 ```
 
 ```
@@ -96,12 +105,6 @@ cos(x)   sin(x)
            x
 In [3]: latex(_)
 Out[3]: \frac{\cos{\left(x \right)}}{x} - \frac{\sin{\left(x \right)}}{x^{2}}
-```
-
-## Calculus
-```
-In [8]: solve(8x**2+2x-10)
-Out[8]: [-5/4, 1]
 ```
 
 ## Misc

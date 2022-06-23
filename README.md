@@ -1,23 +1,22 @@
-# CalcPy 🧮 🐍
+# CalcPy
 
-Calculator and advanced math solver in the comfort of your terminal, using Python, IPython and SymPy with tweeks to make it usable as a calculator.
+Calculator and advanced math solver in the comfort of your terminal using Python, IPython and SymPy.
 
 ## Installation 
 ```
 pip install git+https://github.com/idanpa/calcpy
 ```
-requirements: ipython sympy matplotlib   
-optional: dateparser antlr-python-runtime numpy  
 [Android installation](docs/android.md)
 ## Usage
 ```
 $ calcpy
 ```
-[Examples](docs/examples.md) | [Try online](https://replit.com/@idanp/CalcPy?embed=true)
+[Examples](docs/examples.md)  
+[Try online](https://replit.com/@idanp/CalcPy?embed=true)
 
 ## Features
-
-* SymPy imported and ready to use
+Just an IPython shell with:
+* SymPy imported and ready to use  
   `x`,`y`,`t` are real, `z` is complex, `m`,`n`,`l` are integers
 * Display both symbolic and numeric solutions
 * Integers displayed as decimal, hex and binary
@@ -32,22 +31,22 @@ $ calcpy
 * Implicit lambda `f(a,b)=a**2+b**2`
 * Latex input `plot($\frac{1,x}$)` (latex output with `latex(1/x)`)
 
-[Python](https://www.python.org/) features:
-* All the basic arithmetic (`+`,`-`,`*`,`/`,`**`)
-* Programmer: `0b10` binary input, `0x1F` hexadecimal input, `//` integer division, `%` modulo, `&` bitwise AND, `|` bitwise OR, `^` bitwise XOR, `~` bitwise not, `>>`/`<<` right/left shift. 
-* Complex numbers (`j`/`i`)
+[SymPy](https://www.sympy.org):
+* All the elementary (and non-elementry) math functions and constants - `ln`, `sin`, `e`, `pi` etc. 
+* Calculus, algebra, plotting - `diff`, `integrate`, `limit`, `Sum`, `solve`, `plot`, `plot_implicit` etc.
 
-[IPython](https://ipython.org) features:
-* Get last result with `_`, or using cell number `_4` (`Out[4]` works too) 
+[IPython](https://ipython.org):
+* Get last result with `_`, get specific cell `_12` (`Out[12]` works too) 
 * `func_name?` show docs for func_name
 * `who_ls` see all defined variables
 * Prompt history with `up`/`down`, search with `ctrl+r`
 * Autocomplete with `tab`
 * Edit custom startup script with `%edit user_startup`
 
-[SymPy](https://www.sympy.org) features:
-* All the elementary (and non-elementry) math functions - `ln`, `sin` etc. 
-* Usefull functions: `diff`, `integrate`, `limit`, `Sum`, `solve`, `plot`, `plot_implicit`
+[Python](https://www.python.org/):
+* All the basic arithmetic (`+`,`-`,`*`,`/`,`**`)
+* Programmer: `0b10` binary input, `0x1F` hexadecimal input, `//` integer division, `%` modulo, `&` bitwise AND, `|` bitwise OR, `^` bitwise XOR, `~` bitwise not, `>>`/`<<` right/left shift. 
+* Complex numbers (`j`/`i`)
 
 ## Warranty
 Provided "as is", without warranty of any kind 😊
