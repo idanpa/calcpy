@@ -3,10 +3,12 @@ import IPython
 import shutil
 import sympy
 
-def print_more_info(res):
+def print_info_job(res):
     terminal_size = shutil.get_terminal_size()
     page = terminal_size.columns * terminal_size.lines
     pretty = partial(sympy.printing.pretty, num_columns=terminal_size.columns)
+
+    sympy.printing.pretty_print(res)
     try:
         if isinstance(res, (float, sympy.core.numbers.Float)):
             print(f'\n{pretty(sympy.Rational(res))} = Rational(_)')
@@ -107,17 +109,16 @@ def print_more_info(res):
         elif res is not None:
             try:
                 res = sympy.sympify(res)
-                print_more_info(res)
+                print_info_job(res)
             except sympy.SympifyError:
                 pass
 
     except Exception as e:
         print(e)
 
-def post_run_cell(result:IPython.core.interactiveshell.ExecutionResult, ip):
-    if ip.calcpy.info_asked and result.success and result.result is not None:
-        ip.calcpy.jobs.new(print_more_info, result.result, daemon=True)
+def print_info(res):
+    ip = IPython.get_ipython()
+    ip.calcpy.jobs.new(print_info_job, res, daemon=True)
 
 def init(ip:IPython.InteractiveShell):
-    ip.events.register('post_run_cell', partial(post_run_cell, ip=ip))
-    ip.calcpy.info_asked = False
+    pass

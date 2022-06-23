@@ -20,6 +20,8 @@ from sympy.plotting import plot3d
 
 import datetime
 
+from calcpy.info import print_info
+
 class UnitPrefix():
     is_unit_prefix = True
 class IntegerUnitPrefix(Integer, UnitPrefix):

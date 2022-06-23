@@ -13,11 +13,9 @@ except ModuleNotFoundError:
 
 def calcpy_input_transformer_cleanup(lines):
     ip = IPython.get_ipython()
-    if (lines[0] != '?\n' and lines[0][0] == '?'):
-        ip.calcpy.info_asked = True
-        lines[0] = lines[0][1:]
-    else:
-        ip.calcpy.info_asked = False
+    if (lines[0][0] == '?' and lines[0][1] not in '?\n'):
+        lines[0] = 'print_info(' + lines[0][1:]
+        lines[-1] += ')'
     return lines
 
 def calcpy_input_transformer_post(lines):
