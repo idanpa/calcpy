@@ -133,14 +133,3 @@ def init(ip: IPython.InteractiveShell):
         return int.__format__(int(self), format_spec)
     sympy.Integer.__format__ = integer__format__
 
-    # # fixing sympy prefixes:
-    # def prefix__str__(self):
-    #     return str(self.abbrev)
-    # sympy.physics.units.prefixes.Prefix.__str__ = prefix__str__
-    # sympy.physics.units.prefixes.Prefix.__repr__ = prefix__str__
-    # def prefix_evalf(self, prec=None, **options):
-    #     return self.scale_factor
-    # sympy.physics.units.prefixes.Prefix.evalf = prefix_evalf
-    # def evalf_prefix(expr: 'sympy.physics.units.prefixes.Prefix', prec: int, options: sympy.core.evalf.OPT_DICT) -> sympy.core.evalf.TMP_RES:
-    #     return sympy.core.evalf.evalf_pow(sympy.Pow(expr.base, expr._exponent, evaluate=False), prec, options)
-    # sympy.core.evalf.evalf_table[sympy.physics.units.prefixes.Prefix] = evalf_prefix

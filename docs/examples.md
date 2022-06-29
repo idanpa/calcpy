@@ -99,10 +99,10 @@ sin(x)
   x
 In [2]: diff(_)
 Out[2]: 
-cos(x)   sin(x)
-────── - ──────
-  x         2
-           x
+cos(x)   sin(x)   x⋅cos(x) - sin(x)
+────── - ──────   ─────────────────
+  x         2   =          2
+           x              x
 In [3]: latex(_)
 Out[3]: \frac{\cos{\left(x \right)}}{x} - \frac{\sin{\left(x \right)}}{x^{2}}
 ```

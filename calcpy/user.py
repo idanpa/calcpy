@@ -14,6 +14,8 @@ from sympy import *
 e = E                   # avoid conflict with sympy.stats expectation
 Re = re                 # avoid conflict with python re
 Im = im
+Re.__name__ = 'Re'
+Im.__name__ = 'Im'
 import re
 from sympy.stats import *
 from sympy.plotting import plot3d
