@@ -5,7 +5,20 @@ import IPython
 import argparse
 import subprocess
 import shutil
-import multiprocessing
+import os
+
+def start_ipython(args, conn):
+    # os.sys.stdout = conn
+    os.sys.__stdout__ = conn
+    IPython.start_ipython(args)
+
+class ConnStream():
+    def __init__(self, conn):
+        self.conn = conn
+    def write(self, obj):
+        self.conn.send(obj)
+    def flush(self):
+        pass
 
 def main():
     parser = argparse.ArgumentParser()
@@ -19,7 +32,7 @@ def main():
         print(f"CalcPy {calcpy.__version__}")
         return 0
 
-    ipython_cmd = [
+    ipython_args = [
         "--TerminalIPythonApp.display_banner=False",
         "--InteractiveShell.separate_in=",
         #--InteractiveShellApp.extra_extensions is only supported from 7.10
@@ -33,15 +46,16 @@ def main():
     ]
 
     if args.debug:
-        ipython_cmd.append("--CalcPy.debug=True")
-        ipython_cmd.append("--TerminalInteractiveShell.xmode=verbose")
+        ipython_args.append("--CalcPy.debug=True")
+        ipython_args.append("--TerminalInteractiveShell.xmode=verbose")
 
     if args.command:
-        ipython_cmd.append(f"--InteractiveShellApp.code_to_run={args.command}")
+        ipython_args.append(f"--InteractiveShellApp.code_to_run={args.command}")
 
-    ipython_cmd.extend(args_reminder)
+    ipython_args.extend(args_reminder)
 
     if args.gui:
+        # need jupyter_client==6.1.12
         jupyter_path = shutil.which('jupyter')
         if jupyter_path is None:
             raise Exception('Jupyter was not found')
@@ -54,24 +68,24 @@ def main():
             "--JupyterQtConsoleApp.hide_menubar=True",
             "--JupyterWidget.input_sep=",
         ]
-        ipython_cmd.insert(0, "kernel")
+        ipython_args.insert(0, "kernel")
+        import multiprocessing
+        import re
+
+        parent_conn, child_conn = multiprocessing.Pipe()
+        ipython_proc = multiprocessing.Process(target=start_ipython, args=(ipython_args, ConnStream(child_conn)))
         try:
-            ipython_proc = multiprocessing.Process(target=IPython.start_ipython, args=(ipython_cmd,))
             ipython_proc.start()
-
-            # TODO: sanity check on ipython process
-            # TODO: nicer way to wait for ipython to be ready
-            import time
-            time.sleep(3)
-            # TODO: race, would connect to the most recent kernel, would be nicer to get json name from ipython process
-            # need jupyter_client==6.1.12 to work
-            qtconsole_cmd.append(f"--existing")
-
+            ipython_stdout = ''
+            while not (match := re.search('(--existing.*)\n', ipython_stdout, re.MULTILINE)):
+                if parent_conn.poll(0.1):
+                    ipython_stdout += parent_conn.recv()
+            qtconsole_cmd.append(match[1].replace(' ', '='))
             subprocess.run(qtconsole_cmd)
         finally:
             ipython_proc.terminate()
     else:
-        IPython.start_ipython(ipython_cmd)
+        IPython.start_ipython(ipython_args)
 
 if __name__ == "__main__":
     main()
