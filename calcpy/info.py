@@ -8,8 +8,10 @@ def print_info_job(res):
     page = terminal_size.columns * terminal_size.lines
     pretty = partial(sympy.printing.pretty, num_columns=terminal_size.columns)
 
-    sympy.printing.pretty_print(res)
     try:
+        res_p = pretty(res)
+        print(res_p)
+
         if isinstance(res, (float, sympy.core.numbers.Float)):
             print(f'\n{pretty(sympy.Rational(res))} = Rational(_)')
         elif isinstance(res, (complex, sympy.core.numbers.Float)):
@@ -25,6 +27,7 @@ def print_info_job(res):
                     f_expr = sympy.Mul(f_expr, pow, evaluate=False)
             print(f'\n{pretty(f_expr)}       {pretty(f_dict)} = _.factorint()')
         elif isinstance(res, sympy.Expr):
+            # sympy.factor(res, extension=[i]) could be nice (when len(res.free_symbols) >= 1) but not working most of the time
             if len(res.free_symbols) == 1:
                 sym = list(res.free_symbols)[0]
                 print(f'\n{pretty(sympy.diff(res))} = diff(_)')
@@ -34,6 +37,10 @@ def print_info_job(res):
                 periodic = sympy.periodicity(res, sym)
                 if periodic is not None:
                     print(f'\n{pretty(periodic)} = periodic(_, {sym})')
+
+                # w = sympy.symbols('w')
+                # inverse = sympy.solve(sympy.Eq(res.subs(sym, w), sym),w)
+
             elif len(res.free_symbols) > 1:
                 for sym in res.free_symbols:
                     print(f'\n{pretty(sympy.diff(res, sym))} = diff(_, {sym})')
@@ -42,21 +49,23 @@ def print_info_job(res):
                 for sym in res.free_symbols:
                     periodic = sympy.periodicity(res, sym)
                     if periodic is not None:
-                        print(f'\n{pretty(periodic)} = periodic(_, {sym})')
+                        print(f'\n{pretty(periodic)} = periodicity(_, {sym})')
 
-            try:
-                for sym in res.free_symbols:
-                    print(f'\n{pretty(sympy.calculus.util.minimum(res, sym))} = calculus.util.minimum(_, {sym})')
-                    print(f'{pretty(sympy.calculus.util.maximum(res, sym))} = calculus.util.maximum(_, {sym})')
-            except:
-                pass
+            # takes forever sometimes
+            # try:
+            #     for sym in res.free_symbols:
+            #         print(f'\n{pretty(sympy.calculus.util.minimum(res, sym))} = calculus.util.minimum(_, {sym})')
+            #         print(f'{pretty(sympy.calculus.util.maximum(res, sym))} = calculus.util.maximum(_, {sym})')
+            # except:
+            #     pass
 
-            try:
-                for sym in res.free_symbols:
-                    print(f'\n{pretty(sympy.calculus.util.continuous_domain(res, sym, sympy.S.Reals))} = calculus.util.continuous_domain(_, {sym}, S.Reals)')
-                    print(f'{pretty(sympy.calculus.util.function_range(res, sym, sympy.S.Reals))} = calculus.util.function_range(_, {sym}, S.Reals)')
-            except:
-                pass
+            # takes forever sometimes
+            # try:
+            #     for sym in res.free_symbols:
+            #         print(f'\n{pretty(sympy.calculus.util.continuous_domain(res, sym, sympy.S.Reals))} = calculus.util.continuous_domain(_, {sym}, S.Reals)')
+            #         print(f'{pretty(sympy.calculus.util.function_range(res, sym, sympy.S.Reals))} = calculus.util.function_range(_, {sym}, S.Reals)')
+            # except:
+            #     pass
 
             if len(res.free_symbols) > 0:
                 solutions = sympy.solve(res)
@@ -69,6 +78,10 @@ def print_info_job(res):
             if simple != res:
                 print(f'\n{pretty(simple)} = simplify(_)')
 
+            apart = sympy.apart(res)
+            if apart != res:
+                print(f'\n{pretty(apart)} = apart(_)')
+
             trigsimp = sympy.trigsimp(res)
             if trigsimp != res:
                 print(f'\n{pretty(trigsimp)} = trigsimp(_)')
@@ -80,6 +93,10 @@ def print_info_job(res):
             doit = res.doit()
             if doit != res:
                 print(f'\n{pretty(doit)} = _.doit()')
+
+            N_p = pretty(sympy.N(res))
+            if N_p != res_p:
+                print(f'\n{N_p} = N(_)')
         elif isinstance(res, sympy.matrices.common.MatrixCommon):
             if res.rows == res.cols:
                 print(f'\n{pretty(sympy.det(res))} = det(_)')
@@ -118,6 +135,8 @@ def print_info_job(res):
 
     except Exception as e:
         print(e)
+        return e
+    return res
 
 def print_info(res):
     ip = IPython.get_ipython()
