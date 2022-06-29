@@ -23,7 +23,7 @@ def calcpy_input_transformer_post(lines):
     var_p = r'[^\d\W]\w*' # match any valid variable name
 
     def re_sub_mult_replace(match, vars):
-        # check var is not none, vae not e (since 2e-4 is ambiguous) and this is not a format specifier
+        # check var is not none, vae not e (since 2e-4 is ambiguous) and this is not a format specifier/middle of name
         if match[3] is None or \
            match[3].lower() == 'e' or \
            match[1] is not None:
@@ -60,12 +60,12 @@ def calcpy_input_transformer_post(lines):
             lines[i] = lines[i].replace('^','**')
 
         if ip.calcpy.implicit_multiply: # asterisk-free multiplication: 4MB => 4*MB
-            # pattern is (format string detection|middle of name detection)?(hex number | engineering number | number | parentheses)(var name)?
-            mult_pat = rf'(% *|[^\d\W])?(0x[0-9a-f]*|0X[0-9A-F]*|\d*\.?\d+e-?\d+|\d*\.?\d+|\))({var_p})?'
+            # pattern is (format string detection|middle of name detection)?(hex number | engineering number | number)(var name)?
+            mult_pat = rf'(% *|[^\d\W])?(0x[0-9a-f]*|0X[0-9A-F]*|\d*\.?\d+e-?\d+|\d*\.?\d+)({var_p})?'
             lines[i] = re.sub(mult_pat, partial(re_sub_mult_replace, vars=user_vars), lines[i])
 
-            # pattern is (right parentheses)(hex number | engineering number | number)
-            mult_pat = rf'(\))(0x[0-9a-f]*|0X[0-9A-F]*|\d*\.?\d+e-?\d+|\d*\.?\d+)'
+            # pattern is (right parentheses)(hex number | engineering number | number | var name)
+            mult_pat = rf'(\))(0x[0-9a-f]*|0X[0-9A-F]*|\d*\.?\d+e-?\d+|\d*\.?\d+|{var_p})'
             lines[i] = re.sub(mult_pat, rf'\1*\2', lines[i])
 
         for match in latex_matches:
