@@ -78,7 +78,10 @@ def calcpy_input_transformer_post(lines):
 
     if ip.calcpy.auto_lambda: # easier lambda: f(x,y) = x + y => f = lambda x, y : x + y
         lambda_pattern = rf'^({var_p})\(((?:{var_p}\s*,?\s*)*)\)\s*=([^=].*)'
-        lines[0] = re.sub(lambda_pattern, lambda_replace, lines[0])
+        try:
+            lines[0] = re.sub(lambda_pattern, lambda_replace, lines[0])
+        except ValueError as ve:
+            return [f"raise ValueError(\"{str(ve)}\")"]
 
     return lines
 
