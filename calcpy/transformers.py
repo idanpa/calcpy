@@ -45,6 +45,13 @@ def calcpy_input_transformer_post(lines):
         if vars_match:
             user_vars[vars_match[1]] = None
 
+        python_string_pattern = rf'("[^"]*"|\'[^\']*\')'
+        python_string_matches = re.findall(python_string_pattern, lines[i])
+        python_string_matches = set(python_string_matches)
+        # avoid processing of strings
+        for match in python_string_matches:
+            lines[i] = lines[i].replace(match, f'({hash(match)})')
+
         latex_pattern = rf'(\$[^$]*\$)'
         if ip.calcpy.parse_latex:
             latex_matches = re.findall(latex_pattern, lines[i])
@@ -70,6 +77,9 @@ def calcpy_input_transformer_post(lines):
 
         for match in latex_matches:
             lines[i] = lines[i].replace(f'({hash(match)})', f'parse_latex(r"{match[1:-1]}").subs({{symbols("i"):i}})')
+
+        for match in python_string_matches:
+            lines[i] = lines[i].replace(f'({hash(match)})', match)
 
     def lambda_replace(match):
         if match[1] in ip.user_ns_hidden:
