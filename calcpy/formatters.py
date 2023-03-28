@@ -36,6 +36,9 @@ def complex_formatter(c, printer, cycle):
 def datetime_formatter(dt, printer, cycle):
     printer.text(dt.isoformat())
 
+def timedelta_formatter(td, printer, cycle):
+    printer.text(str(td))
+
 def str_formatter(s, printer, cycle):
     printer.text(s)
 
@@ -111,6 +114,7 @@ def init(ip: IPython.InteractiveShell):
     formatter.for_type(sympy.Integer, int_formatter)
     formatter.for_type(complex, complex_formatter)
     formatter.for_type(datetime.datetime, datetime_formatter)
+    formatter.for_type(datetime.timedelta, timedelta_formatter)
     formatter.for_type(sympy.Expr, sympy_expr_formatter)
     formatter.for_type(sympy.matrices.common.MatrixCommon, sympy_expr_formatter)
     formatter.for_type(list, sympy_list_formatter)
