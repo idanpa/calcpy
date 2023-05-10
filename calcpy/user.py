@@ -20,6 +20,9 @@ import re
 from sympy.stats import *
 from sympy.plotting import plot3d
 
+# aliases:
+choose = binomial
+
 import datetime
 
 from calcpy.info import print_info

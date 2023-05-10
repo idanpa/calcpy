@@ -38,7 +38,7 @@ def calcpy_input_transformer_post(lines):
     user_vars = ip.ev("locals()")
     for i in range(len(lines)):
         lines[i] = lines[i].replace('⋅','*')
-        lines[i] = lines[i].replace('ⅈ','i') # for implicit mutiply to detect it
+        lines[i] = lines[i].replace('ⅈ','i') # for implicit multiply to detect it
 
         var_def_pattern = rf'^({var_p})\s*=(.*)'
         vars_match = re.match(var_def_pattern, lines[i])
@@ -209,6 +209,7 @@ def init(ip: IPython.InteractiveShell):
             raise TypeError(f'Expected {len(sorted_symbols)} arguments {sorted_symbols}')
         return self.subs(zip(sorted_symbols, args))
 
+    # monkey patches
     sympy.Expr.__call__ = sympy_expr_call
     sympy.Expr.__getitem__ = sympy_expr_getitem
     # don't consider expressions as iterables: (see iterable() in sympy\utilities\iterables.py)
