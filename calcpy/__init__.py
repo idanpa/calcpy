@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-from pkg_resources import get_distribution, DistributionNotFound
+from importlib.metadata import version, PackageNotFoundError
+
 try:
-    __version__ = get_distribution('calcpy').version
-except DistributionNotFound:
-    __version__ = '0.0.0'
+    __version__ = version('calcpy')
+except PackageNotFoundError:
+    __version__ = 'no-package'
+    pass
 
 CALCPY_PROFILE_NAME = 'calcpy'
 
