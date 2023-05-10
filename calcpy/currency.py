@@ -254,13 +254,18 @@ country_to_currency = {
 }
 
 # currencies supported by european central bank api:
-# USD, JPY, BGN, CZK, DKK, GBP, HUF, PLN, RON, SEK, CHF, ISK, NOK, HRK, TRY, AUD, BRL, CAD, CNY, HKD, IDR, ILS, INR, KRW, MXN, MYR, NZD, PHP, SGD, THB, ZAR
+SUPPORTED_CURRENCIES = sorted(['EUR', 'USD', 'JPY', 'BGN', 'CZK', 'DKK', 'GBP', 'HUF', 'PLN', 'RON', 'SEK', 'CHF', 'ISK', 'NOK', 'HRK', 'TRY', 'AUD', 'BRL', 'CAD', 'CNY', 'HKD', 'IDR', 'ILS', 'INR', 'KRW', 'MXN', 'MYR', 'NZD', 'PHP', 'SGD', 'THB', 'ZAR'])
 
 BASE_CURRENCY_VAR_NAME = 'base_currency'
 COMMON_CURRENCIES_VAR_NAME = 'common_currencies'
 
+def check_currency(curr):
+    if curr not in SUPPORTED_CURRENCIES:
+        raise ValueError(f'Unexpected "{curr}", supported currencies are: {", ".join(SUPPORTED_CURRENCIES)}')
+
 def set_base_currency(calcpy, base_curr, update=True):
     base_curr = base_curr.upper()
+    check_currency(base_curr)
     calcpy.shell.push({BASE_CURRENCY_VAR_NAME: base_curr})
     with redirect_stdout(None):
         calcpy.shell.run_line_magic('store', BASE_CURRENCY_VAR_NAME)
@@ -283,6 +288,8 @@ def get_base_currency(calcpy):
 
 def set_common_currencies(calcpy, comm_currs, update=True):
     comm_currs = list(map(str.upper, comm_currs))
+    for curr in comm_currs:
+        check_currency(curr)
     calcpy.shell.push({COMMON_CURRENCIES_VAR_NAME: comm_currs})
     with redirect_stdout(None):
         calcpy.shell.run_line_magic('store', COMMON_CURRENCIES_VAR_NAME)
