@@ -341,7 +341,7 @@ def update_currency_job(ip):
             set_rates(ip.calcpy)
         except Exception as e:
             print(f'update currency job failed with: {e}')
-        sleep(60*60*12)
+        sleep(60*60*12) # 12 hours
 
 def init(ip:IPython.InteractiveShell):
     type(ip.calcpy).base_currency = property(get_base_currency, set_base_currency)

@@ -12,7 +12,6 @@ except ModuleNotFoundError:
     dateparsing = False
 
 def calcpy_input_transformer_cleanup(lines):
-    ip = IPython.get_ipython()
     if (lines[0][0] == '?' and lines[0][1] not in '?\n'):
         lines[0] = 'print_info(' + lines[0][1:]
         lines[-1] += ')'
@@ -40,10 +39,11 @@ def calcpy_input_transformer_post(lines):
         lines[i] = lines[i].replace('⋅','*')
         lines[i] = lines[i].replace('ⅈ','i') # for implicit multiply to detect it
 
+        # make sure we consider newly introduced variables:
         var_def_pattern = rf'^({var_p})\s*=(.*)'
         vars_match = re.match(var_def_pattern, lines[i])
         if vars_match:
-            user_vars[vars_match[1]] = None
+            user_vars.setdefault(vars_match[1], None)
 
         python_string_pattern = rf'("[^"]*"|\'[^\']*\')'
         python_string_matches = re.findall(python_string_pattern, lines[i])

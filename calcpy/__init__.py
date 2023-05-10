@@ -5,7 +5,6 @@ try:
     __version__ = version('calcpy')
 except PackageNotFoundError:
     __version__ = 'no-package'
-    pass
 
 CALCPY_PROFILE_NAME = 'calcpy'
 
@@ -48,7 +47,7 @@ class CalcPy(IPython.core.magic.Magics):
 
 def load_ipython_extension(ip:IPython.InteractiveShell):
     if ip.profile != CALCPY_PROFILE_NAME:
-        print(f"warning: Not using the pycalc profile (current profile is {ip.profile}")
+        print(f'warning: Not using the {CALCPY_PROFILE_NAME} profile (current profile is {ip.profile}')
 
     ip.calcpy = CalcPy(ip)
     ip.push({'calcpy': ip.calcpy}, interactive=False)
