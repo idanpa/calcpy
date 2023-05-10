@@ -28,7 +28,6 @@ with open('README.md', 'r', encoding="utf8") as f:
 
 setuptools.setup(
     name='calcpy',
-    version='0.0.1',
     author='Idan Pazi',
     author_email='idan.kp@gmail.com',
     url='https://github.com/idanp/calcpy',
@@ -51,6 +50,8 @@ setuptools.setup(
         ## for dates: dateparser
         ## for parse_latex(): antlr4-python3-runtime (pip), antlr-python-runtime (conda)
     ],
+    use_scm_version=True,
+    setup_requires=['setuptools_scm'],
     license='MIT License',
     zip_safe=False,
     keywords=['calculator',],
