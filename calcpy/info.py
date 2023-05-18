@@ -2,6 +2,7 @@ from functools import partial
 import IPython
 import shutil
 import sympy
+from contextlib import suppress
 
 def print_info_job(res):
     terminal_size = shutil.get_terminal_size()
@@ -34,9 +35,9 @@ def print_info_job(res):
                 integral = sympy.integrate(res)
                 if not isinstance(integral, sympy.integrals.integrals.Integral):
                     print(f'\n{pretty(integral)} = integrate(_)')
-                periodic = sympy.periodicity(res, sym)
-                if periodic is not None:
-                    print(f'\n{pretty(periodic)} = periodic(_, {sym})')
+                period = sympy.periodicity(res, sym)
+                if period is not None:
+                    print(f'\n{pretty(period)} = periodicity(_, {sym})')
 
                 # w = sympy.symbols('w')
                 # inverse = sympy.solve(sympy.Eq(res.subs(sym, w), sym),w)
@@ -47,9 +48,14 @@ def print_info_job(res):
                 for sym in res.free_symbols:
                     print(f'\n{pretty(sympy.integrate(res, sym))} = integrate(_, {sym})')
                 for sym in res.free_symbols:
-                    periodic = sympy.periodicity(res, sym)
-                    if periodic is not None:
-                        print(f'\n{pretty(periodic)} = periodicity(_, {sym})')
+                    period = sympy.periodicity(res, sym)
+                    if period is not None:
+                        print(f'\n{pretty(period)} = periodicity(_, {sym})')
+
+            if res.is_polynomial():
+                factored = sympy.polys.polytools.factor(res, gaussian=True)
+                if factored != res:
+                    print(f'\n{pretty(factored)} = factor(_, gaussian=True)')
 
             # takes forever sometimes
             # try:
@@ -78,9 +84,10 @@ def print_info_job(res):
             if simple != res:
                 print(f'\n{pretty(simple)} = simplify(_)')
 
-            apart = sympy.apart(res)
-            if apart != res:
-                print(f'\n{pretty(apart)} = apart(_)')
+            with suppress(NotImplementedError):
+                apart = sympy.apart(res)
+                if apart != res:
+                    print(f'\n{pretty(apart)} = apart(_)')
 
             trigsimp = sympy.trigsimp(res)
             if trigsimp != res:
@@ -89,6 +96,10 @@ def print_info_job(res):
             expand_trig = sympy.expand_trig(res)
             if expand_trig != res:
                 print(f'\n{pretty(expand_trig)} = expand_trig(_)')
+
+            expand = sympy.expand(res)
+            if expand != res:
+                print(f'\n{pretty(expand)} = expand(_)')
 
             doit = res.doit()
             if doit != res:
@@ -112,11 +123,12 @@ def print_info_job(res):
                     evs = [(sympy.N(ev[0]), ev[1], tuple(map(sympy.N, ev[2]))) for ev in evs]
                     evs_print = pretty(evs)
                 print(f'\n{evs_print} = _.eigenvects() # ((eval, mult, evec),...')
-                diag = res.diagonalize()
-                diag_print = pretty(diag)
-                if len(diag_print) > page:
-                    diag_print = pretty(list(map(sympy.N, diag)))
-                print(f'\n{diag_print} = _.diagonalize() # (P,D) so _=PDP^-1')
+                with suppress(sympy.matrices.matrices.MatrixError):
+                    diag = res.diagonalize()
+                    diag_print = pretty(diag)
+                    if len(diag_print) > page:
+                        diag_print = pretty(list(map(sympy.N, diag)))
+                    print(f'\n{diag_print} = _.diagonalize() # (P,D) so _=PDP^-1')
             elif res.rows > 1 and res.cols > 1:
                 print(f'\n{pretty(res.rank())} = _.rank()')
                 print(f'\n{pretty(res.pinv())} = _.pinv()')
@@ -134,7 +146,7 @@ def print_info_job(res):
                 pass
 
     except Exception as e:
-        print(e)
+        print(repr(e))
         return e
     return res
 

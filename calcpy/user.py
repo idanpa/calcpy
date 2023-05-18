@@ -13,7 +13,7 @@ from sympy.parsing.latex import parse_latex
 from sympy import *
 e = E                   # avoid conflict with sympy.stats expectation
 Re = re                 # avoid conflict with python re
-Im = im
+Im = im                 # just to be consistent
 Re.__name__ = 'Re'
 Im.__name__ = 'Im'
 import re
@@ -22,11 +22,15 @@ from sympy.plotting import plot3d
 
 # aliases:
 choose = binomial
+π = pi
+i = I
+j = I
 
 import datetime
 
 from calcpy.info import print_info
 
+# units manipulation:
 class UnitPrefix():
     is_unit_prefix = True
 class IntegerUnitPrefix(Integer, UnitPrefix):
@@ -51,13 +55,12 @@ TB = IntegerUnitPrefix(2**40)
 
 deg = MulUnitPrefix(Rational(1, 180), pi)
 
-i = I
-j = I
-
+# variables:
 x, y, t = symbols('x y t', real=True)
 z = symbols('z', complex=True)
 m, n, l = symbols('m n l', integer=True)
 
+# user functions:
 def popcount(x):
     return bin(x).count('1')
 
