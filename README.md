@@ -19,7 +19,7 @@ Just an IPython shell with:
 * SymPy imported and ready to use  
   `x`,`y`,`t` are real, `z` is complex, `m`,`n`,`l` are integers
 * Display both symbolic and numeric solutions
-* Integers displayed as decimal, hex and binary
+* Integers displayed as decimal, hex and binary (control size with `calcpy.bitwidth`)
 * Tuples are matrices `((1,2),(3,4))**2`        
 * `?` prefix would provide some basic analysis of expression (similar to [WolframAlpha](https://www.wolframalpha.com/))  
 `?((1,2),(3,4))`, `?x**2+1`, `?234` 

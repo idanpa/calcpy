@@ -12,7 +12,16 @@ def _bin(integer, bitwidth):
     return _bin_pad(format(integer, f'0{bitwidth}b'))
 
 def _hex(integer, bitwidth):
-    return hex(integer)
+    hexwidth = (bitwidth + 3) // 4
+    return '0x' + format(integer, f'0{hexwidth}x')
+
+def _twos_complement_to_int(machine_integer, bitwidth):
+    last_bit = 1 << (bitwidth-1)
+    return -(machine_integer & last_bit) | (machine_integer & (last_bit-1))
+
+def twos_complement_bin_to_int(binary_str):
+    binary_str = binary_str.replace(' ', '')
+    return _twos_complement_to_int(int(binary_str, 2), len(binary_str))
 
 def int_formatter(integer, printer, cycle):
     ip = IPython.get_ipython()
@@ -23,12 +32,17 @@ def int_formatter(integer, printer, cycle):
         if ip.calcpy.bitwidth > 0:
             bitwidth = ip.calcpy.bitwidth
         else:
-            # if calcpy.bitwidth
             for bitwidth in [8, 16, 32, 64, 128]:
-                # TODO: fix for negative numbers:
-                if (integer < (1 << bitwidth)):
+                if (-(1 << (bitwidth-1))) <= integer <= ((1 << (bitwidth-1))-1):
                         break
-        printer.text('{0:<13} {1:<16} {2}'.format(integer, _hex(integer, bitwidth), _bin(integer, bitwidth)))
+        # python bitwise is already acting on the two's complement
+        machine_integer = integer & ((1 << bitwidth) - 1)
+
+        of = ' '
+        if _twos_complement_to_int(machine_integer, bitwidth) != integer:
+            of = '≠'
+
+        printer.text(f'{integer:<12} {of}{_hex(machine_integer, bitwidth):<15} {of}{_bin(machine_integer, bitwidth)}')
 
 def complex_formatter(c, printer, cycle):
     printer.text(c.__repr__().strip('()').replace('j','i'))

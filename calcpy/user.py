@@ -61,6 +61,8 @@ z = symbols('z', complex=True)
 m, n, l = symbols('m n l', integer=True)
 
 # user functions:
+from calcpy.formatters import twos_complement_bin_to_int
+
 def popcount(x):
     return bin(x).count('1')
 
