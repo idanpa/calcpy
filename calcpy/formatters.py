@@ -71,23 +71,58 @@ def pretty_stack(str1, relation, str2, num_columns):
     else:
         return stringPict(*sp1.right(sp2)).render(wrap_line=True, num_columns=num_columns)
 
-def sympy_list_formatter(s, printer, cycle):
+def sympy_iterable_formatter(iterable, printer, cycle):
     num_columns = shutil.get_terminal_size().columns
     pretty = partial(sympy.printing.pretty, num_columns=num_columns)
 
-    pretty_s = pretty(s)
+    pretty_s = pretty(iterable)
     out = pretty_s
 
     try:
         options = {}
         n = 15
-        evalu = [el.evalf(n, **options) if hasattr(el, 'evalf') else el for el in s]
+        evalu = [el.evalf(n, **options) if hasattr(el, 'evalf') else el for el in iterable]
         evalu_s = pretty(evalu)
         if evalu_s != pretty_s:
             out = pretty_stack(out, " ≈ ", evalu_s, num_columns)
     except Exception as e:
         if IPython.get_ipython().calcpy.debug:
-            print(f'list formatter failed: {e}')
+            print(f'iterable formatter failed: {e}')
+
+    printer.text(out)
+
+def sympy_dict_formatter(dict, printer, cycle):
+    num_columns = shutil.get_terminal_size().columns
+    pretty = partial(sympy.printing.pretty, num_columns=num_columns)
+
+    pretty_s = pretty(dict)
+    out = pretty_s
+
+    try:
+        worth_printing = False
+        evalf_dict = {}
+        options = {}
+        n = 15
+        for key in dict:
+            if hasattr(key, 'evalf'):
+                evalf_key = key.evalf(n, **options)
+                if pretty(evalf_key) !=  pretty(key):
+                    worth_printing = True
+            else:
+                evalf_key = key
+
+            if hasattr(dict[key], 'evalf'):
+                evalf_dict[evalf_key] = dict[key].evalf(n, **options)
+                if pretty(evalf_dict[evalf_key]) !=  pretty(dict[key]):
+                    worth_printing = True
+            else:
+                evalf_dict[evalf_key] = dict[key]
+
+        if worth_printing:
+            out = pretty_stack(out, " ≈ ", pretty(evalf_dict), num_columns)
+    except Exception as e:
+        if IPython.get_ipython().calcpy.debug:
+            print(f'dictionary formatter failed: {e}')
 
     printer.text(out)
 
@@ -131,7 +166,9 @@ def init(ip: IPython.InteractiveShell):
     formatter.for_type(datetime.timedelta, timedelta_formatter)
     formatter.for_type(sympy.Expr, sympy_expr_formatter)
     formatter.for_type(sympy.matrices.common.MatrixCommon, sympy_expr_formatter)
-    formatter.for_type(list, sympy_list_formatter)
+    formatter.for_type(list, sympy_iterable_formatter)
+    formatter.for_type(tuple, sympy_iterable_formatter)
+    formatter.for_type(dict, sympy_dict_formatter)
     formatter.for_type(sympy.core.function.FunctionClass, IPython.lib.pretty._function_pprint)
 
     # use IPython's float precision
