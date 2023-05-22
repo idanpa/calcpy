@@ -71,6 +71,10 @@ def pretty_stack(str1, relation, str2, num_columns):
     else:
         return stringPict(*sp1.right(sp2)).render(wrap_line=True, num_columns=num_columns)
 
+def sympy_evalf_options():
+    calcpy = IPython.get_ipython().calcpy
+    return {'chop': calcpy.chop}
+
 def sympy_iterable_formatter(iterable, printer, cycle):
     num_columns = shutil.get_terminal_size().columns
     pretty = partial(sympy.printing.pretty, num_columns=num_columns)
@@ -79,7 +83,7 @@ def sympy_iterable_formatter(iterable, printer, cycle):
     out = pretty_s
 
     try:
-        options = {}
+        options = sympy_evalf_options()
         n = 15
         evalu = [el.evalf(n, **options) if hasattr(el, 'evalf') else el for el in iterable]
         evalu_s = pretty(evalu)
@@ -101,7 +105,7 @@ def sympy_dict_formatter(dict, printer, cycle):
     try:
         worth_printing = False
         evalf_dict = {}
-        options = {}
+        options = sympy_evalf_options()
         n = 15
         for key in dict:
             if hasattr(key, 'evalf'):

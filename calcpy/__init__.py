@@ -38,6 +38,7 @@ class CalcPy(IPython.core.magic.Magics):
     auto_date = traitlets.Bool(False, config=True)
     parse_latex = traitlets.Bool(True, config=True)
     bitwidth = traitlets.Int(0, config=True)
+    chop = traitlets.Bool(True, config=True)
     precision = property(
         lambda calcpy: calcpy.shell.run_line_magic('precision', ''),
         lambda calcpy, p: calcpy.shell.run_line_magic('precision', p))
