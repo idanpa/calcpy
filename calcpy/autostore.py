@@ -2,6 +2,8 @@ from functools import partial
 import types
 from contextlib import redirect_stdout
 import IPython
+import inspect
+import sys
 
 def store_all_user_vars(ip:IPython.InteractiveShell):
     # defer variable store only when init is done
@@ -13,12 +15,16 @@ def store_all_user_vars(ip:IPython.InteractiveShell):
     who_ls = ip.run_line_magic('who_ls', '')
 
     for variable_name in who_ls:
-        t = type(ip.user_ns[variable_name])
-        if t in [types.FunctionType, types.ModuleType, type]:
+        v = ip.user_ns[variable_name]
+        t = type(v)
+        if t in [types.ModuleType, type]:
             continue
         try:
-            with redirect_stdout(None): # can't stop store from printing
-                ip.run_line_magic('store', f'{variable_name}')
+            if t == types.FunctionType:
+                ip.db['autostore_func/' + v.__name__] = inspect.getsource(v)
+            else:
+                with redirect_stdout(None): # can't stop store from printing
+                    ip.run_line_magic('store', f'{variable_name}')
         except Exception as e:
             if ip.calcpy.debug:
                 print(f'Storing variable {variable_name}={ip.user_ns[variable_name]} of type {type(ip.user_ns[variable_name])}\n'+
@@ -32,4 +38,13 @@ def post_run_cell(result:IPython.core.interactiveshell.ExecutionResult, ip):
 def init(ip: IPython.InteractiveShell):
     ip.calcpy.init_state = 1
     ip.events.register('post_run_cell', partial(post_run_cell, ip=ip))
+
+    for key in ip.db.keys('autostore_func/*'):
+        try:
+            func_code = ip.db[key]
+        except KeyError:
+            print("Unable to restore variable '%s', ignoring (use %%store -d to forget!)" % key)
+            print("The error was:", sys.exc_info()[0])
+        else:
+            ip.ex(func_code)
 
