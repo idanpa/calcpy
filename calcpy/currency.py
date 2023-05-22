@@ -256,8 +256,8 @@ country_to_currency = {
 # currencies supported by european central bank api:
 SUPPORTED_CURRENCIES = sorted(['EUR', 'USD', 'JPY', 'BGN', 'CZK', 'DKK', 'GBP', 'HUF', 'PLN', 'RON', 'SEK', 'CHF', 'ISK', 'NOK', 'HRK', 'TRY', 'AUD', 'BRL', 'CAD', 'CNY', 'HKD', 'IDR', 'ILS', 'INR', 'KRW', 'MXN', 'MYR', 'NZD', 'PHP', 'SGD', 'THB', 'ZAR'])
 
-BASE_CURRENCY_VAR_NAME = 'base_currency'
-COMMON_CURRENCIES_VAR_NAME = 'common_currencies'
+BASE_CURRENCY_VAR_PATH = 'calcpy/base_currency'
+COMMON_CURRENCIES_VAR_PATH = 'calcpy/common_currencies'
 
 def check_currency(curr):
     if curr not in SUPPORTED_CURRENCIES:
@@ -266,15 +266,13 @@ def check_currency(curr):
 def set_base_currency(calcpy, base_curr, update=True):
     base_curr = base_curr.upper()
     check_currency(base_curr)
-    calcpy.shell.push({BASE_CURRENCY_VAR_NAME: base_curr})
-    autostore.store(calcpy.shell, BASE_CURRENCY_VAR_NAME)
+    calcpy.shell.db[BASE_CURRENCY_VAR_PATH] = base_curr
     if update:
         set_rates(calcpy)
 
 def get_base_currency(calcpy):
-    base_curr = calcpy.shell.user_ns.get(BASE_CURRENCY_VAR_NAME, None)
-    if base_curr is not None:
-        return base_curr
+    if BASE_CURRENCY_VAR_PATH in calcpy.shell.db:
+        return calcpy.shell.db[BASE_CURRENCY_VAR_PATH]
 
     resp = requests.get('http://ipinfo.io/json')
     country = resp.json()['country']
@@ -289,15 +287,13 @@ def set_common_currencies(calcpy, comm_currs, update=True):
     comm_currs = list(map(str.upper, comm_currs))
     for curr in comm_currs:
         check_currency(curr)
-    calcpy.shell.push({COMMON_CURRENCIES_VAR_NAME: comm_currs})
-    autostore.store(calcpy.shell, COMMON_CURRENCIES_VAR_NAME)
+    calcpy.shell.db[COMMON_CURRENCIES_VAR_PATH] = comm_currs
     if update:
         set_rates(calcpy)
 
 def get_common_currencies(calcpy):
-    comm_currs = calcpy.shell.user_ns.get(COMMON_CURRENCIES_VAR_NAME, None)
-    if comm_currs is not None:
-        return comm_currs
+    if COMMON_CURRENCIES_VAR_PATH in calcpy.shell.db:
+        return calcpy.shell.db[COMMON_CURRENCIES_VAR_PATH]
 
     comm_currs = ["USD", "EUR", "GBP", "CNY" , "JPY"]
     set_common_currencies(calcpy, comm_currs, update=False)
@@ -344,10 +340,6 @@ def update_currency_job(ip):
 def init(ip:IPython.InteractiveShell):
     type(ip.calcpy).base_currency = property(get_base_currency, set_base_currency)
     type(ip.calcpy).common_currencies = property(get_common_currencies, set_common_currencies)
-
-    # TODO: don't use user ns for these, should be just in some specific calcpy db directly
-    ip.user_ns_hidden[BASE_CURRENCY_VAR_NAME] = ip.user_ns[BASE_CURRENCY_VAR_NAME]
-    ip.user_ns_hidden[COMMON_CURRENCIES_VAR_NAME] = ip.user_ns[COMMON_CURRENCIES_VAR_NAME]
 
     ip.calcpy.jobs.new(update_currency_job, ip, daemon=True)
 
