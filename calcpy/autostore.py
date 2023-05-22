@@ -5,38 +5,50 @@ import IPython
 import inspect
 import sys
 
-def store(ip:IPython.InteractiveShell, variable_name, verbose=True):
-        variable = ip.user_ns[variable_name]
-        variable_type = type(variable)
-        if variable_type in [types.ModuleType, type]:
+def store(ip:IPython.InteractiveShell, var_name, verbose=True):
+        var = ip.user_ns[var_name]
+        if type(var) in [types.ModuleType, type]:
             return False
 
-        if variable_type == types.FunctionType:
-            variable_path = 'autostore_func/' + variable_name
-            variable = inspect.getsource(variable)
+        if type(var) == types.FunctionType:
+            var_path = 'autostore_func/' + var_name
+            var = inspect.getsource(var)
         else:
-            variable_path = 'autostore/' + variable_name
+            var_path = 'autostore/' + var_name
 
         try:
-            ip.db[variable_path] = variable
+            ip.db[var_path] = var
         except Exception as e:
             if verbose:
-                print(f'Failed to store {variable_name}={variable} of type {variable_type}: {repr(e)}')
-            del ip.db[variable_path]
+                print(f'Failed to store {var_name}={var} of type {type(var)}: {repr(e)}')
+            del ip.db[var_path]
             return False
         return True
 
+def remove(ip:IPython.InteractiveShell, var_name, verbose=True):
+        ip.db.pop('autostore_func/' + var_name, None)
+        ip.db.pop('autostore/' + var_name, None)
+
+last_user_ns = []
 def store_all_user_vars(ip:IPython.InteractiveShell):
-    for variable_name in ip.user_ns:
-        if variable_name.startswith('_') or \
-           variable_name in ip.user_ns_hidden:
+    global last_user_ns
+    new_last_user_ns = []
+    for var_name in ip.user_ns:
+        if var_name.startswith('_') or \
+           var_name in ip.user_ns_hidden:
             continue
-        store(ip, variable_name, verbose=ip.calcpy.debug)
+        store(ip, var_name, verbose=ip.calcpy.debug)
+        new_last_user_ns.append(var_name)
+        if var_name in last_user_ns:
+            last_user_ns.remove(var_name)
+
+    for var_name in last_user_ns:
+        remove(ip, var_name)
+    last_user_ns = new_last_user_ns
 
 def post_run_cell(result:IPython.core.interactiveshell.ExecutionResult, ip):
     if ip.calcpy.auto_store_vars:
         store_all_user_vars(ip)
-    # TODO: delete variables that were deleted with del
 
 def init(ip: IPython.InteractiveShell):
     ip.calcpy.init_state = 1
@@ -52,14 +64,14 @@ def init(ip: IPython.InteractiveShell):
             # run as cell so it would be possible to retreive source code
             ip.run_cell(func_code)
 
-    for variable_path in ip.db.keys('autostore/*'):
-        variable_name = os.path.basename(variable_path)
+    for var_path in ip.db.keys('autostore/*'):
+        var_name = os.path.basename(var_path)
         try:
-            variable = ip.db[variable_path]
+            var = ip.db[var_path]
         except KeyError:
             print(f'Failed to restore "{func_path}": {sys.exc_info()[0]}')
-            del ip.db[variable_path]
+            del ip.db[var_path]
         else:
-            ip.user_ns[variable_name] = variable
+            ip.user_ns[var_name] = var
 
 
