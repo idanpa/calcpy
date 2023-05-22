@@ -23,11 +23,11 @@ import calcpy.transformers
 import calcpy.info
 import calcpy.autostore
 
-def show_usage():
-    print('''CalcPy - https://github.com/idanpa/calcpy''')
-
 @IPython.core.magic.magics_class
 class CalcPy(IPython.core.magic.Magics):
+    '''
+    CalcPy - https://github.com/idanpa/calcpy
+    '''
     debug = traitlets.Bool(False, config=True)
     implicit_multiply = traitlets.Bool(True, config=True)
     auto_solve = traitlets.Bool(True, config=True)
@@ -44,6 +44,7 @@ class CalcPy(IPython.core.magic.Magics):
         lambda calcpy, p: calcpy.shell.run_line_magic('precision', p))
 
     def __init__(self, shell=None, **kwargs):
+        ''''''
         super(CalcPy, self).__init__(shell, **kwargs)
 
 def load_ipython_extension(ip:IPython.InteractiveShell):
@@ -58,6 +59,9 @@ def load_ipython_extension(ip:IPython.InteractiveShell):
     if isinstance(ip.config.InteractiveShellApp.code_to_run, traitlets.config.loader.LazyConfigValue):
         print(f"CalcPy {__version__} (Python {platform.python_version()} IPython {IPython.__version__} SymPy {sympy.__version__}) ('??' for help)")
     ip.calcpy.jobs = IPython.lib.backgroundjobs.BackgroundJobManager()
+
+    def show_usage():
+        print('''CalcPy - https://github.com/idanpa/calcpy''')
 
     ip.show_usage = show_usage
 
