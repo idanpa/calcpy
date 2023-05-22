@@ -11,11 +11,10 @@ def store(ip:IPython.InteractiveShell, var_name, verbose=True):
             return False
 
         if type(var) == types.FunctionType:
-            var_path = 'autostore_func/' + var_name
+            var_name = '_func_' + var_name
             var = inspect.getsource(var)
-        else:
-            var_path = 'autostore/' + var_name
 
+        var_path = 'autostore/' + var_name
         try:
             ip.db[var_path] = var
         except Exception as e:
@@ -26,8 +25,8 @@ def store(ip:IPython.InteractiveShell, var_name, verbose=True):
         return True
 
 def remove(ip:IPython.InteractiveShell, var_name, verbose=True):
-        ip.db.pop('autostore_func/' + var_name, None)
         ip.db.pop('autostore/' + var_name, None)
+        ip.db.pop('autostore/_func_' + var_name, None)
 
 last_user_ns = []
 def store_all_user_vars(ip:IPython.InteractiveShell):
@@ -54,24 +53,18 @@ def init(ip: IPython.InteractiveShell):
     ip.calcpy.init_state = 1
     ip.events.register('post_run_cell', partial(post_run_cell, ip=ip))
 
-    for func_path in ip.db.keys('autostore_func/*'):
-        try:
-            func_code = ip.db[func_path]
-        except KeyError:
-            print(f'Failed to restore "{func_path}": {sys.exc_info()[0]}')
-            del ip.db[func_path]
-        else:
-            # run as cell so it would be possible to retreive source code
-            ip.run_cell(func_code)
-
     for var_path in ip.db.keys('autostore/*'):
         var_name = os.path.basename(var_path)
         try:
             var = ip.db[var_path]
         except KeyError:
-            print(f'Failed to restore "{func_path}": {sys.exc_info()[0]}')
+            print(f'Failed to restore "{var_path}": {sys.exc_info()[0]}')
             del ip.db[var_path]
         else:
-            ip.user_ns[var_name] = var
+            if var_name.startswith('_func_'):
+                # run as cell so it would be possible to retreive source code
+                ip.run_cell(var)
+            else:
+                ip.user_ns[var_name] = var
 
 
