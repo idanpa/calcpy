@@ -68,12 +68,13 @@ def load_ipython_extension(ip:IPython.InteractiveShell):
 
     calcpy.formatters.init(ip)
     calcpy.transformers.init(ip)
-    calcpy.currency.init(ip)
     calcpy.info.init(ip)
     # we don't let ipython hide all initial variable, (by InteractiveShellApp.hide_initial_ns=False)
     # so user defined variables would be exposed to who, who_ls
     ip.user_ns_hidden.update(ip.user_ns)
     calcpy.autostore.init(ip)
+    calcpy.currency.init(ip)
+    # TODO: load user startup again?
     if callable(ip.user_ns.get('user_startup', None)):
         ip.ev('user_startup()')
 

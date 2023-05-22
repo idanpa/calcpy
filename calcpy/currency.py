@@ -2,7 +2,7 @@ import requests
 from xml.etree import ElementTree
 import IPython
 import sympy
-from contextlib import redirect_stdout
+import calcpy.autostore as autostore
 from time import sleep
 
 country_to_currency = {
@@ -267,8 +267,7 @@ def set_base_currency(calcpy, base_curr, update=True):
     base_curr = base_curr.upper()
     check_currency(base_curr)
     calcpy.shell.push({BASE_CURRENCY_VAR_NAME: base_curr})
-    with redirect_stdout(None):
-        calcpy.shell.run_line_magic('store', BASE_CURRENCY_VAR_NAME)
+    autostore.store(calcpy.shell, BASE_CURRENCY_VAR_NAME)
     if update:
         set_rates(calcpy)
 
@@ -291,8 +290,7 @@ def set_common_currencies(calcpy, comm_currs, update=True):
     for curr in comm_currs:
         check_currency(curr)
     calcpy.shell.push({COMMON_CURRENCIES_VAR_NAME: comm_currs})
-    with redirect_stdout(None):
-        calcpy.shell.run_line_magic('store', COMMON_CURRENCIES_VAR_NAME)
+    autostore.store(calcpy.shell, COMMON_CURRENCIES_VAR_NAME)
     if update:
         set_rates(calcpy)
 
@@ -346,6 +344,10 @@ def update_currency_job(ip):
 def init(ip:IPython.InteractiveShell):
     type(ip.calcpy).base_currency = property(get_base_currency, set_base_currency)
     type(ip.calcpy).common_currencies = property(get_common_currencies, set_common_currencies)
+
+    # TODO: don't use user ns for these, should be just in some specific calcpy db directly
+    ip.user_ns_hidden[BASE_CURRENCY_VAR_NAME] = ip.user_ns[BASE_CURRENCY_VAR_NAME]
+    ip.user_ns_hidden[COMMON_CURRENCIES_VAR_NAME] = ip.user_ns[COMMON_CURRENCIES_VAR_NAME]
 
     ip.calcpy.jobs.new(update_currency_job, ip, daemon=True)
 

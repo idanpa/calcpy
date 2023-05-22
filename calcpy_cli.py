@@ -37,7 +37,6 @@ def main():
         "--InteractiveShell.separate_in=",
         #--InteractiveShellApp.extra_extensions is only supported from 7.10
         "--InteractiveShellApp.exec_lines=%load_ext calcpy",
-        "--StoreMagics.autorestore=True",
         "--InteractiveShellApp.hide_initial_ns=False", # we parially hide them
         # TODO: float_precision should be configurable (at startup)
         "--PlainTextFormatter.float_precision=%.6g",

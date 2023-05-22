@@ -1,50 +1,65 @@
 from functools import partial
+import os
 import types
-from contextlib import redirect_stdout
 import IPython
 import inspect
 import sys
 
-def store_all_user_vars(ip:IPython.InteractiveShell):
-    # defer variable store only when init is done
-    if ip.calcpy.init_state == 0:
-        return
-    if ip.calcpy.init_state == 1:
-        ip.calcpy.init_state = 2
-        return
-    who_ls = ip.run_line_magic('who_ls', '')
+def store(ip:IPython.InteractiveShell, variable_name, verbose=True):
+        variable = ip.user_ns[variable_name]
+        variable_type = type(variable)
+        if variable_type in [types.ModuleType, type]:
+            return False
 
-    for variable_name in who_ls:
-        v = ip.user_ns[variable_name]
-        t = type(v)
-        if t in [types.ModuleType, type]:
-            continue
+        if variable_type == types.FunctionType:
+            variable_path = 'autostore_func/' + variable_name
+            variable = inspect.getsource(variable)
+        else:
+            variable_path = 'autostore/' + variable_name
+
         try:
-            if t == types.FunctionType:
-                ip.db['autostore_func/' + v.__name__] = inspect.getsource(v)
-            else:
-                with redirect_stdout(None): # can't stop store from printing
-                    ip.run_line_magic('store', f'{variable_name}')
+            ip.db[variable_path] = variable
         except Exception as e:
-            if ip.calcpy.debug:
-                print(f'Storing variable {variable_name}={ip.user_ns[variable_name]} of type {type(ip.user_ns[variable_name])}\n'+
-                      f'failed with: {e}')
-            ip.run_line_magic('store', f'-d {variable_name}')
+            if verbose:
+                print(f'Failed to store {variable_name}={variable} of type {variable_type}: {repr(e)}')
+            del ip.db[variable_path]
+            return False
+        return True
+
+def store_all_user_vars(ip:IPython.InteractiveShell):
+    for variable_name in ip.user_ns:
+        if variable_name.startswith('_') or \
+           variable_name in ip.user_ns_hidden:
+            continue
+        store(ip, variable_name, verbose=ip.calcpy.debug)
 
 def post_run_cell(result:IPython.core.interactiveshell.ExecutionResult, ip):
     if ip.calcpy.auto_store_vars:
         store_all_user_vars(ip)
+    # TODO: delete variables that were deleted with del
 
 def init(ip: IPython.InteractiveShell):
     ip.calcpy.init_state = 1
     ip.events.register('post_run_cell', partial(post_run_cell, ip=ip))
 
-    for key in ip.db.keys('autostore_func/*'):
+    for func_path in ip.db.keys('autostore_func/*'):
         try:
-            func_code = ip.db[key]
+            func_code = ip.db[func_path]
         except KeyError:
-            print("Unable to restore variable '%s', ignoring (use %%store -d to forget!)" % key)
-            print("The error was:", sys.exc_info()[0])
+            print(f'Failed to restore "{func_path}": {sys.exc_info()[0]}')
+            del ip.db[func_path]
         else:
-            ip.ex(func_code)
+            # run as cell so it would be possible to retreive source code
+            ip.run_cell(func_code)
+
+    for variable_path in ip.db.keys('autostore/*'):
+        variable_name = os.path.basename(variable_path)
+        try:
+            variable = ip.db[variable_path]
+        except KeyError:
+            print(f'Failed to restore "{func_path}": {sys.exc_info()[0]}')
+            del ip.db[variable_path]
+        else:
+            ip.user_ns[variable_name] = variable
+
 
