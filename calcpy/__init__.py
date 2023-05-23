@@ -47,6 +47,19 @@ class CalcPy(IPython.core.magic.Magics):
         ''''''
         super(CalcPy, self).__init__(shell, **kwargs)
 
+        for trait_name in self.trait_names():
+            trait_path = 'calcpy/' + trait_name
+            if trait_path in self.shell.db:
+                try:
+                    setattr(self, trait_name, self.shell.db[trait_path])
+                except Exception as e:
+                    print(f'Failed to restore trait {trait_name}: {repr(e)}')
+                    del self.shell.db[trait_path]
+
+        def _trait_observe(change):
+            change.owner.shell.db['calcpy/' + change.name] = change.new
+        self.observe(_trait_observe)
+
 def load_ipython_extension(ip:IPython.InteractiveShell):
     if ip.profile != CALCPY_PROFILE_NAME:
         print(f'warning: Not using the {CALCPY_PROFILE_NAME} profile (current profile is {ip.profile}')
