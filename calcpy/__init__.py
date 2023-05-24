@@ -27,10 +27,7 @@ import calcpy.autostore
 
 @IPython.core.magic.magics_class
 class CalcPy(IPython.core.magic.Magics):
-    '''
-    CalcPy - https://github.com/idanpa/calcpy
-    '''
-    debug = traitlets.Bool(False, config=True)
+    debug = traitlets.Bool(False, config=True, help='Add debug prints')
     implicit_multiply = traitlets.Bool(True, config=True)
     auto_solve = traitlets.Bool(True, config=True)
     caret_power = traitlets.Bool(False, config=True)
@@ -65,6 +62,10 @@ class CalcPy(IPython.core.magic.Magics):
                 print(f'Failed to write config from {config_path}: {repr(e)}')
 
         self.observe(calcpy_trait_observe)
+
+        CalcPy.__doc__ = "CalcPy - https://github.com/idanpa/calcpy\n"
+        for trait_name, trait in sorted(self.traits(config=True).items()):
+            CalcPy.__doc__ += self.class_get_trait_help(trait, None).replace('--CalcPy.', '') + '\n'
 
     def non_default_config_values(self):
         non_def = {}
