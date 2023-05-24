@@ -18,8 +18,8 @@ class post_setup(install):
             IPython.core.profiledir.ProfileDir.create_profile_dir_by_name(IPython.paths.get_ipython_dir(), calcpy.CALCPY_PROFILE_NAME)
             calcpy_profile_path = IPython.paths.locate_profile(calcpy.CALCPY_PROFILE_NAME)
         try:
-            with open(os.path.join(calcpy_profile_path, 'startup', 'user_startup.py'), 'x') as f:
-                f.write('def user_startup():\n    pass')
+            with open(os.path.join(calcpy_profile_path, 'user_startup.py'), 'x') as f:
+                f.write('# CalcPy user startup:')
         except FileExistsError:
             pass
 

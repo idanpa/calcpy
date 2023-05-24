@@ -46,6 +46,7 @@ class CalcPy(IPython.core.magic.Magics):
         ''''''
         super(CalcPy, self).__init__(shell, **kwargs)
 
+        self.user_startup = os.path.join(shell.profile_dir.location, 'user_startup.py')
         config_path = os.path.join(self.shell.profile_dir.location, 'calcpy.json')
         try:
             with open(config_path, 'r') as f:
@@ -111,10 +112,14 @@ def load_ipython_extension(ip:IPython.InteractiveShell):
     # we don't let ipython hide all initial variable, (by InteractiveShellApp.hide_initial_ns=False)
     # so user defined variables would be exposed to who, who_ls
     ip.user_ns_hidden.update(ip.user_ns)
+
+    if os.path.isfile(ip.calcpy.user_startup):
+        ip.user_ns['__file__'] = ip.calcpy.user_startup
+        ip.safe_execfile(ip.calcpy.user_startup,
+                         ip.user_ns,
+                         raise_exceptions=False,
+                         shell_futures=True)
     calcpy.autostore.init(ip)
-    # TODO: load user startup again?
-    if callable(ip.user_ns.get('user_startup', None)):
-        ip.ev('user_startup()')
 
 if __name__ == '__main__':
     load_ipython_extension(IPython.get_ipython())

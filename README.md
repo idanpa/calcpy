@@ -41,7 +41,7 @@ Just an IPython shell with:
 * `who_ls` see all defined variables
 * Prompt history with `up`/`down`, search with `ctrl+r`
 * Autocomplete with `tab`
-* Edit custom startup script with `%edit user_startup`
+<!-- TODO: * Edit custom startup script with `%edit user_startup` -->
 
 [Python](https://www.python.org/):
 * All the basic arithmetic (`+`,`-`,`*`,`/`,`**`)
