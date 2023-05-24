@@ -16,6 +16,8 @@ import platform
 import sys
 import importlib
 import shutil
+import json
+import os
 
 import calcpy.currency
 import calcpy.formatters
@@ -47,18 +49,34 @@ class CalcPy(IPython.core.magic.Magics):
         ''''''
         super(CalcPy, self).__init__(shell, **kwargs)
 
-        for trait_name in self.trait_names():
-            trait_path = 'calcpy/' + trait_name
-            if trait_path in self.shell.db:
-                try:
-                    setattr(self, trait_name, self.shell.db[trait_path])
-                except Exception as e:
-                    print(f'Failed to restore trait {trait_name}: {repr(e)}')
-                    del self.shell.db[trait_path]
+        config_path = os.path.join(self.shell.profile_dir.location, 'calcpy.json')
+        try:
+            with open(config_path, 'r') as f:
+                for trait_name, value in json.load(f).items():
+                    setattr(self, trait_name, value)
+        except Exception as e:
+            print(f'Failed to read config from {config_path}: {repr(e)}')
 
-        def _trait_observe(change):
-            change.owner.shell.db['calcpy/' + change.name] = change.new
-        self.observe(_trait_observe)
+        def calcpy_trait_observe(change):
+            try:
+                with open(config_path, 'w') as f:
+                    json.dump(self.non_default_config_values(), f, indent=1)
+            except Exception as e:
+                print(f'Failed to write config from {config_path}: {repr(e)}')
+
+        self.observe(calcpy_trait_observe)
+
+    def non_default_config_values(self):
+        non_def = {}
+        trait_defaults = self.trait_defaults(config=True)
+        for trait_name, value in self.trait_values(config=True).items():
+            if value != trait_defaults[trait_name]:
+                non_def[trait_name] = value
+        return non_def
+
+    def __repr__(self):
+        config = self.trait_values(config=True)
+        return repr(config)
 
 def load_ipython_extension(ip:IPython.InteractiveShell):
     if ip.profile != CALCPY_PROFILE_NAME:
