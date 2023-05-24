@@ -89,7 +89,7 @@ def load_ipython_extension(ip:IPython.InteractiveShell):
 
     ip.register_magics(ip.calcpy) # register_magics loads the traitlets configuration
 
-    if isinstance(ip.config.InteractiveShellApp.code_to_run, traitlets.config.loader.LazyConfigValue):
+    if 'code_to_run' not in ip.config.InteractiveShellApp:
         print(f"CalcPy {__version__} (Python {platform.python_version()} IPython {IPython.__version__} SymPy {sympy.__version__}) ('??' for help)")
     ip.calcpy.jobs = IPython.lib.backgroundjobs.BackgroundJobManager()
 
@@ -113,13 +113,13 @@ def load_ipython_extension(ip:IPython.InteractiveShell):
     # so user defined variables would be exposed to who, who_ls
     ip.user_ns_hidden.update(ip.user_ns)
 
+    calcpy.autostore.init(ip)
     if os.path.isfile(ip.calcpy.user_startup):
         ip.user_ns['__file__'] = ip.calcpy.user_startup
         ip.safe_execfile(ip.calcpy.user_startup,
                          ip.user_ns,
                          raise_exceptions=False,
                          shell_futures=True)
-    calcpy.autostore.init(ip)
 
 if __name__ == '__main__':
     load_ipython_extension(IPython.get_ipython())
