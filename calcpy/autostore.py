@@ -11,8 +11,13 @@ def store(ip:IPython.InteractiveShell, var_name, verbose=True):
             return False
 
         if type(var) == types.FunctionType:
+            try:
+                var = inspect.getsource(var)
+            except Exception as e:
+                if verbose:
+                    print(f'Failed to get function source {var_name}: {repr(e)}')
+                return False
             var_name = '_func_' + var_name
-            var = inspect.getsource(var)
 
         var_path = 'autostore/' + var_name
         try:
