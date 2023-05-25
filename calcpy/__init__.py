@@ -46,7 +46,7 @@ class CalcPy(IPython.core.magic.Magics):
         ''''''
         super(CalcPy, self).__init__(shell, **kwargs)
 
-        self.user_startup = os.path.join(shell.profile_dir.location, 'user_startup.py')
+        self.user_startup_path = os.path.join(shell.profile_dir.location, 'user_startup.py')
         config_path = os.path.join(self.shell.profile_dir.location, 'calcpy.json')
         try:
             with open(config_path, 'r') as f:
@@ -79,6 +79,9 @@ class CalcPy(IPython.core.magic.Magics):
     def __repr__(self):
         config = self.trait_values(config=True)
         return repr(config)
+
+    def edit_user_startup(self):
+        self.shell.run_line_magic('edit', self.user_startup_path)
 
 def load_ipython_extension(ip:IPython.InteractiveShell):
     if ip.profile != CALCPY_PROFILE_NAME:
@@ -114,9 +117,9 @@ def load_ipython_extension(ip:IPython.InteractiveShell):
     ip.user_ns_hidden.update(ip.user_ns)
 
     calcpy.autostore.init(ip)
-    if os.path.isfile(ip.calcpy.user_startup):
-        ip.user_ns['__file__'] = ip.calcpy.user_startup
-        ip.safe_execfile(ip.calcpy.user_startup,
+    if os.path.isfile(ip.calcpy.user_startup_path):
+        ip.user_ns['__file__'] = ip.calcpy.user_startup_path
+        ip.safe_execfile(ip.calcpy.user_startup_path,
                          ip.user_ns,
                          raise_exceptions=False,
                          shell_futures=True)
