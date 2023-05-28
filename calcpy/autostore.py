@@ -76,8 +76,10 @@ def init(ip: IPython.InteractiveShell):
             del ip.db[var_path]
         else:
             if var_name.startswith('_func_'):
-                # run as cell so it would be possible to retreive source code
-                ip.run_cell(var)
+                # to allow %edit func_name, need to place function in file
+                file_path = ip.mktempfile(var)
+                ip.user_ns['__file__'] = file_path
+                ip.safe_execfile(file_path, ip.user_ns, shell_futures=True)
             else:
                 ip.user_ns[var_name] = var
 
