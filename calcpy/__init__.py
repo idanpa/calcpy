@@ -83,6 +83,14 @@ class CalcPy(IPython.core.magic.Magics):
     def edit_user_startup(self):
         self.shell.run_line_magic('edit', self.user_startup_path)
 
+    def reset(self, prompt=True):
+        if prompt:
+            if input("Confirm reset? [y/N] ").lower() not in ["y","yes"]:
+                return
+        for trait_name, trait in sorted(self.traits(config=True).items()):
+            setattr(self, trait_name, trait.default_value)
+        calcpy.autostore.reset(self.shell)
+
 def load_ipython_extension(ip:IPython.InteractiveShell):
     if ip.profile != CALCPY_PROFILE_NAME:
         print(f'warning: Not using the {CALCPY_PROFILE_NAME} profile (current profile is {ip.profile}')

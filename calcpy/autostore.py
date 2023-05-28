@@ -54,8 +54,17 @@ def post_run_cell(result:IPython.core.interactiveshell.ExecutionResult, ip):
     if ip.calcpy.auto_store_vars:
         store_all_user_vars(ip)
 
+def reset(ip: IPython.InteractiveShell):
+    for var_path in ip.db.keys('autostore/*'):
+        del ip.db[var_path]
+
+    for var_name in list(ip.user_ns.keys()):
+        if var_name.startswith('_') or \
+           var_name in ip.user_ns_hidden:
+            continue
+        del ip.user_ns[var_name]
+
 def init(ip: IPython.InteractiveShell):
-    ip.calcpy.init_state = 1
     ip.events.register('post_run_cell', partial(post_run_cell, ip=ip))
 
     for var_path in ip.db.keys('autostore/*'):
