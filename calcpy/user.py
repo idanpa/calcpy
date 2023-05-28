@@ -59,6 +59,7 @@ deg = MulUnitPrefix(Rational(1, 180), pi)
 x, y, t = symbols('x y t', real=True)
 z = symbols('z', complex=True)
 m, n, l = symbols('m n l', integer=True)
+a, b, c, d = symbols('a b c d', real=True)
 
 # user functions:
 from calcpy.formatters import twos_complement_bin_to_int
