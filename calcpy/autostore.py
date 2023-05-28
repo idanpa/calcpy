@@ -1,12 +1,38 @@
-from functools import partial
-import os
-import types
 import IPython
 import inspect
+import types
 import sys
+import os
 
-def store(ip:IPython.InteractiveShell, var_name, verbose=True):
-        var = ip.user_ns[var_name]
+class Autostore():
+    def __init__(self, shell, **kwargs):
+        self.shell = shell
+        self.debug = False
+        self.last_user_ns = []
+
+        self.shell.events.register('post_run_cell', self.post_run_cell)
+
+        for var_path in self.shell.db.keys('autostore/*'):
+            var_name = os.path.basename(var_path)
+            try:
+                var = self.shell.db[var_path]
+            except KeyError:
+                print(f'Failed to restore "{var_path}": {sys.exc_info()[0]}')
+                del self.shell.db[var_path]
+            else:
+                if var_name.startswith('_func_'):
+                    # to allow %edit func_name, need to place function in file
+                    file_path = self.shell.mktempfile(var)
+                    self.shell.user_ns['__file__'] = file_path
+                    self.shell.safe_execfile(file_path, shell.user_ns, shell_futures=True)
+                else:
+                    self.shell.user_ns[var_name] = var
+
+    def unload(self):
+        self.shell.events.unregister('post_run_cell', self.post_run_cell)
+
+    def store(self, var_name, verbose=True):
+        var = self.shell.user_ns[var_name]
         if type(var) in [types.ModuleType, type]:
             return False
 
@@ -21,66 +47,51 @@ def store(ip:IPython.InteractiveShell, var_name, verbose=True):
 
         var_path = 'autostore/' + var_name
         try:
-            ip.db[var_path] = var
+            self.shell.db[var_path] = var
         except Exception as e:
             if verbose:
                 print(f'Failed to store {var_name}={var} of type {type(var)}: {repr(e)}')
-            del ip.db[var_path]
+            del self.shell.db[var_path]
             return False
         return True
 
-def remove(ip:IPython.InteractiveShell, var_name, verbose=True):
-        ip.db.pop('autostore/' + var_name, None)
-        ip.db.pop('autostore/_func_' + var_name, None)
+    def remove(self, var_name, verbose=True):
+        self.shell.db.pop('autostore/' + var_name, None)
+        self.shell.db.pop('autostore/_func_' + var_name, None)
 
-last_user_ns = []
-def store_all_user_vars(ip:IPython.InteractiveShell):
-    global last_user_ns
-    new_last_user_ns = []
-    for var_name in ip.user_ns:
-        if var_name.startswith('_') or \
-           var_name in ip.user_ns_hidden:
-            continue
-        store(ip, var_name, verbose=ip.calcpy.debug)
-        new_last_user_ns.append(var_name)
-        if var_name in last_user_ns:
-            last_user_ns.remove(var_name)
+    def store_all_user_vars(self):
+        new_last_user_ns = []
+        for var_name in self.shell.user_ns:
+            if var_name.startswith('_') or \
+            var_name in self.shell.user_ns_hidden:
+                continue
+            self.store(var_name, verbose=self.debug)
+            new_last_user_ns.append(var_name)
+            if var_name in self.last_user_ns:
+                self.last_user_ns.remove(var_name)
 
-    for var_name in last_user_ns:
-        remove(ip, var_name)
-    last_user_ns = new_last_user_ns
+        for var_name in self.last_user_ns:
+            self.remove(var_name)
+        self.last_user_ns = new_last_user_ns
 
-def post_run_cell(result:IPython.core.interactiveshell.ExecutionResult, ip):
-    if ip.calcpy.auto_store_vars:
-        store_all_user_vars(ip)
+    def post_run_cell(self, result):
+        self.store_all_user_vars()
 
-def reset(ip: IPython.InteractiveShell):
-    for var_path in ip.db.keys('autostore/*'):
-        del ip.db[var_path]
+    def reset(self):
+        for var_path in self.shell.db.keys('autostore/*'):
+            del self.shell.db[var_path]
 
-    for var_name in list(ip.user_ns.keys()):
-        if var_name.startswith('_') or \
-           var_name in ip.user_ns_hidden:
-            continue
-        del ip.user_ns[var_name]
+        for var_name in list(self.shell.user_ns.keys()):
+            if var_name.startswith('_') or \
+            var_name in self.shell.user_ns_hidden:
+                continue
+            del self.shell.user_ns[var_name]
 
-def init(ip: IPython.InteractiveShell):
-    ip.events.register('post_run_cell', partial(post_run_cell, ip=ip))
+def load_ipython_extension(ip:IPython.InteractiveShell):
+    ip.autostore = Autostore(ip)
 
-    for var_path in ip.db.keys('autostore/*'):
-        var_name = os.path.basename(var_path)
-        try:
-            var = ip.db[var_path]
-        except KeyError:
-            print(f'Failed to restore "{var_path}": {sys.exc_info()[0]}')
-            del ip.db[var_path]
-        else:
-            if var_name.startswith('_func_'):
-                # to allow %edit func_name, need to place function in file
-                file_path = ip.mktempfile(var)
-                ip.user_ns['__file__'] = file_path
-                ip.safe_execfile(file_path, ip.user_ns, shell_futures=True)
-            else:
-                ip.user_ns[var_name] = var
+def unload_ipython_extension(ip:IPython.InteractiveShell):
+    ip.autostore.unload()
 
-
+if __name__ == '__main__':
+    load_ipython_extension(IPython.get_ipython())

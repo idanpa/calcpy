@@ -32,7 +32,7 @@ class CalcPy(IPython.core.magic.Magics):
     auto_solve = traitlets.Bool(True, config=True)
     caret_power = traitlets.Bool(False, config=True)
     auto_lambda = traitlets.Bool(True, config=True)
-    auto_store_vars = traitlets.Bool(True, config=True)
+    auto_store = traitlets.Bool(True, config=True)
     auto_matrix = traitlets.Bool(True, config=True)
     auto_date = traitlets.Bool(False, config=True)
     parse_latex = traitlets.Bool(True, config=True)
@@ -61,8 +61,14 @@ class CalcPy(IPython.core.magic.Magics):
                     json.dump(self.non_default_config_values(), f, indent=1)
             except Exception as e:
                 print(f'Failed to write config from {config_path}: {repr(e)}')
-
         self.observe(calcpy_trait_observe)
+
+        def _auto_store_changed(change):
+            if change.old == False and change.new == True:
+                calcpy.autostore.load_ipython_extension(self.shell)
+            if change.old == True and change.new == False:
+                calcpy.autostore.unload_ipython_extension(self.shell)
+        self.observe(_auto_store_changed, names='auto_store')
 
         CalcPy.__doc__ = "CalcPy - https://github.com/idanpa/calcpy\n"
         for trait_name, trait in sorted(self.traits(config=True).items()):
@@ -78,7 +84,7 @@ class CalcPy(IPython.core.magic.Magics):
 
     def __repr__(self):
         config = self.trait_values(config=True)
-        return repr(config)
+        return 'CalcPy ' + repr(config)
 
     def edit_user_startup(self):
         self.shell.run_line_magic('edit', self.user_startup_path)
@@ -89,7 +95,7 @@ class CalcPy(IPython.core.magic.Magics):
                 return
         for trait_name, trait in sorted(self.traits(config=True).items()):
             setattr(self, trait_name, trait.default_value)
-        calcpy.autostore.reset(self.shell)
+        self.shell.autostore.reset()
 
 def load_ipython_extension(ip:IPython.InteractiveShell):
     if ip.profile != CALCPY_PROFILE_NAME:
@@ -98,7 +104,7 @@ def load_ipython_extension(ip:IPython.InteractiveShell):
     ip.calcpy = CalcPy(ip)
     ip.push({'calcpy': ip.calcpy}, interactive=False)
 
-    ip.register_magics(ip.calcpy) # register_magics loads the traitlets configuration
+    ip.register_magics(ip.calcpy)
 
     if 'code_to_run' not in ip.config.InteractiveShellApp:
         print(f"CalcPy {__version__} (Python {platform.python_version()} IPython {IPython.__version__} SymPy {sympy.__version__}) ('??' for help)")
@@ -124,7 +130,9 @@ def load_ipython_extension(ip:IPython.InteractiveShell):
     # so user defined variables would be exposed to who, who_ls
     ip.user_ns_hidden.update(ip.user_ns)
 
-    calcpy.autostore.init(ip)
+    if ip.calcpy.auto_store:
+        calcpy.autostore.load_ipython_extension(ip)
+
     if os.path.isfile(ip.calcpy.user_startup_path):
         ip.user_ns['__file__'] = ip.calcpy.user_startup_path
         ip.safe_execfile(ip.calcpy.user_startup_path,
