@@ -24,6 +24,7 @@ import calcpy.formatters
 import calcpy.transformers
 import calcpy.info
 import calcpy.autostore
+import calcpy.preview
 
 @IPython.core.magic.magics_class
 class CalcPy(IPython.core.magic.Magics):
@@ -35,6 +36,7 @@ class CalcPy(IPython.core.magic.Magics):
     auto_store = traitlets.Bool(True, config=True)
     auto_matrix = traitlets.Bool(True, config=True)
     auto_date = traitlets.Bool(False, config=True)
+    preview = traitlets.Bool(True, config=True)
     parse_latex = traitlets.Bool(True, config=True)
     bitwidth = traitlets.Int(0, config=True)
     chop = traitlets.Bool(True, config=True)
@@ -69,6 +71,13 @@ class CalcPy(IPython.core.magic.Magics):
             if change.old == True and change.new == False:
                 calcpy.autostore.unload_ipython_extension(self.shell)
         self.observe(_auto_store_changed, names='auto_store')
+
+        def _preview_changed(change):
+            if change.old == False and change.new == True:
+                calcpy.preview.load_ipython_extension(self.shell)
+            if change.old == True and change.new == False:
+                calcpy.preview.unload_ipython_extension(self.shell)
+        self.observe(_preview_changed, names='preview')
 
         CalcPy.__doc__ = "CalcPy - https://github.com/idanpa/calcpy\n"
         for trait_name, trait in sorted(self.traits(config=True).items()):
@@ -139,6 +148,9 @@ def load_ipython_extension(ip:IPython.InteractiveShell):
                          ip.user_ns,
                          raise_exceptions=False,
                          shell_futures=True)
+
+    if ip.calcpy.preview:
+        calcpy.preview.load_ipython_extension(ip)
 
 if __name__ == '__main__':
     load_ipython_extension(IPython.get_ipython())
