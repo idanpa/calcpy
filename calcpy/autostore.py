@@ -61,7 +61,7 @@ class Autostore():
 
     def store_all_user_vars(self):
         new_last_user_ns = []
-        for var_name in self.shell.user_ns:
+        for var_name in list(self.shell.user_ns):
             if var_name.startswith('_') or \
             var_name in self.shell.user_ns_hidden:
                 continue
