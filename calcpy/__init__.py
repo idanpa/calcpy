@@ -48,12 +48,13 @@ class CalcPy(IPython.core.magic.Magics):
 
         self.user_startup_path = os.path.join(shell.profile_dir.location, 'user_startup.py')
         config_path = os.path.join(self.shell.profile_dir.location, 'calcpy.json')
-        try:
-            with open(config_path, 'r') as f:
-                for trait_name, value in json.load(f).items():
-                    setattr(self, trait_name, value)
-        except Exception as e:
-            print(f'Failed to read config from {config_path}: {repr(e)}')
+        if os.path.isfile(config_path):
+            try:
+                with open(config_path, 'r') as f:
+                    for trait_name, value in json.load(f).items():
+                        setattr(self, trait_name, value)
+            except Exception as e:
+                print(f'Failed to read config from {config_path}: {repr(e)}')
 
         def calcpy_trait_observe(change):
             try:
