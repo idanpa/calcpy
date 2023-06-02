@@ -21,10 +21,11 @@ Just an IPython shell with:
 * Display both symbolic and numeric solutions
 * Integers displayed as decimal, hex and binary (control size with `calcpy.bitwidth`)
 * Tuples are matrices `((1,2),(3,4))**2`        
+* Result preview while typing
 * `?` prefix would provide some basic analysis of expression (similar to [WolframAlpha](https://www.wolframalpha.com/))  
-`?((1,2),(3,4))`, `?x**2+1`, `?234` 
+`?((1,2),(3,4))`, `?x**2+1`, `?234`
 * Implicit multiplication (`2x`, `(x+1)(x-1)` are valid)
-* All variables stored and restored between sessions (so you can set your own constants e.g. `speed_of_light = 299792458`)
+* All variables and functions are restored between sessions (delete using `del`)
 * Currency conversion `10USD` (`calcpy.base_currency='EUR'` to change base currency)
 <!-- * Strings automatically converted to datetime `"yesterday at 9 am" - "1990-1-30 9:20"` (using [dateparser](https://github.com/scrapinghub/dateparser)) -->
 * Unit prefixes `G`, `M`, `k`, `m`, `u`, `n`, `p`, `KB`, `MB`, `GB`, `TB` (so `4MB-32KB` or `4G/32n` are valid)
@@ -38,10 +39,10 @@ Just an IPython shell with:
 [IPython](https://ipython.org):
 * Get last result with `_`, get specific cell `_12` (`Out[12]` works too) 
 * `func_name?` show docs for func_name
-* `who_ls` see all defined variables
+* `who`/`who_ls` see all defined variables
 * Prompt history with `up`/`down`, search with `ctrl+r`
 * Autocomplete with `tab`
-<!-- TODO: * Edit custom startup script with `%edit user_startup` -->
+* Edit code on editor with `%edit func_name`
 
 [Python](https://www.python.org/):
 * All the basic arithmetic (`+`,`-`,`*`,`/`,`**`)
