@@ -13,9 +13,7 @@ import IPython.lib.backgroundjobs
 import traitlets
 import sympy
 import platform
-import sys
 import importlib
-import shutil
 import json
 import os
 
@@ -66,16 +64,16 @@ class CalcPy(IPython.core.magic.Magics):
         self.observe(calcpy_trait_observe)
 
         def _auto_store_changed(change):
-            if change.old == False and change.new == True:
+            if change.old != change.new == True:
                 calcpy.autostore.load_ipython_extension(self.shell)
-            if change.old == True and change.new == False:
+            if change.old != change.new == False:
                 calcpy.autostore.unload_ipython_extension(self.shell)
         self.observe(_auto_store_changed, names='auto_store')
 
         def _preview_changed(change):
-            if change.old == False and change.new == True:
+            if change.old != change.new == True:
                 calcpy.preview.load_ipython_extension(self.shell)
-            if change.old == True and change.new == False:
+            if change.old != change.new == False:
                 calcpy.preview.unload_ipython_extension(self.shell)
         self.observe(_preview_changed, names='preview')
 
