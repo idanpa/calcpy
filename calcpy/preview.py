@@ -46,12 +46,12 @@ class Previewer():
             return None
         ast_code = self.ip.transform_ast(ast_code)
 
-        with redirect_stdout(None):
-            try:
-                compiled_code = compile(ast_code, '<string>', 'eval', PyCF_DONT_IMPLY_DEDENT, 1)
-                result = eval(compiled_code, self.isolated_ns)
-            except:
-                return None
+        try:
+            compiled_code = compile(ast_code, '<string>', 'eval', PyCF_DONT_IMPLY_DEDENT, 1)
+            # TODO: we globally discard prints from asyncio, but need to find a better fix
+            result = eval(compiled_code, self.isolated_ns)
+        except:
+            return None
 
         if isinstance(result, (int, sympy.Integer, sympy.Float)):
             result_str = str(result)

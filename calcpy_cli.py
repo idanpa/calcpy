@@ -7,6 +7,10 @@ import subprocess
 import shutil
 import os
 
+import threading
+import prompt_toolkit.patch_stdout
+from functools import partial
+
 # TODO: how to do this dynamically?
 from prompt_toolkit.styles.defaults import PROMPT_TOOLKIT_STYLE
 PROMPT_TOOLKIT_STYLE.remove((('bottom-toolbar', 'reverse')))
@@ -24,6 +28,10 @@ class ConnStream():
         self.conn.send(obj)
     def flush(self):
         pass
+
+def no_asyncio_write(write, self, data):
+    if not threading.currentThread().name.startswith('asyncio'):
+        write(self, data)
 
 def main():
     parser = argparse.ArgumentParser()
@@ -58,6 +66,11 @@ def main():
         ipython_args.append(f"--InteractiveShellApp.code_to_run={args.command}")
 
     ipython_args.extend(args_reminder)
+
+    # monkey patch prompt_toolkit to avoid printin from background for preview
+    # TODO: need a better fix
+    prompt_toolkit.patch_stdout.StdoutProxy.write = \
+        partial(no_asyncio_write, prompt_toolkit.patch_stdout.StdoutProxy.write)
 
     if args.gui:
         # need jupyter_client==6.1.12
