@@ -323,18 +323,18 @@ def set_rates(calcpy):
 
     base_rate = rates[base_curr]
     rates_vars = {key: (base_rate/value)*sympy.Symbol(base_curr) for key, value in rates.items()}
-    calcpy.shell.push(rates_vars, interactive=False)
-    calcpy.shell.push({k.lower(): v for k, v in rates_vars.items()}, interactive=False)
+    calcpy.push(rates_vars, interactive=False)
+    calcpy.push({k.lower(): v for k, v in rates_vars.items()}, interactive=False)
     base_table = sympy.Matrix([[(rates[curr]/base_rate)*sympy.Symbol(curr) for curr in comm_currs]])
-    calcpy.shell.push({base_curr: base_table}, interactive=False)
-    calcpy.shell.push({base_curr.lower(): base_table}, interactive=False)
+    calcpy.push({base_curr: base_table}, interactive=False)
+    calcpy.push({base_curr.lower(): base_table}, interactive=False)
 
 def update_currency_job(ip):
     while True:
         try:
             set_rates(ip.calcpy)
         except Exception as e:
-            print(f'update currency job failed with: {e}')
+            print(f'Update currency job failed with: {e}')
         sleep(60*60*12) # 12 hours
 
 def init(ip:IPython.InteractiveShell):

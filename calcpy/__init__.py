@@ -90,6 +90,13 @@ class CalcPy(IPython.core.magic.Magics):
                 non_def[trait_name] = value
         return non_def
 
+    def push(self, variables, interactive=True):
+        self.shell.push(variables, interactive)
+        try:
+            self.shell.previewer.isolated_ns.update(variables)
+        except AttributeError:
+            pass
+
     def __repr__(self):
         config = self.trait_values(config=True)
         return 'CalcPy ' + repr(config)
