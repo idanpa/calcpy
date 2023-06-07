@@ -29,7 +29,7 @@ class Previewer():
                 pass
 
     def pre_run_cell(self, info):
-        self.ip.pt_app.bottom_toolbar = None
+        self.ip.pt_app.bottom_toolbar = ''
         get_app().invalidate()
         # TODO: get_app().invalidate()/_redraw() are not cleaning bottom_toolbar (not fast enough?)
 
@@ -78,6 +78,8 @@ def create_preview_coroutine(ip, buffer, previewer):
     async def async_previewer():
         document = buffer.document
         preview = await previewer.preview_async(buffer.text)
+        if preview is None:
+            preview = ''
         if buffer.document == document:
             ip.pt_app.bottom_toolbar = preview
             get_app().invalidate()
@@ -94,6 +96,7 @@ def load_ipython_extension(ip:IPython.InteractiveShell):
         print('No prompt application for this session, load preview failed')
         return
     ip.previewer = Previewer(ip)
+    ip.pt_app.bottom_toolbar = ''
     ip.events.register('pre_run_cell', ip.previewer.pre_run_cell)
     ip.events.register('post_run_cell', ip.previewer.post_run_cell)
     ip.pt_app.default_buffer._async_previewer = create_preview_coroutine(ip, ip.pt_app.default_buffer, ip.previewer)
@@ -105,3 +108,4 @@ def unload_ipython_extension(ip:IPython.InteractiveShell):
     ip.pt_app.default_buffer.on_text_changed.remove_handler(text_changed_handler)
     del ip.pt_app.default_buffer._async_previewer
     del ip.previewer
+    ip.pt_app.bottom_toolbar = None
