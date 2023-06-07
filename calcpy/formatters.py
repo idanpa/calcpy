@@ -86,6 +86,8 @@ def sympy_iterable_formatter(iterable, printer, cycle):
         options = sympy_evalf_options()
         n = 15
         evalu = [el.evalf(n, **options) if hasattr(el, 'evalf') else el for el in iterable]
+        if isinstance(iterable, tuple):
+            evalu = tuple(evalu)
         evalu_s = pretty(evalu)
         if evalu_s != pretty_s:
             out = pretty_stack(out, " ≈ ", evalu_s, num_columns)
@@ -110,14 +112,14 @@ def sympy_dict_formatter(dict, printer, cycle):
         for key in dict:
             if hasattr(key, 'evalf'):
                 evalf_key = key.evalf(n, **options)
-                if pretty(evalf_key) !=  pretty(key):
+                if pretty(evalf_key) != pretty(key):
                     worth_printing = True
             else:
                 evalf_key = key
 
             if hasattr(dict[key], 'evalf'):
                 evalf_dict[evalf_key] = dict[key].evalf(n, **options)
-                if pretty(evalf_dict[evalf_key]) !=  pretty(dict[key]):
+                if pretty(evalf_dict[evalf_key]) != pretty(dict[key]):
                     worth_printing = True
             else:
                 evalf_dict[evalf_key] = dict[key]
