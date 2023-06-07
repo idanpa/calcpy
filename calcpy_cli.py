@@ -7,6 +7,11 @@ import subprocess
 import shutil
 import os
 
+# TODO: how to do this dynamically?
+from prompt_toolkit.styles.defaults import PROMPT_TOOLKIT_STYLE
+PROMPT_TOOLKIT_STYLE.remove((('bottom-toolbar', 'reverse')))
+PROMPT_TOOLKIT_STYLE.append((('bottom-toolbar', 'noreverse')))
+
 def start_ipython(args, conn):
     # os.sys.stdout = conn
     os.sys.__stdout__ = conn
