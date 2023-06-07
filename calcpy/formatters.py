@@ -19,7 +19,7 @@ def _twos_complement_to_int(machine_integer, bitwidth):
     last_bit = 1 << (bitwidth-1)
     return -(machine_integer & last_bit) | (machine_integer & (last_bit-1))
 
-def twos_complement_bin_to_int(binary_str):
+def bin2int(binary_str):
     binary_str = binary_str.replace(' ', '')
     return _twos_complement_to_int(int(binary_str, 2), len(binary_str))
 
