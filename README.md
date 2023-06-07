@@ -1,6 +1,6 @@
 # CalcPy
 
-Calculator and advanced math solver in the comfort of your terminal using Python, IPython and SymPy.
+Calculator and advanced math solver in the comfort of your terminal by Python, IPython and SymPy.
 
 ## Installation 
 ```
@@ -31,6 +31,8 @@ Just an IPython shell with:
 * Unit prefixes `G`, `M`, `k`, `m`, `u`, `n`, `p`, `KB`, `MB`, `GB`, `TB` (so `4MB-32KB` or `4G/32n` are valid)
 * Implicit lambda `f(a,b)=a**2+b**2`
 * Latex input `plot($\frac{1,x}$)` (latex output with `latex(1/x)`)
+* Copy to clipboard `copy(expr)`
+* Edit custom user startup (for imports, etc.) `calcpy.edit_user_startup()`
 
 [SymPy](https://www.sympy.org):
 * All the elementary (and non-elementry) math functions and constants - `ln`, `sin`, `e`, `pi` etc. 

@@ -63,6 +63,7 @@ a, b, c, d = symbols('a b c d', real=True)
 
 # user functions:
 from calcpy.formatters import twos_complement_bin_to_int
+from calcpy.utils import copy
 
 def popcount(x):
     return bin(x).count('1')
