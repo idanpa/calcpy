@@ -53,6 +53,8 @@ class Previewer():
         except:
             return None
 
+        if result is None:
+            return None
         if isinstance(result, (int, sympy.Integer, sympy.Float)):
             result_str = str(result)
         elif isinstance(result, sympy.Expr):
