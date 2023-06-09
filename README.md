@@ -32,7 +32,7 @@ Just an IPython shell with:
 * Implicit lambda `f(a,b)=a**2+b**2`
 * Latex input `plot($\frac{1,x}$)` (latex output with `latex(1/x)`)
 * Copy to clipboard `copy(expr)`
-* Edit custom user startup (for imports, etc.) `calcpy.edit_user_startup()`
+* Edit custom user startup (for imports, etc.) `edit_user_startup()`
 
 [SymPy](https://www.sympy.org):
 * All the elementary (and non-elementry) math functions and constants - `ln`, `sin`, `e`, `pi` etc. 
