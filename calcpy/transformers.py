@@ -96,16 +96,21 @@ def calcpy_input_transformer_post(lines):
     return lines
 
 class ReplaceIntegerDivisionWithRational(ast.NodeTransformer):
+    def __init__(self, ip):
+        super().__init__()
+        self.ip = ip
+
     def visit_BinOp(self, node):
         def is_integer(x):
             if isinstance(x, ast.Num) and isinstance(x.n, int):
                 return True
-            elif isinstance(x, ast.UnaryOp) and isinstance(x.op, (ast.USub, ast.UAdd)):
+            if isinstance(x, ast.Name) and isinstance(self.ip.user_ns.get(x.id, None), int):
+                return True
+            if isinstance(x, ast.UnaryOp) and isinstance(x.op, (ast.USub, ast.UAdd)):
                 return is_integer(x.operand)
-            elif isinstance(x, ast.BinOp) and isinstance(x.op, (ast.Add, ast.Sub, ast.Mult, ast.Pow)):
+            if isinstance(x, ast.BinOp) and isinstance(x.op, (ast.Add, ast.Sub, ast.Mult, ast.Pow)):
                 return is_integer(x.left) and is_integer(x.right)
-            else:
-                return False
+            return False
 
         if (isinstance(node.op, ast.Div) and is_integer(node.left) and is_integer(node.right)):
             return ast.Call(func=ast.Name(id='Rational', ctx=ast.Load()),
@@ -185,7 +190,7 @@ def init(ip: IPython.InteractiveShell):
     # python might warn about the syntax hacks (on user's code)
     warnings.filterwarnings("ignore", category=SyntaxWarning)
 
-    ip.ast_transformers.append(ReplaceIntegerDivisionWithRational())
+    ip.ast_transformers.append(ReplaceIntegerDivisionWithRational(ip))
     # ip.ast_transformers.append(ReplaceIntWithInteger())
     ip.ast_transformers.append(ReplaceFloatWithRational())
     ip.ast_transformers.append(ReplaceTupleWithMatrices())
