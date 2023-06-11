@@ -3,7 +3,7 @@ import IPython
 from prompt_toolkit.buffer import _only_one_at_a_time, _Retry
 from prompt_toolkit.eventloop import run_in_executor_with_context
 from prompt_toolkit.application.current import get_app
-from contextlib import redirect_stdout
+from calcpy.formatters import sympy_evalf_options
 from types import ModuleType
 from copy import deepcopy
 import shutil
@@ -59,6 +59,12 @@ class Previewer():
             result_str = str(result)
         elif isinstance(result, sympy.Expr):
             result_str = sympy.printing.pretty(sympy.N(result))
+        elif isinstance(result, list):
+            options = sympy_evalf_options()
+            result_str = sympy.printing.pretty([el.evalf(**options) if hasattr(el, 'evalf') else el for el in result])
+        elif isinstance(result, tuple):
+            options = sympy_evalf_options()
+            result_str = sympy.printing.pretty(tuple([el.evalf(**options) if hasattr(el, 'evalf') else el for el in result]))
         else:
             result_str = self.ip.display_formatter.format(result)[0]['text/plain']
 
