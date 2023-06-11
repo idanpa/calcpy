@@ -73,7 +73,10 @@ def pretty_stack(str1, relation, str2, num_columns):
 
 def sympy_evalf_options():
     calcpy = IPython.get_ipython().calcpy
-    return {'chop': calcpy.chop}
+    return {
+        'chop': calcpy.chop,
+        'n': 15,
+    }
 
 def sympy_iterable_formatter(iterable, printer, cycle):
     num_columns = shutil.get_terminal_size().columns
@@ -84,8 +87,7 @@ def sympy_iterable_formatter(iterable, printer, cycle):
 
     try:
         options = sympy_evalf_options()
-        n = 15
-        evalu = [el.evalf(n, **options) if hasattr(el, 'evalf') else el for el in iterable]
+        evalu = [el.evalf(**options) if hasattr(el, 'evalf') else el for el in iterable]
         if isinstance(iterable, tuple):
             evalu = tuple(evalu)
         evalu_s = pretty(evalu)
@@ -108,17 +110,16 @@ def sympy_dict_formatter(dict, printer, cycle):
         worth_printing = False
         evalf_dict = {}
         options = sympy_evalf_options()
-        n = 15
         for key in dict:
             if hasattr(key, 'evalf'):
-                evalf_key = key.evalf(n, **options)
+                evalf_key = key.evalf(**options)
                 if pretty(evalf_key) != pretty(key):
                     worth_printing = True
             else:
                 evalf_key = key
 
             if hasattr(dict[key], 'evalf'):
-                evalf_dict[evalf_key] = dict[key].evalf(n, **options)
+                evalf_dict[evalf_key] = dict[key].evalf(**options)
                 if pretty(evalf_dict[evalf_key]) != pretty(dict[key]):
                     worth_printing = True
             else:
@@ -146,7 +147,7 @@ def sympy_expr_formatter(s, printer, cycle):
             if simpl_s != pretty_s:
                 out = pretty_stack(out, " = ", simpl_s, num_columns)
 
-            evalu = sympy.N(simpl)
+            evalu = simpl.evalf(**sympy_evalf_options())
             evalu_s = pretty(evalu)
             if evalu_s != simpl_s and evalu_s != pretty_s:
                 out = pretty_stack(out, " ≈ ", evalu_s, num_columns)
