@@ -268,7 +268,7 @@ def set_base_currency(calcpy, base_curr, update=True):
     check_currency(base_curr)
     calcpy.shell.db[BASE_CURRENCY_VAR_PATH] = base_curr
     if update:
-        set_rates(calcpy)
+        update_currency(calcpy)
 
 def get_base_currency(calcpy):
     if BASE_CURRENCY_VAR_PATH in calcpy.shell.db:
@@ -289,7 +289,7 @@ def set_common_currencies(calcpy, comm_currs, update=True):
         check_currency(curr)
     calcpy.shell.db[COMMON_CURRENCIES_VAR_PATH] = comm_currs
     if update:
-        set_rates(calcpy)
+        update_currency(calcpy)
 
 def get_common_currencies(calcpy):
     if COMMON_CURRENCIES_VAR_PATH in calcpy.shell.db:
@@ -312,13 +312,13 @@ def get_rates():
         rates[child.attrib['currency']] = float(child.attrib['rate'])
     return rates
 
-def set_rates(calcpy):
+def update_currency(calcpy):
     try:
         base_curr = calcpy.base_currency
         comm_currs = list(filter(base_curr.__ne__, calcpy.common_currencies))
         rates = get_rates()
     except requests.exceptions.ConnectionError:
-        print("Can't update currency rates (connection error)")
+        print(f"Cannot update currency rates (connection error)\nMay retry by 'calcpy.update_currency()'")
         return
 
     base_rate = rates[base_curr]
@@ -331,15 +331,13 @@ def set_rates(calcpy):
 
 def update_currency_job(ip):
     while True:
-        try:
-            set_rates(ip.calcpy)
-        except Exception as e:
-            print(f'Update currency job failed with: {e}')
+        update_currency(ip.calcpy)
         sleep(60*60*12) # 12 hours
 
 def init(ip:IPython.InteractiveShell):
     type(ip.calcpy).base_currency = property(get_base_currency, set_base_currency)
     type(ip.calcpy).common_currencies = property(get_common_currencies, set_common_currencies)
+    type(ip.calcpy).update_currency = update_currency
 
     ip.calcpy.jobs.new(update_currency_job, ip, daemon=True)
 
