@@ -64,9 +64,10 @@ a, b, c, d = symbols('a b c d', real=True)
 # user functions:
 from calcpy.formatters import bin2int
 from calcpy.utils import copy
+from calcpy import get_calcpy
 
 def edit_user_startup():
-    calcpy.edit_user_startup()
+    get_calcpy().edit_user_startup()
 
 def popcount(x):
     return bin(x).count('1')

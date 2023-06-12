@@ -24,6 +24,9 @@ import calcpy.info
 import calcpy.autostore
 import calcpy.preview
 
+def get_calcpy():
+    return IPython.get_ipython().calcpy
+
 @IPython.core.magic.magics_class
 class CalcPy(IPython.core.magic.Magics):
     debug = traitlets.Bool(False, config=True, help='Add debug prints')
