@@ -3,7 +3,7 @@ import IPython
 from prompt_toolkit.buffer import _only_one_at_a_time, _Retry
 from prompt_toolkit.eventloop import run_in_executor_with_context
 from prompt_toolkit.application.current import get_app
-from calcpy.formatters import sympy_evalf_options
+from calcpy.formatters import evalf, evalf_iterable, evalf_dict
 from types import ModuleType
 from copy import deepcopy
 import shutil
@@ -23,7 +23,6 @@ class Previewer():
                 self.isolated_ns[key] = self.ip.user_ns[key]
                 continue
             try:
-                # TODO: this does not solves the case of def test1(): global t; t=3
                 self.isolated_ns[key] = deepcopy(self.ip.user_ns[key])
             except:
                 pass
@@ -31,7 +30,6 @@ class Previewer():
     def pre_run_cell(self, info):
         self.ip.pt_app.bottom_toolbar = ''
         get_app().invalidate()
-        # TODO: get_app().invalidate()/_redraw() are not cleaning bottom_toolbar (not fast enough?)
 
     def post_run_cell(self, result):
         self.update_isolated_ns()
@@ -55,18 +53,20 @@ class Previewer():
 
         if result is None:
             return None
-        if isinstance(result, (int, sympy.Integer, sympy.Float)):
-            result_str = str(result)
-        elif isinstance(result, sympy.Expr):
-            result_str = sympy.printing.pretty(sympy.N(result))
-        elif isinstance(result, list):
-            options = sympy_evalf_options()
-            result_str = sympy.printing.pretty([el.evalf(**options) if hasattr(el, 'evalf') else el for el in result])
-        elif isinstance(result, tuple):
-            options = sympy_evalf_options()
-            result_str = sympy.printing.pretty(tuple([el.evalf(**options) if hasattr(el, 'evalf') else el for el in result]))
-        else:
-            result_str = self.ip.display_formatter.format(result)[0]['text/plain']
+
+        try:
+            if isinstance(result, (int, sympy.Integer, sympy.Float)):
+                result_str = str(result)
+            elif isinstance(result, sympy.Expr):
+                result_str = sympy.printing.pretty(evalf(result))
+            elif isinstance(result, (list, tuple)):
+                result_str = sympy.printing.pretty(evalf_iterable(result))
+            elif isinstance(result, dict):
+                result_str = evalf_dict(result)
+            else:
+                result_str = self.ip.display_formatter.format(result)[0]['text/plain']
+        except:
+            return None
 
         if '\n' in result_str or len(result_str) > shutil.get_terminal_size().columns:
             return None
@@ -79,7 +79,6 @@ class Previewer():
         return await run_in_executor_with_context(run_get_preview_thread)
 
 def create_preview_coroutine(ip, buffer, previewer):
-    # TODO: retry might not be enough, need to timeout or cancel upon new event
     @_only_one_at_a_time
     async def async_previewer():
         document = buffer.document

@@ -71,12 +71,28 @@ def pretty_stack(str1, relation, str2, num_columns):
     else:
         return stringPict(*sp1.right(sp2)).render(wrap_line=True, num_columns=num_columns)
 
-def sympy_evalf_options():
+def evalf(sympy_expr):
     calcpy = IPython.get_ipython().calcpy
-    return {
+    options = {
         'chop': calcpy.chop,
         'n': 15,
     }
+    return sympy_expr.evalf(**options)
+
+def evalf_iterable(iterable):
+    evalu = []
+    for el in iterable:
+        if hasattr(el, 'evalf'):
+            evalu.append(evalf(el))
+        elif isinstance(el, (list, tuple)):
+            evalu.append(evalf_iterable(el))
+        else:
+            evalu.append(el)
+
+    if isinstance(iterable, tuple):
+        evalu = tuple(evalu)
+
+    return evalu
 
 def sympy_iterable_formatter(iterable, printer, cycle):
     num_columns = shutil.get_terminal_size().columns
@@ -86,11 +102,7 @@ def sympy_iterable_formatter(iterable, printer, cycle):
     out = pretty_s
 
     try:
-        options = sympy_evalf_options()
-        evalu = [el.evalf(**options) if hasattr(el, 'evalf') else el for el in iterable]
-        if isinstance(iterable, tuple):
-            evalu = tuple(evalu)
-        evalu_s = pretty(evalu)
+        evalu_s = pretty(evalf_iterable(iterable))
         if evalu_s != pretty_s:
             out = pretty_stack(out, " ≈ ", evalu_s, num_columns)
     except Exception as e:
@@ -98,6 +110,24 @@ def sympy_iterable_formatter(iterable, printer, cycle):
             print(f'iterable formatter failed: {e}')
 
     printer.text(out)
+
+def evalf_dict(dict):
+    num_columns = shutil.get_terminal_size().columns
+    pretty = partial(sympy.printing.pretty, num_columns=num_columns)
+
+    evalf_dict = {}
+    for key in dict:
+        if hasattr(key, 'evalf'):
+            evalf_key = evalf(key)
+        else:
+            evalf_key = key
+
+        if hasattr(dict[key], 'evalf'):
+            evalf_dict[evalf_key] = evalf(dict[key])
+        else:
+            evalf_dict[evalf_key] = dict[key]
+
+    return pretty(evalf_dict)
 
 def sympy_dict_formatter(dict, printer, cycle):
     num_columns = shutil.get_terminal_size().columns
@@ -107,26 +137,9 @@ def sympy_dict_formatter(dict, printer, cycle):
     out = pretty_s
 
     try:
-        worth_printing = False
-        evalf_dict = {}
-        options = sympy_evalf_options()
-        for key in dict:
-            if hasattr(key, 'evalf'):
-                evalf_key = key.evalf(**options)
-                if pretty(evalf_key) != pretty(key):
-                    worth_printing = True
-            else:
-                evalf_key = key
-
-            if hasattr(dict[key], 'evalf'):
-                evalf_dict[evalf_key] = dict[key].evalf(**options)
-                if pretty(evalf_dict[evalf_key]) != pretty(dict[key]):
-                    worth_printing = True
-            else:
-                evalf_dict[evalf_key] = dict[key]
-
-        if worth_printing:
-            out = pretty_stack(out, " ≈ ", pretty(evalf_dict), num_columns)
+        evalf_dict_s = evalf_dict(dict)
+        if evalf_dict_s != pretty_s:
+            out = pretty_stack(out, " ≈ ", evalf_dict_s, num_columns)
     except Exception as e:
         if IPython.get_ipython().calcpy.debug:
             print(f'dictionary formatter failed: {e}')
@@ -147,8 +160,7 @@ def sympy_expr_formatter(s, printer, cycle):
             if simpl_s != pretty_s:
                 out = pretty_stack(out, " = ", simpl_s, num_columns)
 
-            evalu = simpl.evalf(**sympy_evalf_options())
-            evalu_s = pretty(evalu)
+            evalu_s = pretty(evalf(simpl))
             if evalu_s != simpl_s and evalu_s != pretty_s:
                 out = pretty_stack(out, " ≈ ", evalu_s, num_columns)
     except Exception as e:
