@@ -62,6 +62,7 @@ m, n, l = symbols('m n l', integer=True)
 a, b, c, d = symbols('a b c d', real=True)
 
 # user functions:
+from calcpy.transformers import _String2Date
 from calcpy.formatters import bin2int
 from calcpy.utils import copy
 from calcpy import get_calcpy

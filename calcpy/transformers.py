@@ -5,11 +5,10 @@ from functools import partial
 import IPython
 import sympy
 
-try:
-    import dateparser
-    dateparsing = True
-except ModuleNotFoundError:
-    dateparsing = False
+class _String2Date():
+    def __mul__(self, other):
+        import dateparser
+        return dateparser.parse(other, settings={'STRICT_PARSING': True})
 
 def calcpy_input_transformer_cleanup(lines):
     if (lines[0][0] == '?' and lines[0][1] not in '?\n'):
@@ -45,12 +44,10 @@ def calcpy_input_transformer_post(lines):
         if vars_match:
             user_vars.setdefault(vars_match[1], None)
 
-        python_string_pattern = rf'("[^"]*"|\'[^\']*\')'
-        python_string_matches = re.findall(python_string_pattern, lines[i])
-        python_string_matches = set(python_string_matches)
-        # avoid processing of strings
-        for match in python_string_matches:
-            lines[i] = lines[i].replace(match, f'({hash(match)})')
+        code_string_pattern = rf'(d?)("[^"]*"|\'[^\']*\')'
+        code_string_matches = list(re.finditer(code_string_pattern, lines[i]))
+        for m in code_string_matches:
+            lines[i] = lines[i].replace(m.group(), f'({hash(m.group())})')
 
         latex_pattern = rf'(\$[^$]*\$)'
         if ip.calcpy.parse_latex:
@@ -78,8 +75,11 @@ def calcpy_input_transformer_post(lines):
         for match in latex_matches:
             lines[i] = lines[i].replace(f'({hash(match)})', f'parse_latex(r"{match[1:-1]}").subs({{symbols("i"):i}})')
 
-        for match in python_string_matches:
-            lines[i] = lines[i].replace(f'({hash(match)})', match)
+        for m in code_string_matches:
+            if ip.calcpy.auto_date and m.group(1) == 'd':
+                lines[i] = lines[i].replace(f'({hash(m.group())})', '_String2Date()*' + m.group(2))
+            else:
+                lines[i] = lines[i].replace(f'({hash(m.group())})', m.group())
 
     def lambda_replace(match):
         if match[1] in ip.user_ns_hidden:
@@ -157,21 +157,6 @@ class ReplaceTupleWithMatrices(ast.NodeTransformer):
 
         return matrix_ast
 
-class ReplaceStringsWithDates(ast.NodeTransformer):
-    def visit_Constant(self, node):
-        if isinstance(node, ast.Str):
-            ip = IPython.get_ipython()
-            if not ip.calcpy.auto_date:
-                return self.generic_visit(node)
-            dt = dateparser.parse(node.s, settings={'STRICT_PARSING': True})
-            if dt:
-                return ast.Call(
-                    func=ast.Attribute(value=ast.Name(id='datetime', ctx=ast.Load()), attr='datetime', ctx=ast.Load()),
-                    args=[ast.Constant(value=dt.year), ast.Constant(value=dt.month), ast.Constant(value=dt.day),
-                            ast.Constant(value=dt.hour), ast.Constant(value=dt.minute), ast.Constant(value=dt.second), ast.Constant(value=dt.microsecond)],
-                    keywords=[])
-        return self.generic_visit(node)
-
 def syntax_error_handler(ip: IPython.InteractiveShell, etype, value, tb, tb_offset=None):
     if etype is SyntaxError and tb.tb_next and not tb.tb_next.tb_next:
         if 'cannot assign to ' in str(value):
@@ -194,8 +179,6 @@ def init(ip: IPython.InteractiveShell):
     # ip.ast_transformers.append(ReplaceIntWithInteger())
     ip.ast_transformers.append(ReplaceFloatWithRational())
     ip.ast_transformers.append(ReplaceTupleWithMatrices())
-    if dateparsing:
-        ip.ast_transformers.append(ReplaceStringsWithDates())
     ip.input_transformers_cleanup.append(calcpy_input_transformer_cleanup)
     ip.input_transformers_post.append(calcpy_input_transformer_post)
 

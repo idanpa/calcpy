@@ -27,7 +27,7 @@ Just an IPython shell with:
 * Implicit multiplication (`2x`, `(x+1)(x-1)` are valid)
 * All variables and functions are restored between sessions (delete using `del`)
 * Currency conversion `10USD` (`calcpy.base_currency='EUR'` to change base currency)
-<!-- * Strings automatically converted to datetime `"yesterday at 9 am" - "1990-1-30 9:20"` (using [dateparser](https://github.com/scrapinghub/dateparser)) -->
+* Datetime calculations `d"yesterday at 9 am" - d"1990-1-30 9:20"` (using [dateparser](https://github.com/scrapinghub/dateparser))
 * Unit prefixes `G`, `M`, `k`, `m`, `u`, `n`, `p`, `KB`, `MB`, `GB`, `TB` (so `4MB-32KB` or `4G/32n` are valid)
 * Implicit lambda `f(a,b)=a**2+b**2`
 * Latex input `plot($\frac{1,x}$)` (latex output with `latex(1/x)`)
