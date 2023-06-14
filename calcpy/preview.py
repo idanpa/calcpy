@@ -67,8 +67,9 @@ class Previewer():
                 result_str = self.ip.display_formatter.format(result)[0]['text/plain']
         except:
             return None
-
-        if '\n' in result_str or len(result_str) > shutil.get_terminal_size().columns:
+        if '\n' in result_str:
+            result_str = str(result)
+        if len(result_str) > shutil.get_terminal_size().columns:
             return None
 
         return result_str
