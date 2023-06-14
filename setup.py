@@ -4,14 +4,14 @@ import setuptools
 from setuptools.command.install import install
 import sys
 import os
-import IPython
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
-import calcpy
 
 class post_setup(install):
     def run(self):
         install.run(self)
+        import IPython
+        import calcpy
         try:
             calcpy_profile_path = IPython.paths.locate_profile(calcpy.CALCPY_PROFILE_NAME)
         except OSError:
@@ -46,8 +46,11 @@ setuptools.setup(
         'Framework :: IPython',
     ],
     install_requires=[
-        'ipython', 'sympy', 'matplotlib'
-        ## for dates: dateparser
+        'requests',
+        'ipython',
+        'matplotlib',
+        'sympy',
+        'dateparser',
         ## for parse_latex(): antlr4-python3-runtime (pip), antlr-python-runtime (conda)
     ],
     use_scm_version=True,
