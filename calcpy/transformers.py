@@ -5,10 +5,12 @@ from functools import partial
 import IPython
 import sympy
 
-class _String2Date():
-    def __mul__(self, other):
-        import dateparser
-        return dateparser.parse(other, settings={'STRICT_PARSING': True})
+def dateparse(datetime_string):
+    import dateparser
+    d = dateparser.parse(datetime_string)
+    if d is None:
+        raise ValueError(f'Could not parse "{datetime_string}" to datetime')
+    return d
 
 def calcpy_input_transformer_cleanup(lines):
     if (lines[0][0] == '?' and lines[0][1] not in '?\n'):
@@ -77,7 +79,7 @@ def calcpy_input_transformer_post(lines):
 
         for m in code_string_matches:
             if ip.calcpy.auto_date and m.group(1) == 'd':
-                lines[i] = lines[i].replace(f'({hash(m.group())})', '_String2Date()*' + m.group(2))
+                lines[i] = lines[i].replace(f'({hash(m.group())})', 'dateparse(' + m.group(2) + ')')
             else:
                 lines[i] = lines[i].replace(f'({hash(m.group())})', m.group())
 
