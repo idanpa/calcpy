@@ -1,5 +1,5 @@
-## CalcPy on Android
-1. Install [termux](https://termux.com/) using [APK](https://github.com/termux/termux-app/releases) or using [F-Droid](https://f-droid.org/en/packages/com.termux/) (Play Store version is outdated)
+## CalcPy on Android (Termux)
+1. Install [Termux](https://termux.com/) using [APK](https://github.com/termux/termux-app/releases) or using [F-Droid](https://f-droid.org/en/packages/com.termux/) (Play Store version is outdated)
 2. On termux install requirements:
 ```
 pkg install python 

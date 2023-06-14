@@ -81,7 +81,7 @@ class CalcPy(IPython.core.magic.Magics):
                 calcpy.preview.unload_ipython_extension(self.shell)
         self.observe(_preview_changed, names='preview')
 
-        CalcPy.__doc__ = "CalcPy - https://github.com/idanpa/calcpy\n"
+        CalcPy.__doc__ = "CalcPy\n"
         for trait_name, trait in sorted(self.traits(config=True).items()):
             CalcPy.__doc__ += self.class_get_trait_help(trait, None).replace('--CalcPy.', '') + '\n'
 
@@ -124,12 +124,11 @@ def load_ipython_extension(ip:IPython.InteractiveShell):
 
     ip.register_magics(ip.calcpy)
 
-    if 'code_to_run' not in ip.config.InteractiveShellApp:
-        print(f"CalcPy {__version__} (Python {platform.python_version()} IPython {IPython.__version__} SymPy {sympy.__version__}) ('??' for help)")
     ip.calcpy.jobs = IPython.lib.backgroundjobs.BackgroundJobManager()
 
     def show_usage():
-        print('''CalcPy - https://github.com/idanpa/calcpy''')
+        print(f'''CalcPy {__version__} (Python {platform.python_version()} IPython {IPython.__version__} SymPy {sympy.__version__})
+https://github.com/idanpa/calcpy''')
 
     ip.show_usage = show_usage
 
@@ -144,8 +143,8 @@ def load_ipython_extension(ip:IPython.InteractiveShell):
     calcpy.info.init(ip)
     calcpy.currency.init(ip)
 
-    # we don't let ipython hide all initial variable, (by InteractiveShellApp.hide_initial_ns=False)
-    # so user defined variables would be exposed to who, who_ls
+    # we hide ourselves all initial variable, (instead of ipython InteractiveShellApp.hide_initial_ns)
+    # so autostore and user startups variables would be exposed to who, who_ls
     ip.user_ns_hidden.update(ip.user_ns)
 
     if ip.calcpy.auto_store:

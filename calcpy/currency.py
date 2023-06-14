@@ -279,7 +279,6 @@ def get_base_currency(calcpy):
     base_curr = country_to_currency.get(country, 'USD')
 
     set_base_currency(calcpy, base_curr, update=False)
-    print(f'Base currency was set to \'{base_curr}\', you can change it by setting calcpy.base_currency')
 
     return base_curr
 
@@ -318,7 +317,7 @@ def update_currency(calcpy):
         comm_currs = list(filter(base_curr.__ne__, calcpy.common_currencies))
         rates = get_rates()
     except requests.exceptions.ConnectionError:
-        print(f"Cannot update currency rates (connection error)\nMay retry by 'calcpy.update_currency()'")
+        print(f"Cannot update currency rates (connection error), retry by 'calcpy.update_currency()'")
         return
 
     base_rate = rates[base_curr]

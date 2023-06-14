@@ -94,7 +94,7 @@ def evalf_iterable(iterable):
 
     return evalu
 
-def sympy_iterable_formatter(iterable, printer, cycle):
+def iterable_formatter(iterable, printer, cycle):
     num_columns = shutil.get_terminal_size().columns
     pretty = partial(sympy.printing.pretty, num_columns=num_columns)
 
@@ -185,8 +185,8 @@ def init(ip: IPython.InteractiveShell):
     formatter.for_type(datetime.timedelta, timedelta_formatter)
     formatter.for_type(sympy.Expr, sympy_expr_formatter)
     formatter.for_type(sympy.matrices.common.MatrixCommon, sympy_expr_formatter)
-    formatter.for_type(list, sympy_iterable_formatter)
-    formatter.for_type(tuple, sympy_iterable_formatter)
+    formatter.for_type(list, iterable_formatter)
+    formatter.for_type(tuple, iterable_formatter)
     formatter.for_type(dict, sympy_dict_formatter)
     formatter.for_type(sympy.core.function.FunctionClass, IPython.lib.pretty._function_pprint)
 
