@@ -16,6 +16,7 @@ import platform
 import importlib
 import json
 import os
+from contextlib import redirect_stdout
 
 import calcpy.currency
 import calcpy.formatters
@@ -134,7 +135,8 @@ https://github.com/idanpa/calcpy''')
 
     ip.push(importlib.import_module('calcpy.user').__dict__, interactive=False)
     try:
-        ip.enable_pylab(gui='qt', import_all=False)
+        with redirect_stdout(None): # some recent IPython version prints here
+            ip.enable_pylab(gui='qt', import_all=False)
     except ImportError:
         pass # no gui
 
