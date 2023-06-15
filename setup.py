@@ -2,6 +2,7 @@
 
 import setuptools
 from setuptools.command.install import install
+from pathlib import Path
 import sys
 import os
 
@@ -23,16 +24,13 @@ class post_setup(install):
         except FileExistsError:
             pass
 
-with open('README.md', 'r', encoding="utf8") as f:
-    long_description = f.read()
-
 setuptools.setup(
     name='calcpy',
     author='Idan Pazi',
     author_email='idan.kp@gmail.com',
     url='https://github.com/idanp/calcpy',
-    description='IPython based calculator',
-    long_description=long_description,
+    description='IPython based calculator', # fix this
+    long_description=Path('README.md').read_text(),
     long_description_content_type='text/markdown',
     packages=['calcpy'],
     py_modules=['calcpy_cli'],
@@ -53,7 +51,7 @@ setuptools.setup(
         'dateparser',
         ## for parse_latex(): antlr4-python3-runtime (pip), antlr-python-runtime (conda)
     ],
-    use_scm_version=True,
+    use_scm_version={'fallback_version':'0.0.0'},
     setup_requires=['setuptools_scm'],
     license='MIT License',
     zip_safe=False,
