@@ -29,10 +29,6 @@ class ConnStream():
     def flush(self):
         pass
 
-def no_asyncio_write(write, self, data):
-    if not threading.currentThread().name.startswith('asyncio'):
-        write(self, data)
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--gui', action='store_true', help='Launch CalcPy GUI')
@@ -69,8 +65,12 @@ def main():
 
     # monkey patch prompt_toolkit to avoid printin from background for preview
     # TODO: need a better fix
-    prompt_toolkit.patch_stdout.StdoutProxy.write = \
-        partial(no_asyncio_write, prompt_toolkit.patch_stdout.StdoutProxy.write)
+    stdoutproxy_write = prompt_toolkit.patch_stdout.StdoutProxy.write
+    def skip_asyncio_thread_write(self, data):
+        if not threading.currentThread().name.startswith('asyncio'):
+            return stdoutproxy_write(self, data)
+        return len(data)  # Pretend everything was written.
+    prompt_toolkit.patch_stdout.StdoutProxy.write = skip_asyncio_thread_write
 
     if args.gui:
         # need jupyter_client==6.1.12
