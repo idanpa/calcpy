@@ -69,6 +69,8 @@ class Previewer():
             return None
         if '\n' in result_str:
             result_str = str(result)
+            if '\n' in result_str:
+                return None
         if len(result_str) > shutil.get_terminal_size().columns:
             return None
 
