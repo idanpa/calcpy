@@ -5,7 +5,7 @@ import sys
 import os
 
 class Autostore():
-    def __init__(self, shell, **kwargs):
+    def __init__(self, shell):
         self.shell = shell
         self.debug = False
         self.last_user_ns = []
@@ -17,14 +17,18 @@ class Autostore():
             try:
                 var = self.shell.db[var_path]
             except KeyError:
-                print(f'Failed to restore "{var_path}": {sys.exc_info()[0]}')
+                print(f'Failed to restore "{var_path}": {sys.exc_info()[0]}, discarding')
                 del self.shell.db[var_path]
             else:
                 if var_name.startswith('_func_'):
                     # to allow %edit func_name, need to place function in file
-                    file_path = self.shell.mktempfile(var)
+                    file_path = self.shell.mktempfile(var, prefix='autostore' + var_name + '_')
                     self.shell.user_ns['__file__'] = file_path
-                    self.shell.safe_execfile(file_path, shell.user_ns, shell_futures=True)
+                    try:
+                        self.shell.safe_execfile(file_path, shell.user_ns, shell_futures=True, raise_exceptions=True)
+                    except Exception as e:
+                        print(f'Autostore - failed to restore function:\n{var}\n{repr(e)}\n\ndiscarding')
+                        del self.shell.db[var_path]
                 else:
                     self.shell.user_ns[var_name] = var
 
@@ -37,6 +41,12 @@ class Autostore():
             return False
 
         if type(var) == types.FunctionType:
+            try:
+                # skip functions that were not defined by user:
+                if not inspect.getfile(var).startswith('<ipython-input-'):
+                    return False
+            except TypeError:
+                return False
             try:
                 var = inspect.getsource(var)
             except Exception as e:
