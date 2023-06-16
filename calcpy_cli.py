@@ -67,7 +67,7 @@ def main():
     # TODO: need a better fix
     stdoutproxy_write = prompt_toolkit.patch_stdout.StdoutProxy.write
     def skip_asyncio_thread_write(self, data):
-        if not threading.currentThread().name.startswith('asyncio'):
+        if not threading.current_thread().name.startswith('asyncio'):
             return stdoutproxy_write(self, data)
         return len(data)  # Pretend everything was written.
     prompt_toolkit.patch_stdout.StdoutProxy.write = skip_asyncio_thread_write
