@@ -1,11 +1,11 @@
 # Content of this file is pushed into user's context:
 try:
     import numpy as np
-except ModuleNotFoundError:
+except (ModuleNotFoundError, ImportError):
     pass
 try:
     import matplotlib.pyplot as plt
-except ModuleNotFoundError:
+except (ModuleNotFoundError, ImportError):
     pass
 
 import sympy
