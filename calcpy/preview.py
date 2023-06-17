@@ -6,6 +6,7 @@ from prompt_toolkit.application.current import get_app
 from calcpy.formatters import evalf, evalf_iterable, evalf_dict
 from types import ModuleType
 from copy import deepcopy
+import warnings
 import shutil
 import ast
 
@@ -47,7 +48,11 @@ class Previewer():
         try:
             compiled_code = compile(ast_code, '<string>', 'eval', PyCF_DONT_IMPLY_DEDENT, 1)
             # TODO: we globally discard prints from asyncio, but need to find a better fix
-            result = eval(compiled_code, self.isolated_ns)
+            with warnings.catch_warnings():
+                # running matplolib from this thread would hang, use matplotlib warning to skip:
+                # "Starting a Matplotlib GUI outside of the main thread will likely fail."
+                warnings.filterwarnings('error', message='Starting a Matplotlib GUI')
+                result = eval(compiled_code, self.isolated_ns)
         except:
             return None
 
