@@ -12,12 +12,6 @@ def dateparse(datetime_string):
         raise ValueError(f'Could not parse "{datetime_string}" to datetime')
     return d
 
-def calcpy_input_transformer_cleanup(lines):
-    if (lines[0][0] == '?' and lines[0][1] not in '?\n'):
-        lines[0] = 'print_info(' + lines[0][1:]
-        lines[-1] += ')'
-    return lines
-
 def calcpy_input_transformer_post(lines):
     ip = IPython.get_ipython()
     var_p = r'[^\d\W]\w*' # match any valid variable name
@@ -181,7 +175,6 @@ def init(ip: IPython.InteractiveShell):
     # ip.ast_transformers.append(ReplaceIntWithInteger())
     ip.ast_transformers.append(ReplaceFloatWithRational())
     ip.ast_transformers.append(ReplaceTupleWithMatrices())
-    ip.input_transformers_cleanup.append(calcpy_input_transformer_cleanup)
     ip.input_transformers_post.append(calcpy_input_transformer_post)
 
     ip.set_custom_exc((SyntaxError,), syntax_error_handler)

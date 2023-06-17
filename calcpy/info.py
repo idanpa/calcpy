@@ -4,6 +4,12 @@ import shutil
 import sympy
 from contextlib import suppress
 
+def calcpy_input_transformer_cleanup(lines):
+    if (lines[0][0] == '?' and lines[0][1] not in '?\n'):
+        lines[0] = 'print_info(' + lines[0][1:]
+        lines[-1] += ')'
+    return lines
+
 def print_info_job(res):
     terminal_size = shutil.get_terminal_size()
     page = terminal_size.columns * terminal_size.lines
@@ -154,7 +160,18 @@ def print_info_job(res):
 
 def print_info(res):
     ip = IPython.get_ipython()
+    ip.calcpy.skip_next_print = True
     ip.calcpy.jobs.new(print_info_job, res, daemon=True)
+    return res
+
+def info_post_run_cell(result:IPython.core.interactiveshell.ExecutionResult):
+    ip = IPython.get_ipython()
+    if ip.calcpy.skip_next_print:
+        ip.calcpy.skip_next_print = False
+        result.result = None
 
 def init(ip:IPython.InteractiveShell):
-    pass
+    ip.input_transformers_cleanup.append(calcpy_input_transformer_cleanup)
+    ip.events.register('post_run_cell', info_post_run_cell)
+    ip.calcpy.skip_next_print = False
+
