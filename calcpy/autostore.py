@@ -42,8 +42,9 @@ class Autostore():
 
         if type(var) == types.FunctionType:
             try:
-                # skip functions that were not defined by user:
-                if not inspect.getfile(var).startswith('<ipython-input-'):
+                # skip functions that were not defined by user in a cell or by %edit:
+                var_file = inspect.getfile(var)
+                if not (var_file.startswith('<ipython-input-') or ('autostore_func_' in var_file) or ('ipython_edit_' in var_file)):
                     return False
             except TypeError:
                 return False
