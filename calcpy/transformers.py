@@ -30,52 +30,54 @@ def calcpy_input_transformer_post(lines):
         return match[0]
 
     user_vars = ip.ev("locals()")
-    for i in range(len(lines)):
-        lines[i] = lines[i].replace('⋅','*')
-        lines[i] = lines[i].replace('ⅈ','i') # for implicit multiply to detect it
 
-        # make sure we consider newly introduced variables:
-        var_def_pattern = rf'^({var_p})\s*=(.*)'
-        vars_match = re.match(var_def_pattern, lines[i])
-        if vars_match:
-            user_vars.setdefault(vars_match[1], None)
+    user_code = ''.join(lines)
 
-        code_string_pattern = rf'(d?)("[^"]*"|\'[^\']*\')'
-        code_string_matches = list(re.finditer(code_string_pattern, lines[i]))
-        for m in code_string_matches:
-            lines[i] = lines[i].replace(m.group(), f'({hash(m.group())})')
+    user_code = user_code.replace('⋅','*')
+    user_code = user_code.replace('ⅈ','i') # for implicit multiply to detect it
 
-        latex_pattern = rf'(\$[^$]*\$)'
-        if ip.calcpy.parse_latex:
-            latex_matches = re.findall(latex_pattern, lines[i])
+    # make sure we consider newly introduced variables:
+    var_def_pattern = rf'^({var_p})\s*=(.*)'
+
+    for vars_match in re.finditer(var_def_pattern, user_code):
+        user_vars.setdefault(vars_match[1], None)
+
+    code_string_pattern = rf'(d?)("[^"]*"|\'[^\']*\')'
+    code_string_matches = list(re.finditer(code_string_pattern, user_code))
+    for m in code_string_matches:
+        user_code = user_code.replace(m.group(), f'({hash(m.group())})')
+
+    latex_pattern = rf'(\$[^$]*\$)'
+    if ip.calcpy.parse_latex:
+        latex_matches = re.findall(latex_pattern, user_code)
+    else:
+        latex_matches = []
+    latex_matches = set(latex_matches)
+    # avoid processing of latex
+    for match in latex_matches:
+        user_code = user_code.replace(match, f'({hash(match)})')
+
+    # need to be here so we won't replace caret on latex
+    if ip.calcpy.caret_power:
+        user_code = user_code.replace('^','**')
+
+    if ip.calcpy.implicit_multiply: # asterisk-free multiplication: 4MB => 4*MB
+        # pattern is (format string detection|middle of name detection)?(hex number | engineering number | number)(var name)?
+        mult_pat = rf'(% *|[^\d\W])?(0x[0-9a-f]*|0X[0-9A-F]*|\d*\.?\d+e-?\d+|\d*\.?\d+)({var_p})?'
+        user_code = re.sub(mult_pat, partial(re_sub_mult_replace, vars=user_vars), user_code)
+
+        # pattern is (right parentheses)(hex number | engineering number | number | var name)
+        mult_pat = rf'(\))(0x[0-9a-f]*|0X[0-9A-F]*|\d*\.?\d+e-?\d+|\d*\.?\d+|{var_p})'
+        user_code = re.sub(mult_pat, rf'\1*\2', user_code)
+
+    for match in latex_matches:
+        user_code = user_code.replace(f'({hash(match)})', f'parse_latex(r"{match[1:-1]}").subs({{symbols("i"):i}})')
+
+    for m in code_string_matches:
+        if ip.calcpy.auto_date and m.group(1) == 'd':
+            user_code = user_code.replace(f'({hash(m.group())})', 'dateparse(' + m.group(2) + ')')
         else:
-            latex_matches = []
-        latex_matches = set(latex_matches)
-        # avoid processing of latex
-        for match in latex_matches:
-            lines[i] = lines[i].replace(match, f'({hash(match)})')
-
-        # need to be here so we won't replace caret on latex
-        if ip.calcpy.caret_power:
-            lines[i] = lines[i].replace('^','**')
-
-        if ip.calcpy.implicit_multiply: # asterisk-free multiplication: 4MB => 4*MB
-            # pattern is (format string detection|middle of name detection)?(hex number | engineering number | number)(var name)?
-            mult_pat = rf'(% *|[^\d\W])?(0x[0-9a-f]*|0X[0-9A-F]*|\d*\.?\d+e-?\d+|\d*\.?\d+)({var_p})?'
-            lines[i] = re.sub(mult_pat, partial(re_sub_mult_replace, vars=user_vars), lines[i])
-
-            # pattern is (right parentheses)(hex number | engineering number | number | var name)
-            mult_pat = rf'(\))(0x[0-9a-f]*|0X[0-9A-F]*|\d*\.?\d+e-?\d+|\d*\.?\d+|{var_p})'
-            lines[i] = re.sub(mult_pat, rf'\1*\2', lines[i])
-
-        for match in latex_matches:
-            lines[i] = lines[i].replace(f'({hash(match)})', f'parse_latex(r"{match[1:-1]}").subs({{symbols("i"):i}})')
-
-        for m in code_string_matches:
-            if ip.calcpy.auto_date and m.group(1) == 'd':
-                lines[i] = lines[i].replace(f'({hash(m.group())})', 'dateparse(' + m.group(2) + ')')
-            else:
-                lines[i] = lines[i].replace(f'({hash(m.group())})', m.group())
+            user_code = user_code.replace(f'({hash(m.group())})', m.group())
 
     def lambda_replace(match):
         if match[1] in ip.user_ns_hidden:
@@ -85,11 +87,11 @@ def calcpy_input_transformer_post(lines):
     if ip.calcpy.auto_lambda: # easier lambda: f(x,y) = x + y => f = lambda x, y : x + y
         lambda_pattern = rf'^({var_p})\(((?:{var_p}\s*,?\s*)*)\)\s*=([^=].*)'
         try:
-            lines[0] = re.sub(lambda_pattern, lambda_replace, lines[0])
+            user_code = re.sub(lambda_pattern, lambda_replace, user_code)
         except ValueError as ve:
             return [f"raise ValueError(\"{str(ve)}\")"]
 
-    return lines
+    return user_code.splitlines(keepends=True)
 
 class ReplaceIntegerDivisionWithRational(ast.NodeTransformer):
     def __init__(self, ip):

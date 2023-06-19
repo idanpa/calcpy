@@ -37,7 +37,7 @@ class Previewer():
 
     def preview(self, code):
         PyCF_DONT_IMPLY_DEDENT = 0x200
-        code = transformers.calcpy_input_transformer_post([code])[0]
+        code = ''.join(transformers.calcpy_input_transformer_post(code.splitlines(keepends=True)))
 
         try:
             ast_code = compile(code, '<string>', 'eval', ast.PyCF_ONLY_AST | PyCF_DONT_IMPLY_DEDENT, 1)
