@@ -58,8 +58,6 @@ deg = MulUnitPrefix(Rational(1, 180), pi)
 # variables:
 x, y, t = symbols('x y t', real=True)
 z = symbols('z', complex=True)
-m, n, l = symbols('m n l', integer=True)
-a, b, c, d = symbols('a b c d', real=True)
 
 # user functions:
 from calcpy.transformers import dateparse
