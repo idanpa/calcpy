@@ -4,13 +4,14 @@ import shutil
 import sympy
 from contextlib import suppress
 
-def calcpy_input_transformer_cleanup(lines):
+def calcpy_info_input_transformer_cleanup(lines):
     if (lines[0][0] == '?' and lines[0][1] not in '?\n'):
         lines[0] = 'print_info(' + lines[0][1:]
         lines[-1] += ')'
     return lines
 
 def print_info_job(res):
+    ip = IPython.get_ipython()
     terminal_size = shutil.get_terminal_size()
     page = terminal_size.columns * terminal_size.lines
     pretty = partial(sympy.printing.pretty, num_columns=terminal_size.columns)
@@ -131,12 +132,19 @@ def print_info_job(res):
                     evs = [(sympy.N(ev[0]), ev[1], tuple(map(sympy.N, ev[2]))) for ev in evs]
                     evs_print = pretty(evs)
                 print(f'\n{evs_print} = _.eigenvects() # ((eval, mult, evec),...')
-                with suppress(sympy.matrices.matrices.MatrixError):
+                try:
                     diag = res.diagonalize()
                     diag_print = pretty(diag)
                     if len(diag_print) > page:
                         diag_print = pretty(list(map(sympy.N, diag)))
                     print(f'\n{diag_print} = _.diagonalize() # (P,D) so _=PDP^-1')
+                except sympy.matrices.matrices.MatrixError:
+                    jord = res.jordan_form(chop=ip.calcpy.chop)
+                    jord_print = pretty(jord)
+                    if len(jord_print) > page:
+                        jord_print = pretty(list(map(sympy.N, jord)))
+                    print(f'\n{jord_print} = _.jordan_form() # (P,J) so _=PJP^-1')
+
             elif res.rows > 1 and res.cols > 1:
                 print(f'\n{pretty(res.rank())} = _.rank()')
                 print(f'\n{pretty(res.pinv())} = _.pinv()')
@@ -171,7 +179,7 @@ def info_post_run_cell(result:IPython.core.interactiveshell.ExecutionResult):
         result.result = None
 
 def init(ip:IPython.InteractiveShell):
-    ip.input_transformers_cleanup.append(calcpy_input_transformer_cleanup)
+    ip.input_transformers_cleanup.append(calcpy_info_input_transformer_cleanup)
     ip.events.register('post_run_cell', info_post_run_cell)
     ip.calcpy.skip_next_print = False
 
