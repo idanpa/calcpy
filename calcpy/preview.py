@@ -73,11 +73,10 @@ class Previewer():
         except:
             return None
         if '\n' in result_str:
-            result_str = str(result)
-            if '\n' in result_str:
-                return None
-        if len(result_str) > shutil.get_terminal_size().columns:
-            return None
+            result_str = str(result).replace('\n', ' ')
+        num_columns = shutil.get_terminal_size().columns
+        if len(result_str) > num_columns:
+            return result_str[:num_columns-4] + '...'
 
         return result_str
 
