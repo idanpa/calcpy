@@ -136,7 +136,7 @@ https://github.com/idanpa/calcpy''')
     ip.push(importlib.import_module('calcpy.user').__dict__, interactive=False)
     try:
         with redirect_stdout(None): # some recent IPython version prints here
-            ip.enable_pylab(gui='qt', import_all=False)
+            ip.enable_pylab(import_all=False)
     except ImportError:
         pass # no gui
 
@@ -159,7 +159,7 @@ https://github.com/idanpa/calcpy''')
                          raise_exceptions=False,
                          shell_futures=True)
 
-    if ip.calcpy.preview:
+    if ip.calcpy.preview and 'code_to_run' not in ip.config.InteractiveShellApp:
         calcpy.preview.load_ipython_extension(ip)
 
 if __name__ == '__main__':
