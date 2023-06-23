@@ -1,9 +1,11 @@
 from functools import partial
+from contextlib import suppress
 import shutil
 import datetime
 import IPython
 import sympy
 from sympy.printing.pretty.stringpict import stringPict
+import IPython.lib.pretty
 
 def _bin_pad(bin_string, pad_every=4):
         return ' '.join(bin_string[i:i+pad_every] for i in range(0, len(bin_string), pad_every))
@@ -54,6 +56,8 @@ def timedelta_formatter(td, printer, cycle):
     printer.text(str(td))
 
 def str_formatter(s, printer, cycle):
+    if not (''.join(s.split())).isprintable():
+        s = repr(s)
     printer.text(s)
 
 def pretty_stack(str1, relation, str2, num_columns):
@@ -94,9 +98,53 @@ def evalf_iterable(iterable):
 
     return evalu
 
+def is_multiline(string):
+    return '\n' in string
+
+def _pretty(obj, ip_pretty, sympy_pretty):
+    ''' recursive pretty printer
+    a priori it is not clear which printer should be used sympy's/IPython's
+    sympy is terrible with large dictionaries, and IPython knows to divide nested iterables nicely
+    returns pretty string, and whether need to use sympy's printer higher in hierarchy
+    '''
+    if isinstance(obj, str):
+        return obj, False
+    if isinstance(obj, sympy.printing.defaults.Printable):
+        pretty_str = sympy_pretty(obj)
+        return pretty_str, is_multiline(pretty_str)
+    if isinstance(obj, dict):
+        pretty_dict = {}
+        for key in obj:
+            p_key, need_sympy_key = _pretty(key, ip_pretty, sympy_pretty)
+            p_val, need_sympy_value = _pretty(obj[key], ip_pretty, sympy_pretty)
+
+            if need_sympy_key or need_sympy_value:
+                return sympy_pretty(obj), True
+
+            pretty_dict[p_key] = p_val
+        return ip_pretty(pretty_dict), False
+    with suppress(TypeError): # forgiveness if not an iterable
+        pretty_iter = []
+        for item in obj:
+            p_item, need_sympy = _pretty(item, ip_pretty, sympy_pretty)
+            if need_sympy:
+                return sympy_pretty(obj), True
+            pretty_iter.append(p_item)
+        if isinstance(obj, (tuple, set, frozenset)):
+            pretty_iter = type(obj)(pretty_iter)
+        return ip_pretty(pretty_iter), False
+
+    return ip_pretty(obj), False
+
+def pretty(obj):
+    num_columns = shutil.get_terminal_size().columns
+    sympy_pretty = partial(sympy.printing.pretty, num_columns=num_columns)
+    ip_pretty = partial(IPython.lib.pretty.pretty, max_width=num_columns)
+
+    return _pretty(obj, ip_pretty, sympy_pretty)[0]
+
 def iterable_formatter(iterable, printer, cycle):
     num_columns = shutil.get_terminal_size().columns
-    pretty = partial(sympy.printing.pretty, num_columns=num_columns)
 
     pretty_s = pretty(iterable)
     out = pretty_s
@@ -111,33 +159,29 @@ def iterable_formatter(iterable, printer, cycle):
 
     printer.text(out)
 
-def evalf_dict(dict):
-    num_columns = shutil.get_terminal_size().columns
-    pretty = partial(sympy.printing.pretty, num_columns=num_columns)
-
-    evalf_dict = {}
-    for key in dict:
+def evalf_dict(d):
+    evalf_d = {}
+    for key in d:
         if hasattr(key, 'evalf'):
             evalf_key = evalf(key)
         else:
             evalf_key = key
 
-        if hasattr(dict[key], 'evalf'):
-            evalf_dict[evalf_key] = evalf(dict[key])
+        if hasattr(d[key], 'evalf'):
+            evalf_d[evalf_key] = evalf(d[key])
         else:
-            evalf_dict[evalf_key] = dict[key]
+            evalf_d[evalf_key] = d[key]
 
-    return pretty(evalf_dict)
+    return evalf_d
 
-def sympy_dict_formatter(dict, printer, cycle):
+def sympy_dict_formatter(d, printer, cycle):
     num_columns = shutil.get_terminal_size().columns
-    pretty = partial(sympy.printing.pretty, num_columns=num_columns)
 
-    pretty_s = pretty(dict)
+    pretty_s = pretty(d)
     out = pretty_s
 
     try:
-        evalf_dict_s = evalf_dict(dict)
+        evalf_dict_s = pretty(evalf_dict(d))
         if evalf_dict_s != pretty_s:
             out = pretty_stack(out, " ≈ ", evalf_dict_s, num_columns)
     except Exception as e:
@@ -148,7 +192,6 @@ def sympy_dict_formatter(dict, printer, cycle):
 
 def sympy_expr_formatter(s, printer, cycle):
     num_columns = shutil.get_terminal_size().columns
-    pretty = partial(sympy.printing.pretty, num_columns=num_columns)
 
     pretty_s = pretty(s)
     out = pretty_s
@@ -178,6 +221,7 @@ def init(ip: IPython.InteractiveShell):
 
     formatter = ip.display_formatter.formatters['text/plain']
     formatter.for_type(str, str_formatter)
+    IPython.lib.pretty.for_type(str, str_formatter)
     formatter.for_type(int, int_formatter)
     formatter.for_type(sympy.Integer, int_formatter)
     formatter.for_type(complex, complex_formatter)

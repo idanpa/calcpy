@@ -67,7 +67,7 @@ class Previewer():
             elif isinstance(result, (list, tuple)):
                 result_str = sympy.printing.pretty(evalf_iterable(result))
             elif isinstance(result, dict):
-                result_str = evalf_dict(result)
+                result_str = sympy.printing.pretty(evalf_dict(result))
             else:
                 result_str = self.ip.display_formatter.format(result)[0]['text/plain']
         except:
