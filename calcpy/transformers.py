@@ -4,6 +4,7 @@ import warnings
 from functools import partial
 import IPython
 import sympy
+import sympy.interactive.session
 
 def dateparse(datetime_string):
     import dateparser
@@ -37,17 +38,16 @@ def calcpy_input_transformer_post(lines):
     user_code = user_code.replace('ⅈ','i') # for implicit multiply to detect it
 
     # make sure we consider newly introduced variables:
-    var_def_pattern = rf'^({var_p})\s*=(.*)'
-
-    for vars_match in re.finditer(var_def_pattern, user_code):
+    var_def_pattern = r'^({var_p})\s*=(.*)'
+    for vars_match in re.finditer(var_def_pattern, user_code, re.MULTILINE):
         user_vars.setdefault(vars_match[1], None)
 
-    code_string_pattern = rf'(d?)("[^"]*"|\'[^\']*\')'
+    code_string_pattern = r'(d?)("(?:\\"|[^"])*"|\'(?:\\\'|[^\'])*\')'
     code_string_matches = list(re.finditer(code_string_pattern, user_code))
     for m in code_string_matches:
         user_code = user_code.replace(m.group(), f'({hash(m.group())})')
 
-    latex_pattern = rf'(\$[^$]*\$)'
+    latex_pattern = r'(\$[^$]*\$)'
     if ip.calcpy.parse_latex:
         latex_matches = re.findall(latex_pattern, user_code)
     else:
@@ -68,10 +68,10 @@ def calcpy_input_transformer_post(lines):
 
         # pattern is (right parentheses)(hex number | engineering number | number | var name)
         mult_pat = rf'(\))(0x[0-9a-f]*|0X[0-9A-F]*|\d*\.?\d+e-?\d+|\d*\.?\d+|{var_p})'
-        user_code = re.sub(mult_pat, rf'\1*\2', user_code)
+        user_code = re.sub(mult_pat, r'\1*\2', user_code)
 
     for match in latex_matches:
-        user_code = user_code.replace(f'({hash(match)})', f'parse_latex(r"{match[1:-1]}").subs({{symbols("i"):i}})')
+        user_code = user_code.replace(f'({hash(match)})', f'parse_latex(r"""{match[1:-1]}""").subs({{symbols("i"):i}})')
 
     for m in code_string_matches:
         if ip.calcpy.auto_date and m.group(1) == 'd':
@@ -156,14 +156,15 @@ class ReplaceTupleWithMatrices(ast.NodeTransformer):
         return matrix_ast
 
 def syntax_error_handler(ip: IPython.InteractiveShell, etype, value, tb, tb_offset=None):
-    if etype is SyntaxError and tb.tb_next and not tb.tb_next.tb_next:
+    if ip.calcpy.auto_solve and \
+       etype is SyntaxError and tb.tb_next and not tb.tb_next.tb_next:
         if 'cannot assign to ' in str(value):
             try:
                 code = ip.user_ns['In'][-1]
             except (KeyError, IndexError):
                 pass
             else:
-                code = re.sub(rf'(.*[^=])=([^=].*)', rf'solve(Eq(\1, \2))', code)
+                code = re.sub(r'(.*[^=])=([^=].*)', r'solve(Eq(\1, \2))', code)
                 ip.run_cell(code, store_history=False)
                 return None
     ip.showsyntaxerror()
