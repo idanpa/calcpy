@@ -60,20 +60,17 @@ class Previewer():
             return None
 
         try:
-            if isinstance(result, (int, sympy.Integer, sympy.Float)):
-                result_str = str(result)
-            elif isinstance(result, sympy.Expr):
-                result_str = sympy.printing.pretty(evalf(result))
+            if isinstance(result, sympy.Expr):
+                result_str = IPython.lib.pretty.pretty(evalf(result))
             elif isinstance(result, (list, tuple)):
-                result_str = sympy.printing.pretty(evalf_iterable(result))
+                result_str = IPython.lib.pretty.pretty(evalf_iterable(result))
             elif isinstance(result, dict):
-                result_str = sympy.printing.pretty(evalf_dict(result))
+                result_str = IPython.lib.pretty.pretty(evalf_dict(result))
             else:
-                result_str = self.ip.display_formatter.format(result)[0]['text/plain']
+                result_str = IPython.lib.pretty.pretty(result)
         except:
             return None
-        if '\n' in result_str:
-            result_str = str(result).replace('\n', ' ')
+        result_str = result_str.replace('\n', ' ')
         num_columns = shutil.get_terminal_size().columns
         if len(result_str) > num_columns:
             return result_str[:num_columns-4] + '...'

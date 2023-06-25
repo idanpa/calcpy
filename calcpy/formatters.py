@@ -3,6 +3,7 @@ import shutil
 import datetime
 import IPython
 import sympy
+import sympy.combinatorics
 from sympy.printing.pretty.stringpict import stringPict
 import IPython.lib.pretty
 
@@ -59,6 +60,19 @@ def str_formatter(s, printer, cycle):
         s = repr(s)
     printer.text(s)
 
+def ip_sympy_pretty_if_oneline_formatter(obj, printer, cycle):
+    obj_sympy_pretty = sympy.printing.pretty(obj)
+    if '\n' in obj_sympy_pretty:
+        printer.text(repr(obj))
+    else:
+        printer.text(obj_sympy_pretty)
+
+def ip_matrix_formatter(m, printer, cycle):
+    printer.text(str(tuple(tuple(x) for x in m.tolist())))
+
+def ip_permutation_formatter(p, printer, cycle):
+    printer.text(sympy.printing.pretty(sympy.combinatorics.permutations.Cycle(p)))
+
 def pretty_stack(str1, relation, str2, num_columns):
     sp1 = stringPict(str1)
     sp1.baseline = sp1.height()//2
@@ -97,49 +111,12 @@ def evalf_iterable(iterable):
 
     return evalu
 
-def is_multiline(string):
-    return '\n' in string
-
-def _pretty(obj, ip_pretty, sympy_pretty):
-    ''' recursive pretty printer
-    a priori it is not clear which printer should be used sympy's/IPython's
-    sympy is terrible with large dictionaries, and IPython knows to divide nested iterables nicely
-    returns pretty string, and whether need to use sympy's printer higher in hierarchy
-    '''
-    if isinstance(obj, str):
-        return obj, False
-    if isinstance(obj, sympy.printing.defaults.Printable):
-        pretty_str = sympy_pretty(obj)
-        return pretty_str, is_multiline(pretty_str)
-    if isinstance(obj, dict):
-        pretty_dict = {}
-        for key in obj:
-            p_key, need_sympy_key = _pretty(key, ip_pretty, sympy_pretty)
-            p_val, need_sympy_value = _pretty(obj[key], ip_pretty, sympy_pretty)
-
-            if need_sympy_key or need_sympy_value:
-                return sympy_pretty(obj), True
-
-            pretty_dict[p_key] = p_val
-        return ip_pretty(pretty_dict), False
-    if isinstance(obj, (list, tuple, set, frozenset)):
-        pretty_iter = []
-        for item in obj:
-            p_item, need_sympy = _pretty(item, ip_pretty, sympy_pretty)
-            if need_sympy:
-                return sympy_pretty(obj), True
-            pretty_iter.append(p_item)
-        pretty_iter = type(obj)(pretty_iter)
-        return ip_pretty(pretty_iter), False
-
-    return ip_pretty(obj), False
-
 def pretty(obj):
-    num_columns = shutil.get_terminal_size().columns
-    sympy_pretty = partial(sympy.printing.pretty, num_columns=num_columns)
-    ip_pretty = partial(IPython.lib.pretty.pretty, max_width=num_columns)
-
-    return _pretty(obj, ip_pretty, sympy_pretty)[0]
+    num_columns, num_rows = shutil.get_terminal_size()
+    sympy_pretty = sympy.printing.pretty(obj, num_columns=num_columns)
+    if sympy_pretty.count('\n') >= num_rows*1.5:
+        return IPython.lib.pretty.pretty(obj, max_width=num_columns)
+    return sympy_pretty
 
 def iterable_formatter(iterable, printer, cycle):
     num_columns = shutil.get_terminal_size().columns
@@ -210,6 +187,10 @@ def sympy_expr_formatter(s, printer, cycle):
 
     printer.text(out)
 
+def sympy_pretty_formatter(obj, printer, cycle):
+    num_columns = shutil.get_terminal_size().columns
+    printer.text(sympy.printing.pretty(obj, num_columns=num_columns))
+
 def init(ip: IPython.InteractiveShell):
     sympy.interactive.printing.init_printing(
         pretty_print=True,
@@ -217,20 +198,27 @@ def init(ip: IPython.InteractiveShell):
         num_columns=shutil.get_terminal_size().columns,
         ip=ip)
 
+    IPython.lib.pretty.for_type(str, str_formatter)
+    IPython.lib.pretty.for_type(sympy.printing.defaults.Printable, ip_sympy_pretty_if_oneline_formatter)
+    IPython.lib.pretty.for_type(sympy.matrices.common.MatrixShaping, ip_matrix_formatter)
+    IPython.lib.pretty.for_type(sympy.combinatorics.permutations.Cycle, sympy_pretty_formatter)
+    IPython.lib.pretty.for_type(sympy.combinatorics.permutations.Permutation, ip_permutation_formatter)
+
     formatter = ip.display_formatter.formatters['text/plain']
     formatter.for_type(str, str_formatter)
-    IPython.lib.pretty.for_type(str, str_formatter)
     formatter.for_type(int, int_formatter)
     formatter.for_type(sympy.Integer, int_formatter)
     formatter.for_type(complex, complex_formatter)
     formatter.for_type(datetime.datetime, datetime_formatter)
     formatter.for_type(datetime.timedelta, timedelta_formatter)
-    formatter.for_type(sympy.Expr, sympy_expr_formatter)
-    formatter.for_type(sympy.matrices.common.MatrixCommon, sympy_expr_formatter)
     formatter.for_type(list, iterable_formatter)
     formatter.for_type(tuple, iterable_formatter)
     formatter.for_type(dict, sympy_dict_formatter)
+    formatter.for_type(sympy.Expr, sympy_expr_formatter)
+    formatter.for_type(sympy.matrices.common.MatrixCommon, sympy_expr_formatter)
     formatter.for_type(sympy.core.function.FunctionClass, IPython.lib.pretty._function_pprint)
+    formatter.for_type(sympy.combinatorics.permutations.Permutation, sympy_pretty_formatter)
+    formatter.for_type(sympy.combinatorics.permutations.Cycle, sympy_pretty_formatter)
 
     # use IPython's float precision
     from sympy.printing.pretty.pretty import PrettyPrinter
