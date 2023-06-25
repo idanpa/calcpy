@@ -6,6 +6,16 @@ import IPython
 import sympy
 import sympy.interactive.session
 
+# Auxilary classes for manipulations
+class UnitPrefix():
+    is_unit_prefix = True
+class IntegerUnitPrefix(sympy.Integer, UnitPrefix):
+    pass
+class PowUnitPrefix(sympy.Pow, UnitPrefix):
+    pass
+class MulUnitPrefix(sympy.Mul, UnitPrefix):
+    pass
+
 def dateparse(datetime_string):
     import dateparser
     d = dateparser.parse(datetime_string)

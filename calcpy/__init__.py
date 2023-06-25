@@ -42,6 +42,7 @@ class CalcPy(IPython.core.magic.Magics):
     parse_latex = traitlets.Bool(True, config=True)
     bitwidth = traitlets.Int(0, config=True)
     chop = traitlets.Bool(True, config=True)
+    eng_units_prefixes = traitlets.Bool(True, config=True)
     precision = property(
         lambda calcpy: calcpy.shell.run_line_magic('precision', ''),
         lambda calcpy, p: calcpy.shell.run_line_magic('precision', p))
@@ -49,6 +50,8 @@ class CalcPy(IPython.core.magic.Magics):
     def __init__(self, shell=None, **kwargs):
         ''''''
         super(CalcPy, self).__init__(shell, **kwargs)
+
+        self._eng_units_prefixes_dict = importlib.import_module('calcpy.eng_units_prefixes').__dict__
 
         self.user_startup_path = os.path.join(shell.profile_dir.location, 'user_startup.py')
         config_path = os.path.join(self.shell.profile_dir.location, 'calcpy.json')
@@ -81,6 +84,15 @@ class CalcPy(IPython.core.magic.Magics):
             if change.old != change.new == False:
                 calcpy.preview.unload_ipython_extension(self.shell)
         self.observe(_preview_changed, names='preview')
+
+        def _eng_units_prefixes_changed(change):
+            if change.new == True:
+                calcpy.push(self._eng_units_prefixes_dict, interactive=False)
+            if change.new == False:
+                for key in self._eng_units_prefixes_dict:
+                    self.shell.user_ns.pop(key, None)
+                    self.shell.user_ns_hidden.pop(key, None)
+        self.observe(_eng_units_prefixes_changed, names='eng_units_prefixes')
 
         CalcPy.__doc__ = "CalcPy\n"
         for trait_name, trait in sorted(self.traits(config=True).items()):
@@ -134,6 +146,9 @@ https://github.com/idanpa/calcpy''')
     ip.show_usage = show_usage
 
     ip.push(importlib.import_module('calcpy.user').__dict__, interactive=False)
+    if ip.calcpy.eng_units_prefixes:
+        ip.push(ip.calcpy._eng_units_prefixes_dict, interactive=False)
+
     try:
         with redirect_stdout(None): # some recent IPython version prints here
             ip.enable_pylab(import_all=False)

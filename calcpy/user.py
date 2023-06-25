@@ -29,24 +29,7 @@ j = I
 import datetime
 
 from calcpy.info import print_info
-
-# units manipulation:
-class UnitPrefix():
-    is_unit_prefix = True
-class IntegerUnitPrefix(Integer, UnitPrefix):
-    pass
-class PowUnitPrefix(Pow, UnitPrefix):
-    pass
-class MulUnitPrefix(Mul, UnitPrefix):
-    pass
-
-G = IntegerUnitPrefix(1e9)
-M = IntegerUnitPrefix(1e6)
-k = IntegerUnitPrefix(1e3)
-m = PowUnitPrefix(10, -3)
-u = PowUnitPrefix(10, -6)
-n = PowUnitPrefix(10, -9)
-p = PowUnitPrefix(10, -12)
+from calcpy.transformers import IntegerUnitPrefix, PowUnitPrefix, MulUnitPrefix
 
 KB = IntegerUnitPrefix(2**10)
 MB = IntegerUnitPrefix(2**20)
