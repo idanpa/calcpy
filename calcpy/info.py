@@ -3,6 +3,7 @@ import IPython
 import shutil
 import sympy
 from contextlib import suppress
+from time import sleep
 
 def calcpy_info_input_transformer_cleanup(lines):
     if (lines[0][0] == '?' and lines[0][1] not in '?\n'):
@@ -15,6 +16,8 @@ def print_info_job(res):
     terminal_size = shutil.get_terminal_size()
     page = terminal_size.columns * terminal_size.lines
     pretty = partial(sympy.printing.pretty, num_columns=terminal_size.columns)
+
+    sleep(0.01) # so prints won't clash
 
     try:
         res_p = pretty(res)

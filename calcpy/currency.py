@@ -2,7 +2,6 @@ import requests
 from xml.etree import ElementTree
 import IPython
 import sympy
-import calcpy.autostore as autostore
 from time import sleep
 
 country_to_currency = {
