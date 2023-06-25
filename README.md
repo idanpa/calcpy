@@ -18,7 +18,7 @@ $ calcpy
 ## Features
 * Display both symbolic and numeric solutions
 * Integers displayed as decimal, hex and binary (control size with `calcpy.bitwidth`)
-* Result preview while typing
+* Evaluation preview while typing
 * Currency conversion `10USD` (`calcpy.base_currency='EUR'` to change base currency)
 * `?` prefix would provide some basic analysis of expression (similar to [WolframAlpha](https://www.wolframalpha.com/))  
 `?((1,2),(3,4))`, `?x**2+1`, `?234`
@@ -26,11 +26,13 @@ $ calcpy
 * Tuples are matrices `((1,2),(3,4))**2`        
 * All variables and functions are restored between sessions (delete using `del`)
 * Datetime calculations `d"yesterday at 9 am" - d"1990-1-30 9:20"` (using [dateparser](https://github.com/scrapinghub/dateparser))
-* Unit prefixes `G`, `M`, `k`, `m`, `u`, `n`, `p`, `KB`, `MB`, `GB`, `TB` (so `4MB-32KB` or `4G/32n` are valid)
+* Unit prefixes `G`, `M`, `k`, `m`, `u`, `n`, `p`, `KB`, `MB`, `GB`, `TB` (so `4MB-32KB` or `4G/3.2n` are valid)
 * Implicit lambda `f(a,b)=a**2+b**2`
 * Latex input `plot($\frac{1,x}$)` (latex output with `latex(1/x)`)
-* Copy to clipboard `copy(expr)`
+* Copy to clipboard `copy(Out[12])`
+* Automatic symbols, anything like `x` `y_1` would become sympy symbol
 * Custom user startup (for imports, etc.) `edit_user_startup()`
+* Persistent configuration, see options with `calcpy?`
 
 [SymPy](https://www.sympy.org):
 * All the elementary (and non-elementry) math functions and constants - `ln`, `sin`, `e`, `pi` etc. 
@@ -49,5 +51,5 @@ $ calcpy
 * All the basic arithmetic (`+`,`-`,`*`,`/`,`**`)
 * Programmer: `0b10` binary input, `0x1F` hexadecimal input, `//` integer division, `%` modulo, `&` bitwise AND, `|` bitwise OR, `^` bitwise XOR, `~` bitwise not, `>>`/`<<` right/left shift. 
 
-## Warranty
-Provided "as is", without warranty of any kind 😊
+## Contributing
+Feel free to open an issue for bugs/features,  send a pull request  or star.
