@@ -1,5 +1,4 @@
 from functools import partial
-from contextlib import suppress
 import shutil
 import datetime
 import IPython
@@ -123,15 +122,14 @@ def _pretty(obj, ip_pretty, sympy_pretty):
 
             pretty_dict[p_key] = p_val
         return ip_pretty(pretty_dict), False
-    with suppress(TypeError): # forgiveness if not an iterable
+    if isinstance(obj, (list, tuple, set, frozenset)):
         pretty_iter = []
         for item in obj:
             p_item, need_sympy = _pretty(item, ip_pretty, sympy_pretty)
             if need_sympy:
                 return sympy_pretty(obj), True
             pretty_iter.append(p_item)
-        if isinstance(obj, (tuple, set, frozenset)):
-            pretty_iter = type(obj)(pretty_iter)
+        pretty_iter = type(obj)(pretty_iter)
         return ip_pretty(pretty_iter), False
 
     return ip_pretty(obj), False
