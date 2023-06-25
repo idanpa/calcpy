@@ -23,6 +23,9 @@ def dateparse(datetime_string):
         raise ValueError(f'Could not parse "{datetime_string}" to datetime')
     return d
 
+def is_auto_symbol(var_name):
+    return re.fullmatch(r'[^\d\W](_?\d+)?', var_name) is not None
+
 def calcpy_input_transformer_post(lines):
     ip = IPython.get_ipython()
     var_p = r'[^\d\W]\w*' # match any valid variable name
@@ -38,6 +41,9 @@ def calcpy_input_transformer_post(lines):
                 return f'({match[2]}*{match[3]})'
             else:
                 return f'{match[2]}*{match[3]}'
+        if is_auto_symbol(match[3]):
+            return f'{match[2]}*{match[3]}'
+
         return match[0]
 
     user_vars = ip.ev("locals()")
@@ -165,6 +171,13 @@ class ReplaceTupleWithMatrices(ast.NodeTransformer):
 
         return matrix_ast
 
+class AutoSymbols(ast.NodeTransformer):
+    def visit_Name(self, node):
+        ip = IPython.get_ipython()
+        if ip.calcpy.auto_symbols and node.id not in ip.user_ns and is_auto_symbol(node.id):
+            ip.calcpy.push({node.id: sympy.symbols(node.id)}, interactive=False)
+        return self.generic_visit(node)
+
 def syntax_error_handler(ip: IPython.InteractiveShell, etype, value, tb, tb_offset=None):
     if ip.calcpy.auto_solve and \
        etype is SyntaxError and tb.tb_next and not tb.tb_next.tb_next:
@@ -188,6 +201,7 @@ def init(ip: IPython.InteractiveShell):
     # ip.ast_transformers.append(ReplaceIntWithInteger())
     ip.ast_transformers.append(ReplaceFloatWithRational())
     ip.ast_transformers.append(ReplaceTupleWithMatrices())
+    ip.ast_transformers.append(AutoSymbols())
     ip.input_transformers_post.append(calcpy_input_transformer_post)
 
     ip.set_custom_exc((SyntaxError,), syntax_error_handler)

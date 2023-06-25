@@ -38,10 +38,6 @@ TB = IntegerUnitPrefix(2**40)
 
 deg = MulUnitPrefix(Rational(1, 180), pi)
 
-# variables:
-x, y, t = symbols('x y t', real=True)
-z = symbols('z', complex=True)
-
 # user functions:
 from calcpy.transformers import dateparse
 from calcpy.formatters import bin2int

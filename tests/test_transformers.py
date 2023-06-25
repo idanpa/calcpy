@@ -1,3 +1,5 @@
+from sympy import symbols
+
 def test_autodate(ip):
     dt = ip.run_cell('d"today"-d"yesterday"').result
     assert dt.days == 1 or 24*60*60-1 <= dt.seconds <= 24*60*60
@@ -22,4 +24,7 @@ def auto_matrix(ip):
 
 def parse_latex(ip):
     assert ip.run_cell('$\\frac{1}{2}$.evalf()').result == 0.5
+
+def auto_symbols(ip):
+    assert ip.run_cell('x+y_1+z2').result == symbols('x')+symbols('y_1')+symbols('z2')
 
