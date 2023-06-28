@@ -17,11 +17,10 @@ def print_info_job(res):
     page = terminal_size.columns * terminal_size.lines
     pretty = partial(sympy.printing.pretty, num_columns=terminal_size.columns)
 
-    sleep(0.01) # so prints won't clash
+    sleep(0.05) # so prints won't clash
 
     try:
         res_p = pretty(res)
-        print(res_p)
 
         if isinstance(res, (float, sympy.core.numbers.Float)):
             print(f'\n{pretty(sympy.Rational(res))} = Rational(_)')
@@ -171,18 +170,9 @@ def print_info_job(res):
 
 def print_info(res):
     ip = IPython.get_ipython()
-    ip.calcpy.skip_next_print = True
     ip.calcpy.jobs.new(print_info_job, res, daemon=True)
     return res
 
-def info_post_run_cell(result:IPython.core.interactiveshell.ExecutionResult):
-    ip = IPython.get_ipython()
-    if ip.calcpy.skip_next_print:
-        ip.calcpy.skip_next_print = False
-        result.result = None
-
 def init(ip:IPython.InteractiveShell):
     ip.input_transformers_cleanup.append(calcpy_info_input_transformer_cleanup)
-    ip.events.register('post_run_cell', info_post_run_cell)
-    ip.calcpy.skip_next_print = False
 
