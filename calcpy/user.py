@@ -9,6 +9,7 @@ except (ModuleNotFoundError, ImportError):
     pass
 
 import sympy
+import sympy.combinatorics
 from sympy.parsing.latex import parse_latex
 from sympy import *
 e = E                   # avoid conflict with sympy.stats expectation

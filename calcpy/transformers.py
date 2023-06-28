@@ -77,6 +77,13 @@ def calcpy_input_transformer_post(lines):
     if ip.calcpy.caret_power:
         user_code = user_code.replace('^','**')
 
+    if ip.calcpy.auto_permutation:
+        def cycle_replace(match):
+            return "sympy.combinatorics.Permutation(" + \
+                match[0].strip('()').replace(' ',',') + ")"
+        cycle_pat = r'\((\d+ )+\d+\)'
+        user_code = re.sub(cycle_pat, cycle_replace, user_code)
+
     if ip.calcpy.implicit_multiply: # asterisk-free multiplication: 4MB => 4*MB
         # pattern is (format string detection|middle of name detection)?(hex number | engineering number | number)(var name)?
         mult_pat = rf'(% *|[^\d\W])?(0x[0-9a-f]*|0X[0-9A-F]*|\d*\.?\d+e-?\d+|\d*\.?\d+)({var_p})?'
