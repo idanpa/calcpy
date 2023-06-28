@@ -2,18 +2,23 @@
 
 Calculator and advanced math solver in the comfort of your terminal by Python, IPython and SymPy.
 
+## Usage
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/demo/demo_dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="docs/demo/demo_light.svg">
+    <img alt="demo" width="600" src="docs/demo/demo_light.svg">
+  </picture>
+</p>
+
+[Examples](docs/examples.md)&emsp;·&emsp;[Try online](https://replit.com/@idanp/CalcPy?embed=true)
+
 ## Installation 
-([Python installation](https://www.python.org/downloads/))
 ```
 pip install git+https://github.com/idanpa/calcpy
 ```
 [Android installation](docs/android.md)
-## Usage
-```
-$ calcpy
-```
-[Examples](docs/examples.md)  
-[Try online](https://replit.com/@idanp/CalcPy?embed=true)
+([Python installation](https://www.python.org/downloads/))
 
 ## Features
 * Display both symbolic and numeric solutions

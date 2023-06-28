@@ -1,0 +1,26 @@
+set type_wait = 0.12
+set pre_enter_wait = .6
+set enter_wait = 2
+
+wait .5
+$>> calcpy
+wait 4.5
+
+$> 4*2 + 3/4 + sqrt(2)
+
+$> _/2
+
+$> 3MB - 200KB
+
+$> 45EUR
+
+$> diff(sin(x**y), y)
+
+$> ((1,0),(a,b))^-1
+
+$> _^2
+
+$> x^2+3x-1=0
+
+$> ?tan(x)
+wait 4.5

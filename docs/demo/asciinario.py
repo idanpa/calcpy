@@ -10,13 +10,13 @@ import sys
 import time
 from uuid import uuid4
 
-
 class Play:
     def __init__(self, screen_id):
         self.screen_id = screen_id
         self.status_pos = "top"
         self.type_wait = .2
         self.enter_wait = .5
+        self.pre_enter_wait = .1
 
     def do(self, line):
         for regex, method in self.statements.items():
@@ -49,14 +49,19 @@ class Play:
                 time.sleep(self.type_wait)
 
     def do_type(self, match):
+        need_escape = "^"
         flags = set(match[1])
         message = match[2]
         for c in message:
+            if c in need_escape:
+                c = "\\" + c
             self.send_screen("stuff", c)
             if ">" not in flags:
                 time.sleep(self.type_wait)
 
         if "$" in flags:
+            if ">" not in flags:
+                time.sleep(self.pre_enter_wait)
             self.send_screen("stuff", "\n")
             if ">" not in flags:
                 time.sleep(self.enter_wait)
@@ -82,7 +87,7 @@ class Play:
         self.send_screen("exec", "dialog", "--keep-tite", "--msgbox", match[1], "0", "0")
 
     def do_set(self, match):
-        if match[1] in {"type_wait", "enter_wait"}:
+        if match[1] in {"type_wait", "enter_wait", "pre_enter_wait"}:
             setattr(self, match[1], float(match[2]))
         else:
             raise KeyError("unhandled config %r" % match[1])
@@ -101,34 +106,26 @@ class Play:
         re.compile(r"dialog (.*)"): do_dialog,
     }
 
-
 def escape_hstatus(text):
     return text.replace("%", "%%")
 
-
 def play_inscript(text, screen_id):
     player = Play(screen_id)
-
     lines = text.strip().split("\n")
     for line in lines:
         if not line or line.lstrip().startswith("#"):
             continue
-
         player.do(line)
-
 
 parser = ArgumentParser()
 parser.add_argument("scenario")
 parser.add_argument("output")
-parser.add_argument("--cwd")
-args = parser.parse_args()
+args, args_reminder = parser.parse_known_args()
 instructions = Path(args.scenario).read_text()
 
 screen_id = str(uuid4())
 cmd = f"screen -S {screen_id}"
-if args.cwd:
-    cmd = f"cd {args.cwd!r}; {cmd}"
-recorder_proc = subprocess.Popen(["asciinema", "rec", "-c", cmd, args.output])
+recorder_proc = subprocess.Popen(["asciinema", "rec", "--overwrite", "--cols", "80", "--rows", "20", "-c", cmd, args.output])
 
 # give some time for screen to start
 for _ in range(10):
