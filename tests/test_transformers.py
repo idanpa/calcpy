@@ -16,7 +16,7 @@ def caret_power(ip):
     assert ip.run_cell('3^3').result == 27
 
 def auto_lambda(ip):
-    ip.run_cell('f(x,y)=x+y')
+    ip.run_cell('f(x,y):=x+y')
     assert ip.run_cell('f(1,2)').result == 3
 
 def auto_matrix(ip):

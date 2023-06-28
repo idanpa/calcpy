@@ -95,17 +95,10 @@ def calcpy_input_transformer_post(lines):
         else:
             user_code = user_code.replace(f'({hash(m.group())})', m.group())
 
-    def lambda_replace(match):
-        if match[1] in ip.user_ns_hidden:
-            raise ValueError(f"Can't override internal '{match[1]}'")
-        return match[1] + '= lambda ' +  match[2] + ':' + match[3]
-
-    if ip.calcpy.auto_lambda: # easier lambda: f(x,y) = x + y => f = lambda x, y : x + y
-        lambda_pattern = rf'^({var_p})\(((?:{var_p}\s*,?\s*)*)\)\s*=([^=].*)'
-        try:
-            user_code = re.sub(lambda_pattern, lambda_replace, user_code)
-        except ValueError as ve:
-            return [f"raise ValueError(\"{str(ve)}\")"]
+    if ip.calcpy.auto_lambda:
+        lambda_pattern = rf'^({var_p})\(((?:{var_p}\s*,?\s*)*)\)\s*:=([^=].*)'
+        lambda_replace = r'\1= lambda \2 : \3'
+        user_code = re.sub(lambda_pattern, lambda_replace, user_code)
 
     return user_code.splitlines(keepends=True)
 
