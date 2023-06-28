@@ -71,7 +71,7 @@ def ip_matrix_formatter(m, printer, cycle):
     printer.text(str(tuple(tuple(x) for x in m.tolist())))
 
 def ip_permutation_formatter(p, printer, cycle):
-    printer.text(sympy.printing.pretty(sympy.combinatorics.permutations.Cycle(p)))
+    printer.text(sympy.printing.pretty(sympy.combinatorics.Cycle(p)))
 
 def pretty_stack(str1, relation, str2, num_columns):
     sp1 = stringPict(str1)
@@ -201,8 +201,8 @@ def init(ip: IPython.InteractiveShell):
     IPython.lib.pretty.for_type(str, str_formatter)
     IPython.lib.pretty.for_type(sympy.printing.defaults.Printable, ip_sympy_pretty_if_oneline_formatter)
     IPython.lib.pretty.for_type(sympy.matrices.common.MatrixShaping, ip_matrix_formatter)
-    IPython.lib.pretty.for_type(sympy.combinatorics.permutations.Cycle, sympy_pretty_formatter)
-    IPython.lib.pretty.for_type(sympy.combinatorics.permutations.Permutation, ip_permutation_formatter)
+    IPython.lib.pretty.for_type(sympy.combinatorics.Cycle, sympy_pretty_formatter)
+    IPython.lib.pretty.for_type(sympy.combinatorics.Permutation, ip_permutation_formatter)
 
     formatter = ip.display_formatter.formatters['text/plain']
     formatter.for_type(str, str_formatter)
@@ -217,8 +217,8 @@ def init(ip: IPython.InteractiveShell):
     formatter.for_type(sympy.Expr, sympy_expr_formatter)
     formatter.for_type(sympy.matrices.common.MatrixCommon, sympy_expr_formatter)
     formatter.for_type(sympy.core.function.FunctionClass, IPython.lib.pretty._function_pprint)
-    formatter.for_type(sympy.combinatorics.permutations.Permutation, sympy_pretty_formatter)
-    formatter.for_type(sympy.combinatorics.permutations.Cycle, sympy_pretty_formatter)
+    formatter.for_type(sympy.combinatorics.Permutation, sympy_pretty_formatter)
+    formatter.for_type(sympy.combinatorics.Cycle, sympy_pretty_formatter)
 
     # use IPython's float precision
     from sympy.printing.pretty.pretty import PrettyPrinter

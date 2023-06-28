@@ -62,6 +62,8 @@ class Previewer():
         try:
             if isinstance(result, sympy.Expr):
                 result_str = IPython.lib.pretty.pretty(evalf(result))
+            elif isinstance(result, sympy.combinatorics.Cycle):
+                result_str = IPython.lib.pretty.pretty(result)
             elif isinstance(result, (list, tuple)):
                 result_str = IPython.lib.pretty.pretty(evalf_iterable(result))
             elif isinstance(result, dict):
