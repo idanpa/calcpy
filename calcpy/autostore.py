@@ -74,7 +74,8 @@ class Autostore():
         new_last_user_ns = []
         for var_name in list(self.shell.user_ns):
             if var_name.startswith('_') or \
-            var_name in self.shell.user_ns_hidden:
+             self.shell.user_ns[var_name] is \
+              self.shell.user_ns_hidden.get(var_name, None):
                 continue
             self.store(var_name, verbose=self.debug)
             new_last_user_ns.append(var_name)
@@ -87,6 +88,10 @@ class Autostore():
 
     def post_run_cell(self, result):
         self.store_all_user_vars()
+
+    def _get_stored(self):
+        return [os.path.basename(var_path).removeprefix('_func_') for \
+                var_path in self.shell.db.keys('autostore/*')]
 
     def reset(self):
         for var_path in self.shell.db.keys('autostore/*'):
