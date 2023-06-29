@@ -107,6 +107,8 @@ def calcpy_input_transformer_post(lines):
         lambda_replace = r'\1= lambda \2 : \3'
         user_code = re.sub(lambda_pattern, lambda_replace, user_code)
 
+    if ip.calcpy._print_transformed_code:
+        print(user_code)
     return user_code.splitlines(keepends=True)
 
 class ReplaceIntegerDivisionWithRational(ast.NodeTransformer):

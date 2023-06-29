@@ -49,6 +49,8 @@ class CalcPy(IPython.core.magic.Magics):
         lambda calcpy: calcpy.shell.run_line_magic('precision', ''),
         lambda calcpy, p: calcpy.shell.run_line_magic('precision', p))
 
+    _print_transformed_code = traitlets.Bool(False, config=False)
+
     def __init__(self, shell=None, **kwargs):
         ''''''
         super(CalcPy, self).__init__(shell, **kwargs)
