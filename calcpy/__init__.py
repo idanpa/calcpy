@@ -39,6 +39,7 @@ class CalcPy(IPython.core.magic.Magics):
     auto_matrix = traitlets.Bool(True, config=True)
     auto_date = traitlets.Bool(True, config=True)
     auto_symbols = traitlets.Bool(True, config=True)
+    auto_factorial = traitlets.Bool(True, config=True, help="convert '5!' to 'factorial(5)'")
     auto_permutation = traitlets.Bool(False, config=True)
     preview = traitlets.Bool(True, config=True)
     parse_latex = traitlets.Bool(True, config=True)

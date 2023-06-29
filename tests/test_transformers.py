@@ -25,3 +25,7 @@ def test_parse_latex(ip):
 def test_auto_symbols(ip):
     assert ip.run_cell('x+y_1+z2').result == symbols('x')+symbols('y_1')+symbols('z2')
 
+def test_auto_factorial(ip):
+    assert ip.run_cell('5!').result == 120
+    assert ip.run_cell('5!+1').result == 121
+    assert ip.run_cell('5!=6').result == True

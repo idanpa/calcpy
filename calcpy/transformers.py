@@ -16,6 +16,11 @@ class PowUnitPrefix(sympy.Pow, UnitPrefix):
 class MulUnitPrefix(sympy.Mul, UnitPrefix):
     pass
 
+class FactorialPow():
+    # using power so factorial would take the right precedence
+    def __rpow__(self, other):
+        return sympy.factorial(other)
+
 def dateparse(datetime_string):
     import dateparser
     d = dateparser.parse(datetime_string)
@@ -76,6 +81,9 @@ def calcpy_input_transformer_post(lines):
     # need to be here so we won't replace caret on latex
     if ip.calcpy.caret_power:
         user_code = user_code.replace('^','**')
+
+    if ip.calcpy.auto_factorial:
+        user_code = re.sub(r'!(?!=)', r'**_factorial_pow', user_code)
 
     if ip.calcpy.auto_permutation:
         def cycle_replace(match):
@@ -196,6 +204,8 @@ def syntax_error_handler(ip: IPython.InteractiveShell, etype, value, tb, tb_offs
     return None
 
 def init(ip: IPython.InteractiveShell):
+    ip.calcpy.push({'_factorial_pow': FactorialPow()}, interactive=False)
+
     # python might warn about the syntax hacks (on user's code)
     warnings.filterwarnings("ignore", category=SyntaxWarning)
 
