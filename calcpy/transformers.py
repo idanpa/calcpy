@@ -29,7 +29,10 @@ def dateparse(datetime_string):
     return d
 
 def is_auto_symbol(var_name):
-    return re.fullmatch(r'[^\d\W](_?\d+)?', var_name) is not None
+    var_name_no_idx = re.sub(r'_?\d+$', '', var_name)
+    return re.fullmatch(r'[^\d\W]', var_name_no_idx) is not None or \
+        var_name_no_idx in ['alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta', 'theta', 'iota', 'kappa', 'lamda',
+                            'mu', 'nu', 'xi', 'omicron', 'pi', 'rho', 'sigma', 'tau', 'upsilon', 'phi', 'chi', 'psi', 'omega']
 
 def calcpy_input_transformer_post(lines):
     ip = IPython.get_ipython()
