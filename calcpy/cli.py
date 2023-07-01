@@ -1,10 +1,6 @@
-#!/usr/bin/env python3
-
 import calcpy
 import IPython
 import argparse
-import subprocess
-import shutil
 import os
 
 import threading
@@ -12,8 +8,11 @@ import prompt_toolkit.patch_stdout
 
 # TODO: how to do this dynamically?
 from prompt_toolkit.styles.defaults import PROMPT_TOOLKIT_STYLE
-PROMPT_TOOLKIT_STYLE.remove((('bottom-toolbar', 'reverse')))
-PROMPT_TOOLKIT_STYLE.append((('bottom-toolbar', 'noreverse')))
+try:
+    PROMPT_TOOLKIT_STYLE.remove((('bottom-toolbar', 'reverse')))
+    PROMPT_TOOLKIT_STYLE.append((('bottom-toolbar', 'noreverse')))
+except: # this hack might just break one day
+    pass
 
 def main():
     parser = argparse.ArgumentParser()

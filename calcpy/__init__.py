@@ -18,12 +18,12 @@ import json
 import os
 from contextlib import redirect_stdout
 
-import calcpy.currency
-import calcpy.formatters
-import calcpy.transformers
-import calcpy.info
-import calcpy.autostore
-import calcpy.preview
+from . import currency
+from . import formatters
+from . import transformers
+from . import info
+from . import autostore
+from . import preview
 
 def get_calcpy():
     return IPython.get_ipython().calcpy
@@ -78,21 +78,21 @@ class CalcPy(IPython.core.magic.Magics):
 
         def _auto_store_changed(change):
             if change.old != change.new == True:
-                calcpy.autostore.load_ipython_extension(self.shell)
+                autostore.load_ipython_extension(self.shell)
             if change.old != change.new == False:
-                calcpy.autostore.unload_ipython_extension(self.shell)
+                autostore.unload_ipython_extension(self.shell)
         self.observe(_auto_store_changed, names='auto_store')
 
         def _preview_changed(change):
             if change.old != change.new == True:
-                calcpy.preview.load_ipython_extension(self.shell)
+                preview.load_ipython_extension(self.shell)
             if change.old != change.new == False:
-                calcpy.preview.unload_ipython_extension(self.shell)
+                preview.unload_ipython_extension(self.shell)
         self.observe(_preview_changed, names='preview')
 
         def _eng_units_prefixes_changed(change):
             if change.new == True:
-                calcpy.push(self._eng_units_prefixes_dict, interactive=False)
+                self.push(self._eng_units_prefixes_dict, interactive=False)
             if change.new == False:
                 for key in self._eng_units_prefixes_dict:
                     self.shell.user_ns.pop(key, None)
@@ -160,17 +160,17 @@ https://github.com/idanpa/calcpy''')
     except ImportError:
         pass # no gui
 
-    calcpy.formatters.init(ip)
-    calcpy.transformers.init(ip)
-    calcpy.info.init(ip)
-    calcpy.currency.init(ip)
+    formatters.init(ip)
+    transformers.init(ip)
+    info.init(ip)
+    currency.init(ip)
 
     # we hide ourselves all initial variable, (instead of ipython InteractiveShellApp.hide_initial_ns)
     # so autostore and user startups variables would be exposed to who, who_ls
     ip.user_ns_hidden.update(ip.user_ns)
 
     if ip.calcpy.auto_store:
-        calcpy.autostore.load_ipython_extension(ip)
+        autostore.load_ipython_extension(ip)
 
     if os.path.isfile(ip.calcpy.user_startup_path):
         ip.user_ns['__file__'] = ip.calcpy.user_startup_path
@@ -180,7 +180,7 @@ https://github.com/idanpa/calcpy''')
                          shell_futures=True)
 
     if ip.calcpy.preview and 'code_to_run' not in ip.config.InteractiveShellApp:
-        calcpy.preview.load_ipython_extension(ip)
+        preview.load_ipython_extension(ip)
 
 if __name__ == '__main__':
     load_ipython_extension(IPython.get_ipython())

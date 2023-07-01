@@ -1,29 +1,8 @@
 #!/usr/bin/env python
 
 import setuptools
-from setuptools.command.install import install
 from pathlib import Path
-import sys
 import os
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
-
-CALCPY_PROFILE_NAME = 'calcpy'
-
-class post_setup(install):
-    def run(self):
-        install.run(self)
-        import IPython
-        try:
-            calcpy_profile_path = IPython.paths.locate_profile(CALCPY_PROFILE_NAME)
-        except OSError:
-            IPython.core.profiledir.ProfileDir.create_profile_dir_by_name(IPython.paths.get_ipython_dir(), CALCPY_PROFILE_NAME)
-            calcpy_profile_path = IPython.paths.locate_profile(CALCPY_PROFILE_NAME)
-        try:
-            with open(os.path.join(calcpy_profile_path, 'user_startup.py'), 'x') as f:
-                f.write('# CalcPy user startup:')
-        except FileExistsError:
-            pass
 
 setuptools.setup(
     name='calcpy',
@@ -34,10 +13,6 @@ setuptools.setup(
     long_description=Path('README.md').read_text(),
     long_description_content_type='text/markdown',
     packages=['calcpy'],
-    py_modules=['calcpy_cli'],
-    cmdclass={
-        'install': post_setup,
-    },
     classifiers=[
         'Programming Language :: Python :: 3',
         'License :: OSI Approved :: MIT License',
@@ -58,6 +33,6 @@ setuptools.setup(
     zip_safe=False,
     keywords=['calculator',],
     entry_points = {
-        "console_scripts": ['calcpy = calcpy_cli:main']
+        "console_scripts": ['calcpy = calcpy.cli:main']
     },
 )
