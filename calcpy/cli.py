@@ -3,9 +3,6 @@ import IPython
 import argparse
 import os
 
-import threading
-import prompt_toolkit.patch_stdout
-
 # TODO: how to do this dynamically?
 from prompt_toolkit.styles.defaults import PROMPT_TOOLKIT_STYLE
 try:
@@ -45,15 +42,6 @@ def main():
         ipython_args.append(f"--InteractiveShellApp.code_to_run={args.command}")
 
     ipython_args.extend(args_reminder)
-
-    # monkey patch prompt_toolkit to avoid printin from background for preview
-    # TODO: need a better fix
-    stdoutproxy_write = prompt_toolkit.patch_stdout.StdoutProxy.write
-    def skip_asyncio_thread_write(self, data):
-        if not threading.current_thread().name.startswith('asyncio'):
-            return stdoutproxy_write(self, data)
-        return len(data)  # Pretend everything was written.
-    prompt_toolkit.patch_stdout.StdoutProxy.write = skip_asyncio_thread_write
 
     IPython.start_ipython(ipython_args)
 

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 from importlib.metadata import version, PackageNotFoundError
 
 try:
@@ -85,9 +84,9 @@ class CalcPy(IPython.core.magic.Magics):
 
         def _preview_changed(change):
             if change.old != change.new == True:
-                preview.load_ipython_extension(self.shell)
+                self.load_preview()
             if change.old != change.new == False:
-                preview.unload_ipython_extension(self.shell)
+                self.unload_preview()
         self.observe(_preview_changed, names='preview')
 
         def _eng_units_prefixes_changed(change):
@@ -114,7 +113,7 @@ class CalcPy(IPython.core.magic.Magics):
     def push(self, variables, interactive=True):
         self.shell.push(variables, interactive)
         try:
-            self.shell.previewer.isolated_ns.update(variables)
+            self.shell.previewer.push(variables)
         except AttributeError:
             pass
 
@@ -131,12 +130,25 @@ class CalcPy(IPython.core.magic.Magics):
                 setattr(self, trait_name, trait.default_value)
         self.shell.autostore.reset(prompt)
 
+    def load_preview(self):
+        preview_config = self.shell.config.copy()
+        preview_config.CalcPy.preview = False
+        preview_config.CalcPy.auto_store = False
+        preview.load_ipython_extension(self.shell, config=preview_config, formatter=formatters.preview_formatter, debug=self.debug)
+
+    def unload_preview(self):
+        preview.unload_ipython_extension(self.shell)
+
 def load_ipython_extension(ip:IPython.InteractiveShell):
     if ip.profile != CALCPY_PROFILE_NAME:
         print(f'warning: Not using the {CALCPY_PROFILE_NAME} profile (current profile is {ip.profile}')
 
     ip.calcpy = CalcPy(ip)
     ip.push({'calcpy': ip.calcpy}, interactive=False)
+
+    if ip.calcpy.preview and 'InteractiveShellApp.code_to_run' not in ip.config and \
+       not ip.config.TerminalInteractiveShell.simple_prompt == True:
+        ip.calcpy.load_preview()
 
     ip.register_magics(ip.calcpy)
 
@@ -175,9 +187,6 @@ https://github.com/idanpa/calcpy''')
                          ip.user_ns,
                          raise_exceptions=False,
                          shell_futures=True)
-
-    if ip.calcpy.preview and 'code_to_run' not in ip.config.InteractiveShellApp:
-        preview.load_ipython_extension(ip)
 
 if __name__ == '__main__':
     load_ipython_extension(IPython.get_ipython())

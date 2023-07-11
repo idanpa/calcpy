@@ -191,6 +191,27 @@ def sympy_pretty_formatter(obj, printer, cycle):
     num_columns = shutil.get_terminal_size().columns
     printer.text(sympy.printing.pretty(obj, num_columns=num_columns))
 
+def preview_formatter(obj):
+    try:
+        if isinstance(obj, sympy.Expr):
+            obj_str = IPython.lib.pretty.pretty(evalf(obj))
+        elif isinstance(obj, sympy.combinatorics.Cycle):
+            obj_str = IPython.lib.pretty.pretty(obj)
+        elif isinstance(obj, (list, tuple)):
+            obj_str = IPython.lib.pretty.pretty(evalf_iterable(obj))
+        elif isinstance(obj, dict):
+            obj_str = IPython.lib.pretty.pretty(evalf_dict(obj))
+        else:
+            obj_str = IPython.lib.pretty.pretty(obj)
+    except:
+        obj_str = ''
+
+    obj_str = obj_str.replace('\n', ' ')
+    num_columns = shutil.get_terminal_size().columns
+    if len(obj_str) > num_columns:
+        obj_str = obj_str[:num_columns-4] + '...'
+    return obj_str
+
 def init(ip: IPython.InteractiveShell):
     sympy.interactive.printing.init_printing(
         pretty_print=True,
