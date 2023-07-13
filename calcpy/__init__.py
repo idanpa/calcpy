@@ -13,7 +13,6 @@ import IPython.lib.backgroundjobs
 import traitlets
 import sympy
 import platform
-import importlib
 import json
 import os
 from contextlib import redirect_stdout
@@ -56,7 +55,8 @@ class CalcPy(IPython.core.magic.Magics):
         ''''''
         super(CalcPy, self).__init__(shell, **kwargs)
 
-        self._eng_units_prefixes_dict = importlib.import_module('calcpy.eng_units_prefixes').__dict__
+        self._eng_units_prefixes_dict = { 'G': transformers.IntegerUnitPrefix(1e9), 'M': transformers.IntegerUnitPrefix(1e6), 'k': transformers.IntegerUnitPrefix(1e3),
+            'm': transformers.PowUnitPrefix(10, -3),  'u': transformers.PowUnitPrefix(10, -6),  'n': transformers.PowUnitPrefix(10, -9), 'p': transformers.PowUnitPrefix(10, -12) }
 
         self.user_startup_path = os.path.join(shell.profile_dir.location, 'user_startup.py')
         config_path = os.path.join(self.shell.profile_dir.location, 'calcpy.json')
@@ -150,7 +150,7 @@ https://github.com/idanpa/calcpy''')
 
     ip.show_usage = show_usage
 
-    ip.push(importlib.import_module('calcpy.user').__dict__, interactive=False)
+    ip.run_cell('from calcpy.user import *', store_history=False)
     if ip.calcpy.eng_units_prefixes:
         ip.push(ip.calcpy._eng_units_prefixes_dict, interactive=False)
 
