@@ -163,7 +163,7 @@ class ReplaceFloatWithRational(ast.NodeTransformer):
                             keywords=[])
         return self.generic_visit(node)
 
-class ReplaceTupleWithMatrices(ast.NodeTransformer):
+class ReplaceTupleWithMatrix(ast.NodeTransformer):
     def visit_Tuple(self, node):
         ip = IPython.get_ipython()
         # skip empty tuples and non-nested tuples (e.g some functions uses tuples to represent ranges)
@@ -205,7 +205,6 @@ def syntax_error_handler(ip: IPython.InteractiveShell, etype, value, tb, tb_offs
                 ip.run_cell(code, store_history=False)
                 return None
     ip.showsyntaxerror()
-    return None
 
 def init(ip: IPython.InteractiveShell):
     ip.calcpy.push({'_factorial_pow': FactorialPow()}, interactive=False)
@@ -213,11 +212,11 @@ def init(ip: IPython.InteractiveShell):
     # python might warn about the syntax hacks (on user's code)
     warnings.filterwarnings("ignore", category=SyntaxWarning)
 
+    ip.ast_transformers.append(AutoSymbols())
     ip.ast_transformers.append(ReplaceIntegerDivisionWithRational(ip))
     # ip.ast_transformers.append(ReplaceIntWithInteger())
     ip.ast_transformers.append(ReplaceFloatWithRational())
-    ip.ast_transformers.append(ReplaceTupleWithMatrices())
-    ip.ast_transformers.append(AutoSymbols())
+    ip.ast_transformers.append(ReplaceTupleWithMatrix())
     ip.input_transformers_post.append(calcpy_input_transformer_post)
 
     ip.set_custom_exc((SyntaxError,), syntax_error_handler)
