@@ -126,12 +126,10 @@ class CalcPy(IPython.core.magic.Magics):
         self.shell.run_line_magic('edit', self.user_startup_path)
 
     def reset(self, prompt=True):
-        if prompt:
-            if input("Confirm reset? [y/N] ").lower() not in ["y","yes"]:
-                return
-        for trait_name, trait in sorted(self.traits(config=True).items()):
-            setattr(self, trait_name, trait.default_value)
-        self.shell.autostore.reset()
+        if (not prompt) or (input("Reset CalcPy configuration? [y/N] ").lower() in ["y","yes"]):
+            for trait_name, trait in sorted(self.traits(config=True).items()):
+                setattr(self, trait_name, trait.default_value)
+        self.shell.autostore.reset(prompt)
 
 def load_ipython_extension(ip:IPython.InteractiveShell):
     if ip.profile != CALCPY_PROFILE_NAME:
@@ -173,7 +171,6 @@ https://github.com/idanpa/calcpy''')
         autostore.load_ipython_extension(ip)
 
     if os.path.isfile(ip.calcpy.user_startup_path):
-        ip.user_ns['__file__'] = ip.calcpy.user_startup_path
         ip.safe_execfile(ip.calcpy.user_startup_path,
                          ip.user_ns,
                          raise_exceptions=False,

@@ -1,13 +1,12 @@
 import IPython
 import inspect
-import types
 import sys
 import os
 
 class Autostore():
-    def __init__(self, shell):
+    def __init__(self, shell, verbose=False):
         self.shell = shell
-        self.debug = False
+        self.verbose = verbose
         self.last_user_ns = []
 
         self.shell.events.register('post_run_cell', self.post_run_cell)
@@ -17,13 +16,12 @@ class Autostore():
             try:
                 var = self.shell.db[var_path]
             except KeyError:
-                print(f'Failed to restore "{var_path}": {sys.exc_info()[0]}, discarding')
+                print(f'Autostore failed to restore "{var_path}": {sys.exc_info()[0]}, discarding')
                 del self.shell.db[var_path]
             else:
                 if var_name.startswith('_func_'):
                     # to allow %edit func_name, need to place function in file
                     file_path = self.shell.mktempfile(var, prefix='autostore' + var_name + '_')
-                    self.shell.user_ns['__file__'] = file_path
                     try:
                         self.shell.safe_execfile(file_path, shell.user_ns, shell_futures=True, raise_exceptions=True)
                     except Exception as e:
@@ -37,22 +35,17 @@ class Autostore():
 
     def store(self, var_name, verbose=True):
         var = self.shell.user_ns[var_name]
-        if type(var) in [types.ModuleType, type]:
+        if inspect.isbuiltin(var) or inspect.ismodule(var) or inspect.isclass(var):
             return False
-
-        if type(var) == types.FunctionType:
-            try:
-                # skip functions that were not defined by user in a cell or by %edit:
-                var_file = inspect.getfile(var)
-                if not (var_file.startswith('<ipython-input-') or ('autostore_func_' in var_file) or ('ipython_edit_' in var_file)):
-                    return False
-            except TypeError:
+        if inspect.isfunction(var):
+            # skip external functions:
+            var_file = inspect.getfile(var)
+            if not (var_file.startswith('<ipython-input-') or ('autostore_func_' in var_file) or ('ipython_edit_' in var_file)):
                 return False
             try:
                 var = inspect.getsource(var)
             except Exception as e:
-                if verbose:
-                    print(f'Failed to get function source {var_name}: {repr(e)}')
+                print(f'Failed to get function source {var_name}: {repr(e)}')
                 return False
             var_name = '_func_' + var_name
 
@@ -77,7 +70,7 @@ class Autostore():
              self.shell.user_ns[var_name] is \
               self.shell.user_ns_hidden.get(var_name, None):
                 continue
-            self.store(var_name, verbose=self.debug)
+            self.store(var_name, verbose=self.verbose)
             new_last_user_ns.append(var_name)
             if var_name in self.last_user_ns:
                 self.last_user_ns.remove(var_name)
@@ -93,18 +86,16 @@ class Autostore():
         return [os.path.basename(var_path).removeprefix('_func_') for \
                 var_path in self.shell.db.keys('autostore/*')]
 
-    def reset(self):
+    def reset(self, prompt=True):
+        if prompt:
+            if input("Delete all variables [y/N] ").lower() not in ["y","yes"]:
+                return
         for var_path in self.shell.db.keys('autostore/*'):
-            del self.shell.db[var_path]
+            self.shell.db.pop(var_path, None)
+            self.shell.user_ns.pop(os.path.basename(var_path).removeprefix('_func_'), None)
 
-        for var_name in list(self.shell.user_ns.keys()):
-            if var_name.startswith('_') or \
-            var_name in self.shell.user_ns_hidden:
-                continue
-            del self.shell.user_ns[var_name]
-
-def load_ipython_extension(ip:IPython.InteractiveShell):
-    ip.autostore = Autostore(ip)
+def load_ipython_extension(ip:IPython.InteractiveShell, verbose=False):
+    ip.autostore = Autostore(ip, verbose=verbose)
 
 def unload_ipython_extension(ip:IPython.InteractiveShell):
     ip.autostore.unload()
