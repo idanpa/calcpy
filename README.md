@@ -53,8 +53,8 @@ pip install git+https://github.com/idanpa/calcpy
 * Edit code on editor with `%edit func_name`
 
 [Python](https://www.python.org/):
-* All the basic arithmetic (`+`,`-`,`*`,`/`,`**`)
-* Programmer: `0b10` binary input, `0x1F` hexadecimal input, `//` integer division, `%` modulo, `&` bitwise AND, `|` bitwise OR, `^` bitwise XOR, `~` bitwise not, `>>`/`<<` right/left shift. 
+* All the basic arithmetic (`+`,`-`,`*`,`/`,`**`/`^`)
+* Programmer: `0b10` binary input, `0x1F` hexadecimal input, `//` integer division, `%` modulo, `&` bitwise AND, `|` bitwise OR, `^^` bitwise XOR (on calcpy `^` is exponentiation, disable with `calcpy.caret_power`), `~` bitwise not, `>>`/`<<` right/left shift. 
 
 ## Contributing
 Feel free to open an issue for bugs/features,  send a pull request  or star.

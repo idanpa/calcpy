@@ -83,7 +83,8 @@ def calcpy_input_transformer_post(lines):
 
     # need to be here so we won't replace caret on latex
     if ip.calcpy.caret_power:
-        user_code = user_code.replace('^','**')
+        user_code = re.sub(r'(?<!\^)\^(?!\^)', '**', user_code)
+        user_code = user_code.replace('^^','^')
 
     if ip.calcpy.auto_factorial:
         user_code = re.sub(r'!(?!=)', r'**_factorial_pow', user_code)

@@ -32,7 +32,7 @@ class CalcPy(IPython.core.magic.Magics):
     debug = traitlets.Bool(False, config=True, help='Add debug prints')
     implicit_multiply = traitlets.Bool(True, config=True)
     auto_solve = traitlets.Bool(True, config=True)
-    caret_power = traitlets.Bool(False, config=True)
+    caret_power = traitlets.Bool(True, config=True, help="convert '^' to '**' and '^^' to '^'")
     auto_lambda = traitlets.Bool(True, config=True, help="convert 'f(x,y):=x+y' to 'f=lambda x,y : x+y'")
     auto_store = traitlets.Bool(True, config=True)
     auto_matrix = traitlets.Bool(True, config=True)
