@@ -1,200 +1,215 @@
 import multiprocessing as mp
+import threading
 import _thread
-import inspect
+import signal
+import types
+import os
 import ast
 import sys
-import io
 import IPython
 from traitlets.config.loader import Config
-from prompt_toolkit.buffer import _only_one_at_a_time, _Retry
-from prompt_toolkit.eventloop import run_in_executor_with_context
-from prompt_toolkit.application.current import get_app
 
-from . import formatters
+CTRL_C_TIMEOUT = 2
+RESTART_TIMEOUT = 10
+
+class PipeListener(threading.Thread):
+    def __init__(self, conn, cb):
+        super().__init__(name=cb.__name__, daemon=True)
+        self.conn = conn
+        self.cb = cb
+        self.start()
+
+    def run(self):
+        while True:
+            try:
+                msg = self.conn.recv()
+            except (EOFError, OSError):
+                return # pipe closed
+            self.cb(msg)
 
 class DisableAssignments(ast.NodeTransformer):
+    def __init__(self, active):
+        super().__init__()
+        self.active = active
+
     def visit_Assign(self, node):
-        return ast.Expr(ast.Constant(None))
-    def visit_AnnAssign(self, node):
-        return ast.Expr(ast.Constant(None))
+        if self.active:
+            return ast.Expr(node.value)
+        return self.generic_visit(node)
+
     def visit_AugAssign(self, node):
-        return ast.Expr(ast.Constant(None))
+        if self.active:
+            node.target.ctx = ast.Load()
+            return ast.Expr(ast.BinOp(left=node.target, op=node.op, right=node.value))
+        return self.generic_visit(node)
 
 class IPythonProcess(mp.Process):
-    def __init__(self, config=Config(), formatter=str, debug=False):
+    def __init__(self, stdout_path, exec_conn, ctrl_conn, ns_conn, config=Config(), formatter=str, debug=False):
+        super().__init__(name='ipython_preview', daemon=True)
+        self.stdout_path = stdout_path
+        self.exec_conn = exec_conn
+        self.ctrl_conn = ctrl_conn
+        self.ns_conn = ns_conn
         self.config = config
         self.formatter = formatter
         self.debug = debug
-        self.exec_conn_p, self.exec_conn_c = mp.Pipe()
-        self.ctrl_conn_p, self.ctrl_conn_c = mp.Pipe()
-        self.ns_conn_p, self.ns_conn_c = mp.Pipe()
-        super().__init__(name='ipython_preview', daemon=True)
-
-    def execute(self, cell, timeout=6):
-        # flush previous (possibly timeout) executions:
-        while self.exec_conn_p.poll():
-            self.exec_conn_p.recv()
-
-        self.exec_conn_p.send(cell)
-        if not self.exec_conn_p.poll(timeout):
-            self.ctrl_conn_p.send('interrupt')
-        if self.exec_conn_p.poll(0.5):
-            return self.exec_conn_p.recv()
-        else:
-            raise TimeoutError
-
-    def get_stdout(self):
-        self.ctrl_conn_p.send('stdout')
-        if self.ctrl_conn_p.poll(2):
-            return self.ctrl_conn_p.recv()
-        return ''
+        self.start()
 
     def sandbox_pre(self):
         for module_name in ['matplotlib', 'tkinter', 'pyperclip']:
             sys.modules[module_name] = None
-
-        sys.stdout = io.StringIO()
-        if not self.debug:
-            sys.stderr = sys.stdout
-        sys.stdin = None
 
     def sandbox_post(self):
         import subprocess
         subprocess.Popen = None
         import builtins
         builtins.open = None
-        import os
         os.exit = None
         os.abort = None
         os.kill = None
         os.system = None
 
-    def exc_handler(self, ip:IPython.InteractiveShell, etype, value, tb, tb_offset=None):
-        print(value)
-
-    def format_res(self, obj):
-        if obj is None:
-            return ''
-        return self.formatter(obj)
-
-    def ctrl_job(self):
-        while True:
-            ctrl_msg = self.ctrl_conn_c.recv()
-            if ctrl_msg == 'interrupt':
-                _thread.interrupt_main()
-            elif ctrl_msg == 'stdout':
-                self.ctrl_conn_c.send(sys.stdout.getvalue())
-            else:
-                self.ctrl_conn_c.send('unexpected')
-
     def ns_job(self):
         while True:
             try:
-                ns_msg = self.ns_conn_c.recv()
+                ns_msg = self.ns_conn.recv()
                 self.ip.user_ns[ns_msg[0]] = ns_msg[1]
+            except (EOFError, OSError):
+                return # pipe closed
             except Exception as e:
-                print(f'Previewer ns error: {repr(e)}', file=sys.stderr)
+                print(f'ns error: {repr(e)}')
 
     def run(self):
-        self.sandbox_pre()
+        # on windows, ctrl+c propegate to terminal's subprocess, and there is good chance
+        # user would ctrl+c while previewer is restarting, mask it as long there is no handling
+        # TODO: should be done first, possibly by placing at the top line of a new module
+        signal.signal(signal.SIGINT, signal.SIG_IGN)
+        if self.debug:
+            sys.stdout = open(self.stdout_path, 'a')
+        else:
+            sys.stderr = sys.stdout = open(os.devnull, 'w')
+        sys.stdin = None
 
+        self.sandbox_pre()
         # for execution to return result, but to not change _, __ etc.
         IPython.core.displayhook.DisplayHook.update_user_ns = lambda self, result: None
-
         self.config.TerminalInteractiveShell.simple_prompt = True
         self.config.TerminalInteractiveShell.term_title = False
+        self.config.TerminalInteractiveShell.xmode = 'Minimal'
+        self.config.HistoryAccessor.enabled = False
         self.ipapp = IPython.terminal.ipapp.TerminalIPythonApp.instance(config=self.config)
         self.ipapp.initialize()
         self.ip = self.ipapp.shell
-
-        self.ip.previewer_jobs = IPython.lib.backgroundjobs.BackgroundJobManager()
-        self.ip.previewer_jobs.new(self.ctrl_job, daemon=True)
-        self.ip.previewer_jobs.new(self.ns_job, daemon=True)
-
-        self.ip.ast_transformers.append(DisableAssignments())
-        self.ip.set_custom_exc((Exception,), self.exc_handler)
+        self.ip.inspector = None # inspector is calling expensive operations
+        self.disable_assign = DisableAssignments(False)
+        self.ip.ast_transformers.append(self.disable_assign)
+        self.ns_thread = threading.Thread(target=self.ns_job, daemon=True)
+        self.ns_thread.start()
 
         self.sandbox_post()
+        signal.signal(signal.SIGINT, signal.default_int_handler)
 
         while True:
             try:
-                result = self.ip.run_cell(self.exec_conn_c.recv(), store_history=False).result
-                self.exec_conn_c.send(self.format_res(result))
+                code, assign, preview = self.exec_conn.recv()
+                ctrl_c_timer = threading.Timer(CTRL_C_TIMEOUT, _thread.interrupt_main)
+                restart_timer = threading.Timer(RESTART_TIMEOUT, self.ctrl_conn.send, ['restart'])
+                ctrl_c_timer.start(),  restart_timer.start()
+                result = self.run_code(code, assign)
+                ctrl_c_timer.cancel(), restart_timer.cancel()
+                if preview:
+                    self.exec_conn.send(result)
+            except (EOFError, OSError):
+                return # pipe closed
             except Exception as e:
-                print(f'Previewer run cell error: {repr(e)}', file=sys.stderr)
+                print(f'previewer run cell error: {repr(e)}', file=sys.stderr)
+
+    def run_code(self, code, assign):
+        self.disable_assign.active = not assign
+        result = self.ip.run_cell(code, store_history=False).result
+        if result is None:
+            return ''
+        return self.formatter(result)
 
 class Previewer():
-    def __init__(self, ip, timeout=6, config=Config(), formatter=str, debug=False):
-        if getattr(ip, 'pt_app', None) is None:
-            raise Exception('Preview: No prompt application')
-        if mp.get_start_method() != 'spawn':
-            mp.set_start_method('spawn')
+    def __init__(self, ip, config=Config(), formatter=str, debug=False):
+        # spawn, so no memory leftovers (e.g. traitlets singletons)
+        mp.set_start_method('spawn', force=True)
         self.ip = ip
-        self.timeout = timeout
         self.config = ip.config.copy()
         self.config.merge(config)
-        self.prev_ip_proc = IPythonProcess(config=self.config, formatter=formatter, debug=debug)
-        self.prev_ip_proc.start()
-        self.update_ns()
-        self.ip.pt_app.bottom_toolbar = ''
+        self.formatter = formatter
+        self.debug = debug
+        self.stdout_path = self.ip.mktempfile(prefix='preview_stdout') if debug else None
+        self.start()
+
+    def start(self):
+        self.exec_conn, exec_conn_c = mp.Pipe()
+        self.ctrl_conn, ctrl_conn_c = mp.Pipe()
+        self.ns_conn, ns_conn_c = mp.Pipe()
+        self.preview_thread = PipeListener(self.exec_conn, self.preview_cb)
+        self.ctrl_thread = PipeListener(self.ctrl_conn, self.ctrl_cb)
+        self.prev_ip_proc = IPythonProcess(self.stdout_path, exec_conn_c, ctrl_conn_c, ns_conn_c,
+            config=self.config, formatter=self.formatter, debug=self.debug)
+        self.push(self.ip.user_ns)
         self.ip.events.register('pre_run_cell', self.pre_run_cell)
         self.ip.events.register('post_run_cell', self.post_run_cell)
         self.ip.pt_app.default_buffer.on_text_changed.add_handler(self.text_changed_handler)
+        self.ip.pt_app.bottom_toolbar = ''
 
     def deinit(self):
         self.ip.events.unregister('pre_run_cell', self.pre_run_cell)
         self.ip.events.unregister('post_run_cell', self.post_run_cell)
         self.ip.pt_app.default_buffer.on_text_changed.remove_handler(self.text_changed_handler)
-        self.ip.pt_app.bottom_toolbar = None
+        self.exec_conn.close()
+        self.ctrl_conn.close()
+        self.ns_conn.close()
         self.prev_ip_proc.terminate()
 
+    def restart(self):
+        self.deinit()
+        self.start()
+
+    def pre_run_cell(self, info):
+        self.exec_conn.send((info.raw_cell, True, False))
+
+    def post_run_cell(self, result):
+        self.push(self.ip.user_ns)
+        self.ip.pt_app.bottom_toolbar = ''
+        self.ip.pt_app.app.invalidate()
+
+    def ctrl_cb(self, ctrl_msg):
+        if ctrl_msg == 'restart':
+            self.restart()
+
+    def preview_cb(self, result):
+        self.ip.pt_app.bottom_toolbar = result
+        self.ip.pt_app.app.invalidate()
+
+    def text_changed_handler(self, buffer):
+        self.exec_conn.send((buffer.text, False, True))
+
     def push(self, variables):
-        '''push dictionary of variables to previewer (skipping variables that cannot be sent)'''
         for key, val in variables.copy().items():
-            if inspect.isbuiltin(val):
-                continue
-            if getattr(val, '__module__', None) == '__main__':
-                continue
             try:
-                self.prev_ip_proc.ns_conn_p.send((key, val))
+                self.ns_conn.send((key, val))
             except Exception as e:
                 pass
 
-    def update_ns(self):
-        self.push(self.ip.user_ns)
-
-    def pre_run_cell(self, info):
-        self.ip.pt_app.bottom_toolbar = ''
-        get_app().invalidate()
-
-    def post_run_cell(self, result):
-        self.update_ns()
-
     def get_stdout(self):
-        return self.prev_ip_proc.get_stdout()
+        if self.stdout_path == None:
+            raise NotImplementedError('Previewer stdout available only when debug=True')
+        with open(self.stdout_path, 'r') as f:
+            return f.read()
 
-    def preview(self, code):
-        try:
-            return self.prev_ip_proc.execute(code, self.timeout)
-        except TimeoutError:
-            return '' # TODO: restart process?
-
-    @_only_one_at_a_time
-    async def async_previewer(self, buffer):
-        document = buffer.document
-        preview = await run_in_executor_with_context(self.preview, buffer.text)
-        if buffer.document == document:
-            self.ip.pt_app.bottom_toolbar = preview
-            get_app().invalidate()
-        else: # text has changed, retry
-            raise _Retry
-
-    def text_changed_handler(self, buffer):
-        get_app().create_background_task(self.async_previewer(buffer))
-
-def load_ipython_extension(ip:IPython.InteractiveShell, timeout=6, config=Config(), formatter=str, debug=False):
-    ip.previewer = Previewer(ip, timeout=timeout, config=config, formatter=formatter, debug=debug)
+def load_ipython_extension(ip:IPython.InteractiveShell, config=Config(), formatter=str, debug=False):
+    if ip.config.TerminalInteractiveShell.simple_prompt == True:
+        return
+    ip.previewer = Previewer(ip, config=config, formatter=formatter, debug=debug)
 
 def unload_ipython_extension(ip:IPython.InteractiveShell):
+    if ip.config.TerminalInteractiveShell.simple_prompt == True:
+        return
     ip.previewer.deinit()
+    ip.pt_app.bottom_toolbar = None
     del ip.previewer

@@ -146,8 +146,7 @@ def load_ipython_extension(ip:IPython.InteractiveShell):
     ip.calcpy = CalcPy(ip)
     ip.push({'calcpy': ip.calcpy}, interactive=False)
 
-    if ip.calcpy.preview and 'InteractiveShellApp.code_to_run' not in ip.config and \
-       not ip.config.TerminalInteractiveShell.simple_prompt == True:
+    if ip.calcpy.preview and 'InteractiveShellApp.code_to_run' not in ip.config:
         ip.calcpy.load_preview()
 
     ip.register_magics(ip.calcpy)
