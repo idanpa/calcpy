@@ -27,3 +27,4 @@ def test_setup(venv_dir):
     assert venv_dir in check_output('pip --version')
     check_output('pip install ' + calcpy_path)
     assert 'Out[1]: 2' in check_output('calcpy -c 1+1')
+    assert 'Out[1]: 2' in check_output('python -m calcpy -c 1+1')
