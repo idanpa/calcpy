@@ -7,18 +7,19 @@ Calculator and advanced math solver in the comfort of your terminal by Python, I
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/demo/demo_dark.svg">
     <source media="(prefers-color-scheme: light)" srcset="docs/demo/demo_light.svg">
-    <img alt="demo" width="600" src="docs/demo/demo_light.svg">
+    <img alt="demo" width="640" height="340" src="docs/demo/demo_light.svg">
   </picture>
 </p>
 
 [Examples](docs/examples.md)&emsp;·&emsp;[Try online](https://replit.com/@idanp/CalcPy?embed=true)
 
 ## Installation 
+Prerequisites - [Python](https://www.python.org/downloads/)
 ```
 pip install git+https://github.com/idanpa/calcpy
 ```
-[Android installation](docs/android.md)
-([Python installation](https://www.python.org/downloads/))
+(no git? use `pip install https://github.com/idanpa/calcpy/archive/main.zip`)  
+[Android installation](docs/android.md)  
 
 ## Features
 * Display both symbolic and numeric solutions
@@ -42,7 +43,6 @@ pip install git+https://github.com/idanpa/calcpy
 [SymPy](https://www.sympy.org):
 * All the elementary (and non-elementry) math functions and constants - `ln`, `sin`, `e`, `pi` etc. 
 * Calculus, algebra, plotting - `diff`, `integrate`, `limit`, `Sum`, `solve`, `plot`, `plot_implicit` etc.
-* Complex numbers `1+2i`
 
 [IPython](https://ipython.org):
 * Get last result with `_`, get specific cell `_12` (`Out[12]` works too) 
@@ -53,7 +53,8 @@ pip install git+https://github.com/idanpa/calcpy
 * Edit code on editor with `%edit func_name`
 
 [Python](https://www.python.org/):
-* All the basic arithmetic (`+`,`-`,`*`,`/`,`**`/`^`)
+* All the basic arithmetic `+`,`-`,`*`,`/`,`**` or `^`
+* Complex numbers `1+2i`, binary `0b1101`, hex `0xafe1`, scientific notation `2.12e-6`
 * Programmer: `0b10` binary input, `0x1F` hexadecimal input, `//` integer division, `%` modulo, `&` bitwise AND, `|` bitwise OR, `^^` bitwise XOR (on calcpy `^` is exponentiation, disable with `calcpy.caret_power`), `~` bitwise not, `>>`/`<<` right/left shift. 
 
 ## Contributing

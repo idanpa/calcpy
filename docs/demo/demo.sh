@@ -1,4 +1,5 @@
 echo "export PS1=\"$ \"" >> ~/.bashrc
+calcpy -c 'calcpy.reset(False)'
 calcpy -c 'calcpy.base_currency="usd"'
 rm $(ipython locate)/profile_calcpy/history.sqlite
 python asciinario.py demo_scenario.txt demo.cast
