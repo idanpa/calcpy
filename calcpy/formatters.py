@@ -113,7 +113,10 @@ def evalf_iterable(iterable):
 
 def pretty(obj):
     num_columns, num_rows = shutil.get_terminal_size()
-    sympy_pretty = sympy.printing.pretty(obj, num_columns=num_columns)
+    try: # pretty may fail on clashes with other class names
+        sympy_pretty = sympy.printing.pretty(obj, num_columns=num_columns)
+    except:
+        sympy_pretty = str(obj)
     if sympy_pretty.count('\n') >= num_rows*1.5:
         return IPython.lib.pretty.pretty(obj, max_width=num_columns)
     return sympy_pretty
