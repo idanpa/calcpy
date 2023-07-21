@@ -21,7 +21,7 @@ from . import formatters
 from . import transformers
 from . import info
 from . import autostore
-from . import preview
+from . import previewer
 
 def get_calcpy():
     return IPython.get_ipython().calcpy
@@ -39,7 +39,7 @@ class CalcPy(IPython.core.magic.Magics):
     auto_symbols = traitlets.Bool(True, config=True)
     auto_factorial = traitlets.Bool(True, config=True, help="convert '5!' to 'factorial(5)'")
     auto_permutation = traitlets.Bool(False, config=True)
-    preview = traitlets.Bool(True, config=True)
+    previewer = traitlets.Bool(True, config=True)
     parse_latex = traitlets.Bool(True, config=True)
     bitwidth = traitlets.Int(0, config=True)
     chop = traitlets.Bool(True, config=True)
@@ -82,12 +82,12 @@ class CalcPy(IPython.core.magic.Magics):
                 autostore.unload_ipython_extension(self.shell)
         self.observe(_auto_store_changed, names='auto_store')
 
-        def _preview_changed(change):
+        def _previewer_changed(change):
             if change.old != change.new == True:
-                self.load_preview()
+                self.load_previewer()
             if change.old != change.new == False:
-                self.unload_preview()
-        self.observe(_preview_changed, names='preview')
+                self.unload_previewer()
+        self.observe(_previewer_changed, names='previewer')
 
         def _eng_units_prefixes_changed(change):
             if change.new == True:
@@ -130,14 +130,14 @@ class CalcPy(IPython.core.magic.Magics):
                 setattr(self, trait_name, trait.default_value)
         self.shell.autostore.reset(prompt)
 
-    def load_preview(self):
-        preview_config = self.shell.config.copy()
-        preview_config.CalcPy.preview = False
-        preview_config.CalcPy.auto_store = False
-        preview.load_ipython_extension(self.shell, config=preview_config, formatter=formatters.preview_formatter, debug=self.debug)
+    def load_previewer(self):
+        previewer_config = self.shell.config.copy()
+        previewer_config.CalcPy.previewer = False
+        previewer_config.CalcPy.auto_store = False
+        previewer.load_ipython_extension(self.shell, config=previewer_config, formatter=formatters.previewer_formatter, debug=self.debug)
 
-    def unload_preview(self):
-        preview.unload_ipython_extension(self.shell)
+    def unload_previewer(self):
+        previewer.unload_ipython_extension(self.shell)
 
 def load_ipython_extension(ip:IPython.InteractiveShell):
     if ip.profile != CALCPY_PROFILE_NAME:
@@ -146,8 +146,8 @@ def load_ipython_extension(ip:IPython.InteractiveShell):
     ip.calcpy = CalcPy(ip)
     ip.push({'calcpy': ip.calcpy}, interactive=False)
 
-    if ip.calcpy.preview and 'InteractiveShellApp.code_to_run' not in ip.config:
-        ip.calcpy.load_preview()
+    if ip.calcpy.previewer and 'InteractiveShellApp.code_to_run' not in ip.config:
+        ip.calcpy.load_previewer()
 
     ip.register_magics(ip.calcpy)
 

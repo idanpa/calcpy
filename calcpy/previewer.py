@@ -45,7 +45,7 @@ class DisableAssignments(ast.NodeTransformer):
 
 class IPythonProcess(mp.Process):
     def __init__(self, stdout_path, exec_conn, ctrl_conn, ns_conn, config=Config(), formatter=str, debug=False):
-        super().__init__(name='ipython_preview', daemon=True)
+        super().__init__(name='ipython_previewer', daemon=True)
         self.stdout_path = stdout_path
         self.exec_conn = exec_conn
         self.ctrl_conn = ctrl_conn
@@ -140,7 +140,7 @@ class Previewer():
         self.config.merge(config)
         self.formatter = formatter
         self.debug = debug
-        self.stdout_path = self.ip.mktempfile(prefix='preview_stdout') if debug else None
+        self.stdout_path = self.ip.mktempfile(prefix='previewer_stdout') if debug else None
         self.start()
 
     def start(self):

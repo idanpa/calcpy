@@ -194,7 +194,7 @@ def sympy_pretty_formatter(obj, printer, cycle):
     num_columns = shutil.get_terminal_size().columns
     printer.text(sympy.printing.pretty(obj, num_columns=num_columns))
 
-def preview_formatter(obj):
+def previewer_formatter(obj):
     try:
         if isinstance(obj, sympy.Expr):
             obj_str = IPython.lib.pretty.pretty(evalf(obj))
