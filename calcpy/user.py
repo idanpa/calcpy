@@ -30,14 +30,13 @@ j = I
 import datetime
 
 from calcpy.info import print_info
-from calcpy.transformers import IntegerUnitPrefix, PowUnitPrefix, MulUnitPrefix
 
-KB = IntegerUnitPrefix(2**10)
-MB = IntegerUnitPrefix(2**20)
-GB = IntegerUnitPrefix(2**30)
-TB = IntegerUnitPrefix(2**40)
+KB = Integer(2) ** 10
+MB = Integer(2) ** 20
+GB = Integer(2) ** 30
+TB = Integer(2) ** 40
 
-deg = MulUnitPrefix(Rational(1, 180), pi)
+deg = Rational(1, 180) * pi
 
 # user functions:
 from calcpy.transformers import dateparse

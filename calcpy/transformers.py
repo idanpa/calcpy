@@ -4,16 +4,6 @@ import warnings
 import IPython
 import sympy
 
-# Auxilary classes for manipulations
-class UnitPrefix():
-    is_unit_prefix = True
-class IntegerUnitPrefix(sympy.Integer, UnitPrefix):
-    pass
-class PowUnitPrefix(sympy.Pow, UnitPrefix):
-    pass
-class MulUnitPrefix(sympy.Mul, UnitPrefix):
-    pass
-
 class FactorialPow():
     # using power so factorial would take the right precedence
     def __rpow__(self, other):
@@ -51,14 +41,8 @@ def raw_code_transformer(code):
            match[3].lower() == 'e' or \
            match[1] is not None:
             return match[0]
-        if match[3] in user_vars:
-            if getattr(user_vars[match[3]], 'is_unit_prefix', False):
-                return f'({match[2]}*{match[3]})'
-            else:
-                return f'{match[2]}*{match[3]}'
-        if is_auto_symbol(match[3]):
-            return f'{match[2]}*{match[3]}'
-
+        if match[3] in user_vars or is_auto_symbol(match[3]):
+            return f'({match[2]}*{match[3]})'
         return match[0]
 
     # before doing anything, extract strings and latex, we don't want to transform these:

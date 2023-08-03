@@ -55,8 +55,8 @@ class CalcPy(IPython.core.magic.Magics):
         ''''''
         super(CalcPy, self).__init__(shell, **kwargs)
 
-        self._eng_units_prefixes_dict = { 'G': transformers.IntegerUnitPrefix(1e9), 'M': transformers.IntegerUnitPrefix(1e6), 'k': transformers.IntegerUnitPrefix(1e3),
-            'm': transformers.PowUnitPrefix(10, -3),  'u': transformers.PowUnitPrefix(10, -6),  'n': transformers.PowUnitPrefix(10, -9), 'p': transformers.PowUnitPrefix(10, -12) }
+        _10 = sympy.Integer(10)
+        self._eng_units_prefixes_dict = { 'G': _10**9, 'M': _10**6, 'k': _10**3, 'm': _10**-3,  'u': _10**-6,  'n': _10**-9, 'p': _10**-12}
 
         self.user_startup_path = os.path.join(shell.profile_dir.location, 'user_startup.py')
         config_path = os.path.join(self.shell.profile_dir.location, 'calcpy.json')
