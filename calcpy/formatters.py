@@ -111,26 +111,27 @@ def evalf_iterable(iterable):
 
     return evalu
 
-def pretty(obj):
-    num_columns, num_rows = shutil.get_terminal_size()
+def pretty(obj, n_col=None, n_row=None):
+    if n_col is None or n_row is None:
+        n_col, n_row = shutil.get_terminal_size()
     try: # pretty may fail on clashes with other class names
-        sympy_pretty = sympy.printing.pretty(obj, num_columns=num_columns)
+        sympy_pretty = sympy.printing.pretty(obj, num_columns=n_col)
     except:
         sympy_pretty = str(obj)
-    if sympy_pretty.count('\n') >= num_rows*1.5:
-        return IPython.lib.pretty.pretty(obj, max_width=num_columns)
+    if sympy_pretty.count('\n') >= n_row*1.5:
+        return IPython.lib.pretty.pretty(obj, max_width=n_col)
     return sympy_pretty
 
 def iterable_formatter(iterable, printer, cycle):
-    num_columns = shutil.get_terminal_size().columns
+    n_col, n_row = shutil.get_terminal_size()
 
-    pretty_s = pretty(iterable)
+    pretty_s = pretty(iterable, n_col, n_row)
     out = pretty_s
 
     try:
-        evalu_s = pretty(evalf_iterable(iterable))
+        evalu_s = pretty(evalf_iterable(iterable), n_col - len(" ≈ "), n_row)
         if evalu_s != pretty_s:
-            out = pretty_stack(out, " ≈ ", evalu_s, num_columns)
+            out = pretty_stack(out, " ≈ ", evalu_s, n_col)
     except Exception as e:
         if IPython.get_ipython().calcpy.debug:
             print(f'iterable formatter failed: {e}')
@@ -153,15 +154,15 @@ def evalf_dict(d):
     return evalf_d
 
 def sympy_dict_formatter(d, printer, cycle):
-    num_columns = shutil.get_terminal_size().columns
+    n_col, n_row = shutil.get_terminal_size()
 
-    pretty_s = pretty(d)
+    pretty_s = pretty(d, n_col, n_row)
     out = pretty_s
 
     try:
-        evalf_dict_s = pretty(evalf_dict(d))
+        evalf_dict_s = pretty(evalf_dict(d), n_col - len(" ≈ "), n_row)
         if evalf_dict_s != pretty_s:
-            out = pretty_stack(out, " ≈ ", evalf_dict_s, num_columns)
+            out = pretty_stack(out, " ≈ ", evalf_dict_s, n_col)
     except Exception as e:
         if IPython.get_ipython().calcpy.debug:
             print(f'dictionary formatter failed: {e}')
@@ -169,21 +170,21 @@ def sympy_dict_formatter(d, printer, cycle):
     printer.text(out)
 
 def sympy_expr_formatter(s, printer, cycle):
-    num_columns = shutil.get_terminal_size().columns
+    n_col, n_row = shutil.get_terminal_size()
 
-    pretty_s = pretty(s)
+    pretty_s = pretty(s, n_col, n_row)
     out = pretty_s
 
     try:
         if not isinstance(s, (sympy.core.numbers.Integer, sympy.core.numbers.Float)):
             simpl = sympy.simplify(s)
-            simpl_s = pretty(simpl)
+            simpl_s = pretty(simpl, n_col - len(" = "), n_row)
             if simpl_s != pretty_s:
-                out = pretty_stack(out, " = ", simpl_s, num_columns)
+                out = pretty_stack(out, " = ", simpl_s, n_col)
 
-            evalu_s = pretty(evalf(simpl))
+            evalu_s = pretty(evalf(simpl), n_col - len(" ≈ "), n_row)
             if evalu_s != simpl_s and evalu_s != pretty_s:
-                out = pretty_stack(out, " ≈ ", evalu_s, num_columns)
+                out = pretty_stack(out, " ≈ ", evalu_s, n_col)
     except Exception as e:
         if IPython.get_ipython().calcpy.debug:
             print(f'expr formatter failed: {e}')
@@ -191,8 +192,8 @@ def sympy_expr_formatter(s, printer, cycle):
     printer.text(out)
 
 def sympy_pretty_formatter(obj, printer, cycle):
-    num_columns = shutil.get_terminal_size().columns
-    printer.text(sympy.printing.pretty(obj, num_columns=num_columns))
+    n_col, n_row = shutil.get_terminal_size()
+    printer.text(sympy.printing.pretty(obj, num_columns=n_col))
 
 def previewer_formatter(obj):
     try:
