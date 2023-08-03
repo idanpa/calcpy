@@ -242,4 +242,17 @@ def init(ip: IPython.InteractiveShell):
     sympy.Expr._iterable = False
     sympy.Expr.real = property(sympy.re)
     sympy.Expr.imag = property(sympy.im)
+    # numpy - sympy interoperability
+    try:
+        import numpy as np
+        def sympy_int_array(self, dtype=np.dtype(int)):
+            return np.array(int(self), dtype=dtype)
+        def sympy_float_array(self, dtype=np.dtype(float)):
+            return np.array(float(self), dtype=dtype)
+        sympy.Rational.__array__  = sympy_float_array
+        sympy.Float.__array__  = sympy_float_array
+        sympy.NumberSymbol.__array__  = sympy_float_array
+        sympy.Integer.__array__  = sympy_int_array
+    except (ModuleNotFoundError, ImportError):
+        pass
 
