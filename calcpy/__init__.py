@@ -21,7 +21,7 @@ from . import formatters
 from . import transformers
 from . import info
 from . import autostore
-from . import previewer
+import previewer
 
 def get_calcpy():
     return IPython.get_ipython().calcpy

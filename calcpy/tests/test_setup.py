@@ -15,7 +15,7 @@ def test_setup(venv_dir):
     venv.create(venv_dir, with_pip=True, upgrade_deps=True, symlinks=True)
     dot_ipython_dir = os.path.join(venv_dir,'.ipython')
     os.environ['IPYTHONDIR'] = dot_ipython_dir
-    calcpy_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+    calcpy_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
     if os.name == 'nt':
         activate = os.path.join(venv_dir, 'Scripts', 'activate.bat') + ' & '
     else:

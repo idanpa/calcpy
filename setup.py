@@ -12,7 +12,7 @@ setuptools.setup(
     description='IPython based calculator', # fix this
     long_description=Path('README.md').read_text(),
     long_description_content_type='text/markdown',
-    packages=['calcpy'],
+    packages=['calcpy','previewer'],
     classifiers=[
         'Programming Language :: Python :: 3',
         'License :: OSI Approved :: MIT License',
