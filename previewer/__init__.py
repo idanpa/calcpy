@@ -1,8 +1,12 @@
+import signal
 import multiprocessing as mp
+if mp.current_process().name == 'ipython_previewer':
+    # on windows, ctrl+c propegate to terminal's subprocess, and there is good chance
+    # user would ctrl+c while previewer is restarting, mask it as long there is no handling
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
+
 import threading
 import _thread
-import signal
-import types
 import os
 import ast
 import sys
@@ -81,10 +85,6 @@ class IPythonProcess(mp.Process):
                 print(f'ns error: {repr(e)}')
 
     def run(self):
-        # on windows, ctrl+c propegate to terminal's subprocess, and there is good chance
-        # user would ctrl+c while previewer is restarting, mask it as long there is no handling
-        # TODO: should be done first, possibly by placing at the top line of a new module
-        signal.signal(signal.SIGINT, signal.SIG_IGN)
         if self.debug:
             sys.stdout = open(self.stdout_path, 'a')
         else:
