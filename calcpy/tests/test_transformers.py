@@ -4,7 +4,7 @@ def test_autodate(ip):
     dt = ip.run_cell('d"today"-d"yesterday"').result
     assert dt.days == 1 or 24*60*60-1 <= dt.seconds <= 24*60*60
 
-def test_implicit_multiply(ip):
+def test_auto_product(ip):
     ip.run_cell('foo=1')
     assert ip.run_cell('2foo').result == 2
 
@@ -19,7 +19,7 @@ def test_auto_lambda(ip):
 def test_auto_matrix(ip):
     assert ip.run_cell('((1,0),(0,1)).det()').result == 1
 
-def test_parse_latex(ip):
+def test_auto_latex(ip):
     assert ip.run_cell('$\\frac{1}{2}$.evalf()').result == 0.5
 
 def test_auto_symbols(ip):

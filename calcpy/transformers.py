@@ -4,7 +4,6 @@ import warnings
 from functools import partial
 import IPython
 import sympy
-import sympy.interactive.session
 
 # Auxilary classes for manipulations
 class UnitPrefix():
@@ -72,7 +71,7 @@ def calcpy_input_transformer_post(lines):
         user_code = user_code.replace(m.group(), f'({hash(m.group())})')
 
     latex_pattern = r'(\$[^$]*\$)'
-    if ip.calcpy.parse_latex:
+    if ip.calcpy.auto_latex:
         latex_matches = re.findall(latex_pattern, user_code)
     else:
         latex_matches = []
@@ -96,7 +95,7 @@ def calcpy_input_transformer_post(lines):
         cycle_pat = r'\((\d+ )+\d+\)'
         user_code = re.sub(cycle_pat, cycle_replace, user_code)
 
-    if ip.calcpy.implicit_multiply: # asterisk-free multiplication: 4MB => 4*MB
+    if ip.calcpy.auto_product: # asterisk-free multiplication: 4MB => 4*MB
         # pattern is (format string detection|middle of name detection)?(hex number | engineering number | number)(var name)?
         mult_pat = rf'(% *|[^\d\W])?(0x[0-9a-f]*|0X[0-9A-F]*|\d*\.?\d+e-?\d+|\d*\.?\d+)({var_p})?'
         user_code = re.sub(mult_pat, partial(re_sub_mult_replace, vars=user_vars), user_code)
@@ -123,11 +122,12 @@ def calcpy_input_transformer_post(lines):
         print(user_code)
     return user_code.splitlines(keepends=True)
 
-class ReplaceIntegerDivisionWithRational(ast.NodeTransformer):
+class AstNodeTransformer(ast.NodeTransformer):
     def __init__(self, ip):
         super().__init__()
         self.ip = ip
 
+class ReplaceIntegerDivisionWithRational(AstNodeTransformer):
     def visit_BinOp(self, node):
         def is_integer(x):
             if isinstance(x, ast.Num) and isinstance(x.n, int):
@@ -140,13 +140,14 @@ class ReplaceIntegerDivisionWithRational(ast.NodeTransformer):
                 return is_integer(x.left) and is_integer(x.right)
             return False
 
-        if (isinstance(node.op, ast.Div) and is_integer(node.left) and is_integer(node.right)):
-            return ast.Call(func=ast.Name(id='Rational', ctx=ast.Load()),
-                            args=[node.left, node.right], keywords=[])
+        if self.ip.calcpy.auto_rational:
+            if (isinstance(node.op, ast.Div) and is_integer(node.left) and is_integer(node.right)):
+                return ast.Call(func=ast.Name(id='Rational', ctx=ast.Load()),
+                                args=[node.left, node.right], keywords=[])
         return self.generic_visit(node)
 
 '''
-class ReplaceIntWithInteger(ast.NodeTransformer):
+class ReplaceIntWithInteger(AstNodeTransformer):
     def visit_Constant(self, node):
         if isinstance(node, ast.Num) and isinstance(node.n, int):
             return ast.Call(func=ast.Name(id='Integer', ctx=ast.Load()),
@@ -154,20 +155,20 @@ class ReplaceIntWithInteger(ast.NodeTransformer):
         return self.generic_visit(node)
 '''
 
-class ReplaceFloatWithRational(ast.NodeTransformer):
+class ReplaceFloatWithRational(AstNodeTransformer):
     def visit_Constant(self, node):
-        if isinstance(node, ast.Num) and isinstance(node.n, float):
-            return ast.Call(func=ast.Name(id='Rational', ctx=ast.Load()),
-                            args=[ast.Call(func=ast.Name(id='str', ctx=ast.Load()),
-                                           args=[node], keywords=[])],
-                            keywords=[])
+        if self.ip.calcpy.auto_rational:
+            if isinstance(node, ast.Num) and isinstance(node.n, float):
+                return ast.Call(func=ast.Name(id='Rational', ctx=ast.Load()),
+                                args=[ast.Call(func=ast.Name(id='str', ctx=ast.Load()),
+                                            args=[node], keywords=[])],
+                                keywords=[])
         return self.generic_visit(node)
 
-class ReplaceTupleWithMatrix(ast.NodeTransformer):
+class ReplaceTupleWithMatrix(AstNodeTransformer):
     def visit_Tuple(self, node):
-        ip = IPython.get_ipython()
         # skip empty tuples and non-nested tuples (e.g some functions uses tuples to represent ranges)
-        if not ip.calcpy.auto_matrix or \
+        if not self.ip.calcpy.auto_matrix or \
            len(node.elts) == 0 or \
            not all(isinstance(el, ast.Tuple) for el in node.elts):
             return self.generic_visit(node)
@@ -179,17 +180,17 @@ class ReplaceTupleWithMatrix(ast.NodeTransformer):
             # sympy would warn if there is a non expression object, use this warning to fallback:
             with warnings.catch_warnings():
                 warnings.simplefilter("error")
-                matrix = ip.ev(matrix_code)
+                matrix = self.ip.ev(matrix_code)
         except:
             return self.generic_visit(node)
 
         return matrix_ast
 
-class AutoSymbols(ast.NodeTransformer):
+class AutoSymbols(AstNodeTransformer):
     def visit_Name(self, node):
-        ip = IPython.get_ipython()
-        if ip.calcpy.auto_symbols and node.id not in ip.user_ns and is_auto_symbol(node.id):
-            ip.calcpy.push({node.id: sympy.symbols(node.id)}, interactive=False)
+        if self.ip.calcpy.auto_symbols:
+            if node.id not in self.ip.user_ns and is_auto_symbol(node.id):
+                self.ip.calcpy.push({node.id: sympy.symbols(node.id)}, interactive=False)
         return self.generic_visit(node)
 
 def syntax_error_handler(ip: IPython.InteractiveShell, etype, value, tb, tb_offset=None):
@@ -212,11 +213,11 @@ def init(ip: IPython.InteractiveShell):
     # python might warn about the syntax hacks (on user's code)
     warnings.filterwarnings("ignore", category=SyntaxWarning)
 
-    ip.ast_transformers.append(AutoSymbols())
+    ip.ast_transformers.append(AutoSymbols(ip))
     ip.ast_transformers.append(ReplaceIntegerDivisionWithRational(ip))
-    # ip.ast_transformers.append(ReplaceIntWithInteger())
-    ip.ast_transformers.append(ReplaceFloatWithRational())
-    ip.ast_transformers.append(ReplaceTupleWithMatrix())
+    # ip.ast_transformers.append(ReplaceIntWithInteger(ip))
+    ip.ast_transformers.append(ReplaceFloatWithRational(ip))
+    ip.ast_transformers.append(ReplaceTupleWithMatrix(ip))
     ip.input_transformers_post.append(calcpy_input_transformer_post)
 
     ip.set_custom_exc((SyntaxError,), syntax_error_handler)
