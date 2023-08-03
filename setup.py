@@ -33,6 +33,6 @@ setuptools.setup(
     zip_safe=False,
     keywords=['calculator',],
     entry_points = {
-        "console_scripts": ['calcpy = calcpy.cli:main']
+        "console_scripts": ['calcpy = calcpy.__main__:main']
     },
 )
