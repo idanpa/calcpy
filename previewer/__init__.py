@@ -48,6 +48,11 @@ class DisableAssignments(ast.NodeTransformer):
             return ast.Expr(ast.BinOp(left=node.target, op=node.op, right=node.value))
         return self.generic_visit(node)
 
+    def visit_Delete(self, node):
+        if self.active:
+            return ast.Expr(ast.Constant(None))
+        return self.generic_visit(node)
+
 class IPythonProcess(mp.Process):
     def __init__(self, exec_conn, ctrl_conn, ns_conn, config=Config(), formatter=str, debug=False, stdout_path=None, interactive=False):
         super().__init__(name='ipython_previewer', daemon=True)
@@ -86,7 +91,10 @@ class IPythonProcess(mp.Process):
                 ns_msg = self.ns_conn.recv()
                 if ns_msg[0] in self.ns_block_list:
                     continue
-                self.ip.user_ns[ns_msg[0]] = ns_msg[1]
+                if len(ns_msg) == 2:
+                    self.ip.user_ns[ns_msg[0]] = ns_msg[1]
+                elif len(ns_msg) == 3:
+                    self.ip.user_ns[ns_msg[0]][ns_msg[1]] = ns_msg[2]
             except (EOFError, OSError):
                 return # pipe closed
             except Exception as e:
@@ -115,7 +123,7 @@ class IPythonProcess(mp.Process):
         self.ip.inspector = None # inspector is calling expensive operations
         self.disable_assign = DisableAssignments(False)
         self.ip.ast_transformers.append(self.disable_assign)
-        self.ns_thread = threading.Thread(target=self.ns_job, daemon=True)
+        self.ns_thread = threading.Thread(target=self.ns_job, daemon=True, name='ns_job')
         self.ns_thread.start()
 
         self.sandbox_post()
@@ -127,13 +135,13 @@ class IPythonProcess(mp.Process):
 
         while True:
             try:
-                code, assign, preview = self.exec_conn.recv()
+                code, assign, do_preview = self.exec_conn.recv()
                 ctrl_c_timer = threading.Timer(CTRL_C_TIMEOUT, _thread.interrupt_main)
                 restart_timer = threading.Timer(RESTART_TIMEOUT, self.ctrl_conn.send, ['restart'])
                 ctrl_c_timer.start(),  restart_timer.start()
                 result = self.run_code(code, assign)
                 ctrl_c_timer.cancel(), restart_timer.cancel()
-                if preview:
+                if do_preview:
                     self.exec_conn.send(result)
             except (EOFError, OSError):
                 return # pipe closed
@@ -142,10 +150,11 @@ class IPythonProcess(mp.Process):
 
     def run_code(self, code, assign):
         self.disable_assign.active = not assign
-        result = self.ip.run_cell(code, store_history=False).result
-        if result is None:
+        print(f'In [1]: {code}')
+        result = self.ip.run_cell(code, store_history=False)
+        if result.result is None:
             return ''
-        return self.formatter(result)
+        return self.formatter(result.result)
 
 class Previewer():
     def __init__(self, ip, config=Config(), formatter=str, debug=False):
@@ -193,6 +202,10 @@ class Previewer():
 
     def post_run_cell(self, result):
         self.push(self.ip.user_ns)
+        Out = self.ip.user_ns['Out']
+        if len(Out) > 0:
+            Out_last = list(Out)[-1]
+            self.push_kv('Out', Out_last, Out[Out_last])
         self.ip.pt_app.bottom_toolbar = ''
         self.ip.pt_app.app.invalidate()
 
@@ -208,11 +221,17 @@ class Previewer():
         self.exec_conn.send((buffer.text, False, True))
 
     def push(self, variables):
-        for key, val in variables.copy().items():
+        for var_name, val in variables.copy().items():
             try:
-                self.ns_conn.send((key, val))
+                self.ns_conn.send((var_name, val))
             except Exception as e:
                 pass
+
+    def push_kv(self, var_name, key, value):
+        try:
+            self.ns_conn.send((var_name, key, val))
+        except Exception as e:
+            pass
 
     def get_stdout(self):
         if self.stdout_path == None:
