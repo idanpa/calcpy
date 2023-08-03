@@ -49,15 +49,16 @@ class DisableAssignments(ast.NodeTransformer):
         return self.generic_visit(node)
 
 class IPythonProcess(mp.Process):
-    def __init__(self, stdout_path, exec_conn, ctrl_conn, ns_conn, config=Config(), formatter=str, debug=False):
+    def __init__(self, exec_conn, ctrl_conn, ns_conn, config=Config(), formatter=str, debug=False, stdout_path=None, interactive=False):
         super().__init__(name='ipython_previewer', daemon=True)
-        self.stdout_path = stdout_path
         self.exec_conn = exec_conn
         self.ctrl_conn = ctrl_conn
         self.ns_conn = ns_conn
         self.config = config
         self.formatter = formatter
         self.debug = debug
+        self.stdout_path = stdout_path
+        self.interactive = interactive
         self.start()
 
     def sandbox_pre(self):
@@ -85,11 +86,14 @@ class IPythonProcess(mp.Process):
                 print(f'ns error: {repr(e)}')
 
     def run(self):
-        if self.debug:
-            sys.stdout = open(self.stdout_path, 'a')
+        if self.interactive:
+            sys.stdin = open(0)
         else:
-            sys.stderr = sys.stdout = open(os.devnull, 'w')
-        sys.stdin = None
+            if self.debug and self.stdout_path:
+                sys.stdout = open(self.stdout_path, 'a')
+            else:
+                sys.stderr = sys.stdout = open(os.devnull, 'w')
+            sys.stdin = None
 
         self.sandbox_pre()
         # for execution to return result, but to not change _, __ etc.
@@ -109,6 +113,10 @@ class IPythonProcess(mp.Process):
 
         self.sandbox_post()
         signal.signal(signal.SIGINT, signal.default_int_handler)
+
+        if self.interactive:
+            self.ipapp.start()
+            return
 
         while True:
             try:
@@ -152,8 +160,8 @@ class Previewer():
         self.ns_conn, ns_conn_c = mp.Pipe()
         self.preview_thread = PipeListener(self.exec_conn, self.preview_cb)
         self.ctrl_thread = PipeListener(self.ctrl_conn, self.ctrl_cb)
-        self.prev_ip_proc = IPythonProcess(self.stdout_path, exec_conn_c, ctrl_conn_c, ns_conn_c,
-            config=self.config, formatter=self.formatter, debug=self.debug)
+        self.prev_ip_proc = IPythonProcess(exec_conn_c, ctrl_conn_c, ns_conn_c,
+            config=self.config, formatter=self.formatter, debug=self.debug, stdout_path=self.stdout_path)
         self.push(self.ip.user_ns)
         self.ip.events.register('pre_run_cell', self.pre_run_cell)
         self.ip.events.register('post_run_cell', self.post_run_cell)
