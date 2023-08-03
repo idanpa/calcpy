@@ -3,14 +3,6 @@ import IPython
 import argparse
 import os
 
-# TODO: how to do this dynamically?
-from prompt_toolkit.styles.defaults import PROMPT_TOOLKIT_STYLE
-try:
-    PROMPT_TOOLKIT_STYLE.remove((('bottom-toolbar', 'reverse')))
-    PROMPT_TOOLKIT_STYLE.append((('bottom-toolbar', 'noreverse')))
-except: # this hack might just break one day
-    pass
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--version', action='store_true', help='Print version and exit')

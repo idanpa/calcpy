@@ -7,6 +7,7 @@ import os
 import ast
 import sys
 import IPython
+from prompt_toolkit.styles import Style, merge_styles
 from traitlets.config.loader import Config
 
 CTRL_C_TIMEOUT = 2
@@ -141,6 +142,8 @@ class Previewer():
         self.formatter = formatter
         self.debug = debug
         self.stdout_path = self.ip.mktempfile(prefix='previewer_stdout') if debug else None
+        self.ip.pt_app.style = merge_styles([self.ip.pt_app.style,
+            Style([('bottom-toolbar', 'noreverse')])])
         self.start()
 
     def start(self):
