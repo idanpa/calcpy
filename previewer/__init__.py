@@ -59,6 +59,7 @@ class IPythonProcess(mp.Process):
         self.debug = debug
         self.stdout_path = stdout_path
         self.interactive = interactive
+        self.ns_block_list = ['open', 'exit', 'quit', 'get_ipython']
         self.start()
 
     def sandbox_pre(self):
@@ -70,15 +71,21 @@ class IPythonProcess(mp.Process):
         subprocess.Popen = None
         import builtins
         builtins.open = None
+        import io
+        io.open = None
         os.exit = None
         os.abort = None
         os.kill = None
         os.system = None
+        for key in self.ns_block_list:
+            self.ip.user_ns.pop(key, None)
 
     def ns_job(self):
         while True:
             try:
                 ns_msg = self.ns_conn.recv()
+                if ns_msg[0] in self.ns_block_list:
+                    continue
                 self.ip.user_ns[ns_msg[0]] = ns_msg[1]
             except (EOFError, OSError):
                 return # pipe closed
