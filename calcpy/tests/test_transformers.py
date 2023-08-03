@@ -21,6 +21,7 @@ def test_auto_matrix(ip):
 
 def test_auto_latex(ip):
     assert ip.run_cell('$\\frac{1}{2}$.evalf()').result == 0.5
+    assert ip.run_cell('$1$ + $1$ + $1+1$').result == 4
 
 def test_auto_symbols(ip):
     assert ip.run_cell('x+y_1+z2').result == symbols('x')+symbols('y_1')+symbols('z2')
@@ -29,3 +30,6 @@ def test_auto_factorial(ip):
     assert ip.run_cell('5!').result == 120
     assert ip.run_cell('5!+1').result == 121
     assert ip.run_cell('5!=6').result == True
+
+def test_f_string(ip):
+    assert ip.run_cell("f'{2x} {{2x}} {2^2}'").result == '2*x {2x} 4'
