@@ -177,13 +177,8 @@ def sympy_expr_formatter(s, printer, cycle):
 
     try:
         if not isinstance(s, (sympy.core.numbers.Integer, sympy.core.numbers.Float)):
-            simpl = sympy.simplify(s)
-            simpl_s = pretty(simpl, n_col - len(" = "), n_row)
-            if simpl_s != pretty_s:
-                out = pretty_stack(out, " = ", simpl_s, n_col)
-
-            evalu_s = pretty(evalf(simpl), n_col - len(" ≈ "), n_row)
-            if evalu_s != simpl_s and evalu_s != pretty_s:
+            evalu_s = pretty(evalf(s), n_col - len(" ≈ "), n_row)
+            if evalu_s != pretty_s:
                 out = pretty_stack(out, " ≈ ", evalu_s, n_col)
     except Exception as e:
         if IPython.get_ipython().calcpy.debug:
