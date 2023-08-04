@@ -5,8 +5,19 @@ def test_autodate(ip):
     assert dt.days == 1 or 24*60*60-1 <= dt.seconds <= 24*60*60
 
 def test_auto_product(ip):
-    ip.run_cell('foo=1')
-    assert ip.run_cell('2foo').result == 2
+    assert ip.run_cell('2(1+1)').result == 4
+    assert ip.run_cell('(1+1)2').result == 4
+    assert ip.run_cell('(1+1)0x10').result == 0x20
+    assert ip.run_cell('(1+1)2e2').result == 400
+    ip.run_cell('var = 3')
+    assert ip.run_cell('2var').result == 6
+    assert ip.run_cell('0x10var').result == 0x30
+    assert ip.run_cell('2e2var').result == 600
+    x = ip.run_cell('x').result
+    assert ip.run_cell('x(x+1)').result == x*(x+1)
+    assert ip.run_cell('(x+1)x').result == (x+1)*x
+    assert ip.run_cell('2(x+1)').result == 2*(x+1)
+    assert ip.run_cell('(x+1)2').result == (x+1)*2
 
 def test_caret_power(ip):
     ip.calcpy.caret_power = True

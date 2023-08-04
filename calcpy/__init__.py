@@ -30,7 +30,7 @@ def get_calcpy():
 class CalcPy(IPython.core.magic.Magics):
     debug = traitlets.Bool(False, config=True)
     caret_power = traitlets.Bool(True, config=True, help="convert '^' to '**' and '^^' to '^'")
-    auto_product = traitlets.Bool(True, config=True, help="convert '2x' to '2*x'")
+    auto_product = traitlets.Bool(True, config=True, help="implicit product, e.g. convert '2x' to '2*x'")
     auto_solve = traitlets.Bool(True, config=True, help="convert 'x+1=0' to solve(Eq(x+1,0))")
     auto_lambda = traitlets.Bool(True, config=True, help="convert 'f(x,y):=x+y' to 'f=lambda x,y : x+y'")
     auto_store = traitlets.Bool(True, config=True, help="enable automatic store/restore of variables and functions")

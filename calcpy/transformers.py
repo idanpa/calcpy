@@ -67,7 +67,7 @@ def raw_code_transformer(code):
             latex_matches[key] = f'parse_latex(r"""{m[1]}""").subs({{symbols("i"):i}})'
 
     code = code.replace('⋅','*')
-    code = code.replace('ⅈ','i') # for implicit multiply to detect it
+    code = code.replace('ⅈ','i') # for auto product to detect it
 
     if ip.calcpy.caret_power:
         code = re.sub(r'(?<!\^)\^(?!\^)', '**', code)
@@ -178,6 +178,14 @@ class AutoSymbols(AstNodeTransformer):
                 self.ip.calcpy.push({node.id: sympy.symbols(node.id)}, interactive=False)
         return self.generic_visit(node)
 
+class AutoProduct(AstNodeTransformer):
+    def visit_Call(self, node):
+        if self.ip.calcpy.auto_product and len(node.args) == 1 and node.keywords==[] and (
+           (isinstance(node.func, ast.Name) and isinstance(self.ip.user_ns.get(node.func.id, None), (sympy.Expr, int, float, complex))) or \
+           (isinstance(node.func, ast.Constant) and isinstance(node.func.value, (int, float, complex)))):
+            return ast.BinOp(left=node.func, op=ast.Mult(), right=node.args[0])
+        return self.generic_visit(node)
+
 def syntax_error_handler(ip: IPython.InteractiveShell, etype, value, tb, tb_offset=None):
     if ip.calcpy.auto_solve and \
        etype is SyntaxError and tb.tb_next and not tb.tb_next.tb_next:
@@ -203,14 +211,10 @@ def init(ip: IPython.InteractiveShell):
     # ip.ast_transformers.append(ReplaceIntWithInteger(ip))
     ip.ast_transformers.append(ReplaceFloatWithRational(ip))
     ip.ast_transformers.append(ReplaceTupleWithMatrix(ip))
+    ip.ast_transformers.append(AutoProduct(ip))
     ip.input_transformers_post.append(calcpy_input_transformer_post)
 
     ip.set_custom_exc((SyntaxError,), syntax_error_handler)
-
-    def sympy_expr_call(self, *args):
-        if len(args) != 1:
-            raise ValueError('Implicit multiply of sympy expression expects a single argument')
-        return self.__rmul__(args[0])
 
     def sympy_expr_getitem(self, args):
         if not isinstance(args, tuple):
@@ -221,7 +225,6 @@ def init(ip: IPython.InteractiveShell):
         return self.subs(zip(sorted_symbols, args))
 
     # monkey patches
-    sympy.Expr.__call__ = sympy_expr_call
     sympy.Expr.__getitem__ = sympy_expr_getitem
     # don't consider expressions as iterables: (see iterable() in sympy\utilities\iterables.py)
     sympy.Expr._iterable = False
