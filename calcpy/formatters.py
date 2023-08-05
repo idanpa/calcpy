@@ -219,6 +219,9 @@ def init(ip: IPython.InteractiveShell):
         ip=ip)
 
     IPython.lib.pretty.for_type(str, str_formatter)
+    IPython.lib.pretty.for_type(complex, complex_formatter)
+    IPython.lib.pretty.for_type(datetime.datetime, datetime_formatter)
+    IPython.lib.pretty.for_type(datetime.timedelta, timedelta_formatter)
     IPython.lib.pretty.for_type(sympy.printing.defaults.Printable, ip_sympy_pretty_if_oneline_formatter)
     IPython.lib.pretty.for_type(sympy.matrices.common.MatrixShaping, ip_matrix_formatter)
     IPython.lib.pretty.for_type(sympy.combinatorics.Cycle, sympy_pretty_formatter)
