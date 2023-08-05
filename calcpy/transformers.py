@@ -5,6 +5,16 @@ import IPython
 import sympy
 import sympy.parsing.latex
 
+# Auxilary classes for manipulations
+class UnitPrefix():
+    is_unit_prefix = True
+class IntegerUnitPrefix(sympy.Integer, UnitPrefix):
+    pass
+class PowUnitPrefix(sympy.Pow, UnitPrefix):
+    pass
+class MulUnitPrefix(sympy.Mul, UnitPrefix):
+    pass
+
 class FactorialPow():
     # using power so factorial would take the right precedence
     def __rpow__(self, other):
@@ -88,18 +98,21 @@ def raw_code_transformer(code):
            match[3].lower() == 'e' or \
            match[1] is not None:
             return match[0]
-        if match[3] in user_vars or is_auto_symbol(match[3]):
-            if match[4]:
-                return f'{match[2]}*{match[3]}{match[4]}'
-            else:
+        if match[3] in user_vars:
+            if getattr(user_vars[match[3]], 'is_unit_prefix', False):
                 return f'({match[2]}*{match[3]})'
+            else:
+                return f'{match[2]}*{match[3]}'
+        if is_auto_symbol(match[3]):
+            return f'{match[2]}*{match[3]}'
+
         return match[0]
 
     if ip.calcpy.auto_product:
         # number - hex number | engineering number | number
         num_pat = r'0x[0-9a-f]*|0X[0-9A-F]*|\d*\.?\d+e-?\d+|\d*\.?\d+'
         # prod - (format string detection|middle of name detection)?(number)(var name)?
-        prod_pat = rf'(% *|[^\d\W])?({num_pat})({var_pat})?(\s*\*\*\s*({var_pat}|{num_pat}))?'
+        prod_pat = rf'(% *|[^\d\W])?({num_pat})({var_pat})?'
         code = re.sub(prod_pat, auto_prod_replace, code)
 
         # pattern is (right parentheses)(hex number | engineering number | number | var name)
