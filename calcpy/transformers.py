@@ -36,23 +36,13 @@ def calcpy_input_transformer_post(lines):
 
 def raw_code_transformer(code):
     ip = IPython.get_ipython()
-    var_p = r'[^\d\W]\w*' # match any valid variable name
+    var_pat = r'[^\d\W]\w*' # match any valid variable name
 
     user_vars = ip.user_ns.copy()
     # consider also newly introduced variables:
-    var_def_pattern = rf'^({var_p})\s*=(.*)'
+    var_def_pattern = rf'^({var_pat})\s*=(.*)'
     for vars_match in re.finditer(var_def_pattern, code, re.MULTILINE):
         user_vars.setdefault(vars_match[1], None)
-
-    def re_sub_mult_replace(match):
-        # check var is not none, vae not e (since 2e-4 is ambiguous) and this is not a format specifier/middle of name
-        if match[3] is None or \
-           match[3].lower() == 'e' or \
-           match[1] is not None:
-            return match[0]
-        if match[3] in user_vars or is_auto_symbol(match[3]):
-            return f'({match[2]}*{match[3]})'
-        return match[0]
 
     # before doing anything, extract strings and latex, we don't want to transform these:
     code_string_matches = {}
@@ -92,14 +82,29 @@ def raw_code_transformer(code):
         cycle_pat = r'\((\d+ )+\d+\)'
         code = re.sub(cycle_pat, cycle_replace, code)
 
+    def auto_prod_replace(match):
+        # check var is not none, var not e (since 2e-4 is ambiguous), not a format specifier/middle of name
+        if match[3] is None or \
+           match[3].lower() == 'e' or \
+           match[1] is not None:
+            return match[0]
+        if match[3] in user_vars or is_auto_symbol(match[3]):
+            if match[4]:
+                return f'{match[2]}*{match[3]}{match[4]}'
+            else:
+                return f'({match[2]}*{match[3]})'
+        return match[0]
+
     if ip.calcpy.auto_product:
-        # pattern is (format string detection|middle of name detection)?(hex number | engineering number | number)(var name)?
-        mult_pat = rf'(% *|[^\d\W])?(0x[0-9a-f]*|0X[0-9A-F]*|\d*\.?\d+e-?\d+|\d*\.?\d+)({var_p})?'
-        code = re.sub(mult_pat, re_sub_mult_replace, code)
+        # number - hex number | engineering number | number
+        num_pat = r'0x[0-9a-f]*|0X[0-9A-F]*|\d*\.?\d+e-?\d+|\d*\.?\d+'
+        # prod - (format string detection|middle of name detection)?(number)(var name)?
+        prod_pat = rf'(% *|[^\d\W])?({num_pat})({var_pat})?(\s*\*\*\s*({var_pat}|{num_pat}))?'
+        code = re.sub(prod_pat, auto_prod_replace, code)
 
         # pattern is (right parentheses)(hex number | engineering number | number | var name)
-        mult_pat = rf'(\))(0x[0-9a-f]*|0X[0-9A-F]*|\d*\.?\d+e-?\d+|\d*\.?\d+|{var_p})'
-        code = re.sub(mult_pat, r'\1*\2', code)
+        prod_pat = rf'(\))(0x[0-9a-f]*|0X[0-9A-F]*|\d*\.?\d+e-?\d+|\d*\.?\d+|{var_pat})'
+        code = re.sub(prod_pat, r'\1*\2', code)
 
     for key, val in latex_matches.items():
         code = code.replace(f'({key})', val)
@@ -108,7 +113,7 @@ def raw_code_transformer(code):
         code = code.replace(f'({key})', val)
 
     if ip.calcpy.auto_lambda:
-        lambda_pattern = rf'^({var_p})\(((?:{var_p}\s*,?\s*)*)\)\s*:=([^=].*)'
+        lambda_pattern = rf'^({var_pat})\(((?:{var_pat}\s*,?\s*)*)\)\s*:=([^=].*)'
         lambda_replace = r'\1= lambda \2 : \3'
         code = re.sub(lambda_pattern, lambda_replace, code)
 

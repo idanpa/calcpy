@@ -14,10 +14,13 @@ def test_auto_product(ip):
     assert ip.run_cell('0x10var').result == 0x30
     assert ip.run_cell('2e2var').result == 600
     x = ip.run_cell('x').result
+    y = ip.run_cell('y').result
     assert ip.run_cell('x(x+1)').result == x*(x+1)
     assert ip.run_cell('(x+1)x').result == (x+1)*x
     assert ip.run_cell('2(x+1)').result == 2*(x+1)
     assert ip.run_cell('(x+1)2').result == (x+1)*2
+    assert ip.run_cell('5x^5 + 4x ^ 4 + 3x**3 + 2x ** 2').result == 5*x**5 + 4*x**4 + 3*x**3 + 2*x**2
+    assert ip.run_cell('5x^y').result == 5*x**y
 
 def test_caret_power(ip):
     ip.calcpy.caret_power = True
