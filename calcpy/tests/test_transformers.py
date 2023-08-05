@@ -33,6 +33,11 @@ def test_auto_matrix(ip):
 def test_auto_latex(ip):
     assert ip.run_cell('$\\frac{1}{2}$.evalf()').result == 0.5
     assert ip.run_cell('$1$ + $1$ + $1+1$').result == 4
+    assert ip.run_cell('$x+y$ == x+y').result == True
+    ip.run_cell('a,b = 3,4')
+    assert ip.run_cell('$a+b$').result == 7
+    ip.calcpy.auto_latex_sub = False
+    assert ip.run_cell('$a+b$').result == symbols('a') + symbols('b')
 
 def test_auto_symbols(ip):
     assert ip.run_cell('x+y_1+z2').result == symbols('x')+symbols('y_1')+symbols('z2')

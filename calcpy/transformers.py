@@ -3,6 +3,7 @@ import re
 import warnings
 import IPython
 import sympy
+import sympy.parsing.latex
 
 class FactorialPow():
     # using power so factorial would take the right precedence
@@ -15,6 +16,14 @@ def dateparse(datetime_string):
     if d is None:
         raise ValueError(f'Could not parse "{datetime_string}" to datetime')
     return d
+
+def parse_latex(s):
+    ip = IPython.get_ipython()
+    expr = sympy.parsing.latex.parse_latex(s)
+    if not ip.calcpy.auto_latex_sub:
+        return expr
+    subs = {sym.name : ip.user_ns.get(sym.name,sympy.symbols(sym.name)) for sym in expr.free_symbols}
+    return expr.subs(subs)
 
 def is_auto_symbol(var_name):
     var_name_no_idx = re.sub(r'_?\d+$', '', var_name)

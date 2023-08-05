@@ -9,7 +9,6 @@ except (ModuleNotFoundError, ImportError):
     pass
 
 import sympy
-from sympy.parsing.latex import parse_latex
 from sympy import *
 from sympy.combinatorics import *
 e = E                   # avoid conflict with sympy.stats expectation
@@ -39,7 +38,7 @@ TB = Integer(2) ** 40
 deg = Rational(1, 180) * pi
 
 # user functions:
-from calcpy.transformers import dateparse
+from calcpy.transformers import dateparse, parse_latex
 from calcpy.formatters import bin2int
 from calcpy.utils import copy
 from calcpy import get_calcpy

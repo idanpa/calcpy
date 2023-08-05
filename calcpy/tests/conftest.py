@@ -14,4 +14,5 @@ def session_ip():
 
 @pytest.fixture(scope='function')
 def ip(session_ip):
-    yield session_ip
+    session_ip.calcpy.reset(prompt=False)
+    return session_ip

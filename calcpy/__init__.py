@@ -41,6 +41,7 @@ class CalcPy(IPython.core.magic.Magics):
     auto_factorial = traitlets.Bool(True, config=True, help="convert '5!' to 'factorial(5)'")
     auto_permutation = traitlets.Bool(False, config=True, help="convert '(0 1)(3 4)' to 'Permutation(0, 1)(3, 4)'")
     auto_latex = traitlets.Bool(True, config=True, help="convert $1+1$ to parse_latex('1+1')")
+    auto_latex_sub = traitlets.Bool(True, config=True, help="substitute local variables in parsed latex")
     previewer = traitlets.Bool(True, config=True, help="enable previewer")
     bitwidth = traitlets.Int(0, config=True, help="bitwidth of displayed binary integers, if 0 adjusted accordingly")
     chop = traitlets.Bool(True, config=True, help="replace small numbers with zero")
