@@ -1,8 +1,10 @@
 from sympy import symbols
+from datetime import datetime
 
 def test_autodate(ip):
     dt = ip.run_cell('d"today"-d"yesterday"').result
     assert dt.days == 1 or 24*60*60-1 <= dt.seconds <= 24*60*60
+    assert ip.run_cell('d\'1 January 1970\'').result == datetime(1970, 1, 1)
 
 def test_auto_product(ip):
     assert ip.run_cell('2(1+1)').result == 4

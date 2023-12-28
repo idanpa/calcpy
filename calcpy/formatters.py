@@ -176,7 +176,7 @@ def sympy_expr_formatter(s, printer, cycle):
     out = pretty_s
 
     try:
-        if not isinstance(s, (sympy.core.numbers.Integer, sympy.core.numbers.Float)):
+        if not isinstance(s, (sympy.Integer, sympy.Float)):
             evalu_s = pretty(evalf(s), n_col - len(" ≈ "), n_row)
             if evalu_s != pretty_s:
                 out = pretty_stack(out, " ≈ ", evalu_s, n_col)
@@ -215,6 +215,7 @@ def init(ip: IPython.InteractiveShell):
     sympy.interactive.printing.init_printing(
         pretty_print=True,
         use_latex='mathjax',
+        use_unicode=not (ip.config.TerminalInteractiveShell.simple_prompt==True),
         num_columns=shutil.get_terminal_size().columns,
         ip=ip)
 
@@ -223,7 +224,7 @@ def init(ip: IPython.InteractiveShell):
     IPython.lib.pretty.for_type(datetime.datetime, datetime_formatter)
     IPython.lib.pretty.for_type(datetime.timedelta, timedelta_formatter)
     IPython.lib.pretty.for_type(sympy.printing.defaults.Printable, ip_sympy_pretty_if_oneline_formatter)
-    IPython.lib.pretty.for_type(sympy.matrices.common.MatrixShaping, ip_matrix_formatter)
+    IPython.lib.pretty.for_type(sympy.matrices.MatrixBase, ip_matrix_formatter)
     IPython.lib.pretty.for_type(sympy.combinatorics.Cycle, sympy_pretty_formatter)
     IPython.lib.pretty.for_type(sympy.combinatorics.Permutation, ip_permutation_formatter)
 
@@ -238,7 +239,7 @@ def init(ip: IPython.InteractiveShell):
     formatter.for_type(tuple, iterable_formatter)
     formatter.for_type(dict, sympy_dict_formatter)
     formatter.for_type(sympy.Expr, sympy_expr_formatter)
-    formatter.for_type(sympy.matrices.common.MatrixCommon, sympy_expr_formatter)
+    formatter.for_type(sympy.matrices.MatrixBase, sympy_expr_formatter)
     formatter.for_type(sympy.core.function.FunctionClass, IPython.lib.pretty._function_pprint)
     formatter.for_type(sympy.combinatorics.Permutation, sympy_pretty_formatter)
     formatter.for_type(sympy.combinatorics.Cycle, sympy_pretty_formatter)

@@ -1,7 +1,6 @@
 import calcpy
 import IPython
 import argparse
-import os
 
 def main():
     parser = argparse.ArgumentParser()

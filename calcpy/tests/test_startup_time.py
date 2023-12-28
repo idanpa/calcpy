@@ -12,7 +12,7 @@ def test_startup_time(n=10):
         start_time = time.time()
         subprocess.check_call(['calcpy', '-c', '4+4'], stdout=None, stdin=subprocess.PIPE)
         elapsed.append(time.time() - start_time)
-    print(elapsed)
+        print(elapsed[-1])
     print(f'max {max(elapsed)}')
     print(f'min {min(elapsed)}')
     print(f'avg {sum(elapsed)/n}')

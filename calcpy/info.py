@@ -22,20 +22,14 @@ def print_info_job(res):
     try:
         res_p = pretty(res)
 
-        if isinstance(res, (float, sympy.core.numbers.Float)):
+        if isinstance(res, (float, sympy.Float)):
             print(f'\n{pretty(sympy.Rational(res))} = Rational(_)')
-        elif isinstance(res, (complex, sympy.core.numbers.Float)):
+        elif isinstance(res, (complex, sympy.Rational)):
             pass
-        elif isinstance(res, (int, sympy.core.numbers.Integer)):
-            f_dict = sympy.factorint(res)
-            f_expr = None
-            for base, expo in f_dict.items():
-                pow = sympy.Pow(base, expo, evaluate=False)
-                if f_expr is None:
-                    f_expr = pow
-                else:
-                    f_expr = sympy.Mul(f_expr, pow, evaluate=False)
-            print(f'\n{pretty(f_expr)}       {pretty(f_dict)} = _.factorint()')
+        elif isinstance(res, (int, sympy.Integer)):
+            factors_dict = sympy.factorint(res)
+            factors_expr = sympy.Mul(*[sympy.Pow(base, expo, evaluate=False) for base, expo in factors_dict.items()], evaluate=False)
+            print(f'\n{pretty(factors_expr)}       {pretty(factors_dict)} = factorint(_)')
         elif isinstance(res, sympy.Expr):
             # sympy.factor(res, extension=[i]) could be nice (when len(res.free_symbols) >= 1) but not working most of the time
             if len(res.free_symbols) == 1:
@@ -119,7 +113,7 @@ def print_info_job(res):
             N_p = pretty(sympy.N(res))
             if N_p != res_p:
                 print(f'\n{N_p} = N(_)')
-        elif isinstance(res, sympy.matrices.common.MatrixCommon):
+        elif isinstance(res, sympy.matrices.MatrixBase):
             if res.rows == res.cols:
                 print(f'\n{pretty(sympy.det(res))} = det(_)')
                 print(f'{pretty(sympy.trace(res))} = trace(_)')

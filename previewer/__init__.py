@@ -72,6 +72,12 @@ class IPythonProcess(mp.Process):
             sys.modules[module_name] = None
 
     def sandbox_post(self):
+        try:
+            # cache tz before removing access to it
+            import tzlocal
+            tzlocal.reload_localzone()
+        except (ModuleNotFoundError, ImportError):
+            pass
         import subprocess
         subprocess.Popen = None
         import builtins

@@ -22,6 +22,7 @@ setuptools.setup(
     install_requires=[
         'requests',
         'ipython',
+        'pickleshare',
         'matplotlib',
         'sympy',
         'dateparser',
