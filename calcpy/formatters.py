@@ -267,8 +267,11 @@ def init(ip: IPython.InteractiveShell):
     PrettyPrinter._print_Float = print_float
     PrettyPrinter._print_float = print_float
 
-    # for sympy.Integer to support all int's format specifiers:
+    # for sympy to support format specifiers:
     def integer__format__(self, format_spec):
         return int.__format__(int(self), format_spec)
     sympy.Integer.__format__ = integer__format__
+    def rational__format__(self, format_spec):
+        return float.__format__(float(self), format_spec)
+    sympy.Rational.__format__ = rational__format__
 
