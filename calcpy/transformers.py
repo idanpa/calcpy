@@ -111,8 +111,8 @@ def raw_code_transformer(code):
     if ip.calcpy.auto_product:
         # number - hex number | engineering number | number
         num_pat = r'0x[0-9a-f]*|0X[0-9A-F]*|\d*\.?\d+e-?\d+|\d*\.?\d+'
-        # prod - (format string detection|middle of name detection)?(number)(var name)?
-        prod_pat = rf'(% *|[^\d\W])?({num_pat})({var_pat})?'
+        # prod - (format spec|middle of name detection)?(number)(var name)?
+        prod_pat = rf'(: *|[^\d\W])?({num_pat})({var_pat})?'
         code = re.sub(prod_pat, auto_prod_replace, code)
 
         # pattern is (right parentheses)(hex number | engineering number | number | var name)
