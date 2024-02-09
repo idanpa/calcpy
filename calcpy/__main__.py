@@ -19,7 +19,6 @@ def main():
         #--InteractiveShellApp.extra_extensions is only supported from 7.10
         "--InteractiveShellApp.exec_lines=%load_ext calcpy",
         "--InteractiveShellApp.hide_initial_ns=False", # we partially hide them
-        "--PlainTextFormatter.float_precision=%.6g",
         "--TerminalInteractiveShell.confirm_exit=False",
         "--TerminalInteractiveShell.term_title_format=CalcPy",
         f"--profile={calcpy.CALCPY_PROFILE_NAME}",
