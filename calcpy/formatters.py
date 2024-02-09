@@ -5,6 +5,7 @@ import IPython
 import sympy
 import sympy.combinatorics
 from sympy.printing.pretty.stringpict import stringPict
+from sympy.concrete.expr_with_limits import ExprWithLimits
 import IPython.lib.pretty
 
 def _bin_pad(bin_string, pad_every=4):
@@ -88,18 +89,28 @@ def pretty_stack(str1, relation, str2, num_columns):
     else:
         return stringPict(*sp1.right(sp2)).render(wrap_line=True, num_columns=num_columns)
 
-def evalf(sympy_expr):
+def evalf(expr:sympy.Expr):
     calcpy = IPython.get_ipython().calcpy
-    options = {
-        'chop': calcpy.chop,
-        'n': 15,
-    }
-    return sympy_expr.evalf(**options)
+    if expr.free_symbols:
+        if expr.is_polynomial() and calcpy.auto_expand_factor_poly:
+            expand = expr.expand()
+            if expand == expr:
+                factor = expr.factor()
+                if factor == expr:
+                    return expr.simplify()
+                return factor
+            return expand
+        return expr
+    types = set(map(type, expr.atoms(sympy.Rational, sympy.Function, sympy.NumberSymbol, ExprWithLimits)))
+    types -= {sympy.Integer, sympy.core.numbers.Zero, sympy.core.numbers.One, sympy.core.numbers.NegativeOne}
+    if calcpy.auto_evalf and types:
+        return expr.evalf(chop=calcpy.chop, n=15)
+    return expr
 
 def evalf_iterable(iterable):
     evalu = []
     for el in iterable:
-        if hasattr(el, 'evalf'):
+        if isinstance(el, sympy.Expr):
             evalu.append(evalf(el))
         elif isinstance(el, (list, tuple)):
             evalu.append(evalf_iterable(el))
@@ -141,12 +152,12 @@ def iterable_formatter(iterable, printer, cycle):
 def evalf_dict(d):
     evalf_d = {}
     for key in d:
-        if hasattr(key, 'evalf'):
+        if isinstance(key, sympy.Expr):
             evalf_key = evalf(key)
         else:
             evalf_key = key
 
-        if hasattr(d[key], 'evalf'):
+        if isinstance(d[key], sympy.Expr):
             evalf_d[evalf_key] = evalf(d[key])
         else:
             evalf_d[evalf_key] = d[key]

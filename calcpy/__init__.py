@@ -31,6 +31,8 @@ class CalcPy(IPython.core.magic.Magics):
     caret_power = traitlets.Bool(True, config=True, help="convert '^' to '**' and '^^' to '^'")
     auto_product = traitlets.Bool(True, config=True, help="implicit product, e.g. convert '2x' to '2*x'")
     auto_solve = traitlets.Bool(True, config=True, help="convert 'x+1=0' to solve(Eq(x+1,0))")
+    auto_expand_factor_poly = traitlets.Bool(True, config=True, help="expand/factor polynomials")
+    auto_evalf = traitlets.Bool(True, config=True, help="evalute expressions")
     auto_lambda = traitlets.Bool(True, config=True, help="convert 'f(x,y):=x+y' to 'f=lambda x,y : x+y'")
     auto_store = traitlets.Bool(True, config=True, help="enable automatic store/restore of variables and functions")
     auto_matrix = traitlets.Bool(True, config=True, help="convert tuples of tuples to matrices")
