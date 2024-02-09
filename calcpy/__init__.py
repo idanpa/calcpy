@@ -14,7 +14,6 @@ import sympy
 import platform
 import json
 import os
-from contextlib import redirect_stdout
 
 from . import currency
 from . import formatters
@@ -164,12 +163,6 @@ https://github.com/idanpa/calcpy''')
     ip.run_cell('from calcpy.user import *', store_history=False)
     if ip.calcpy.eng_units_prefixes:
         ip.push(ip.calcpy._eng_units_prefixes_dict, interactive=False)
-
-    try:
-        with redirect_stdout(None): # some recent IPython version prints here
-            ip.enable_pylab(import_all=False)
-    except ImportError:
-        pass # no gui
 
     formatters.init(ip)
     transformers.init(ip)
