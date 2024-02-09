@@ -56,8 +56,9 @@ def raw_code_transformer(code):
 
     # before doing anything, extract strings and latex, we don't want to transform these:
     code_string_matches = {}
-    code_string_pattern = r'([bdfr]{0,2})("(?:\\"|[^"])*"|\'(?:\\\'|[^\'])*\')'
-    for m in re.finditer(code_string_pattern, code):
+    # (string modifiers)("str"|'str'|"""str"""|'''str''')
+    str_pat = r'([bdfr]{0,2})("(?:\\"|[^"])+"|\'(?:\\\'|[^\'])+\'|"""([\S\s]*?)(?<!\\)"""|\'\'\'([\S\s]*?)(?<!\\)\'\'\')'
+    for m in re.finditer(str_pat, code):
         key = hash(m.group())
         code = code.replace(m.group(), f'({key})')
         if ip.calcpy.auto_date and m.group(1) == 'd':

@@ -54,5 +54,11 @@ def test_auto_factorial(ip):
     assert ip.run_cell('5!+1').result == 121
     assert ip.run_cell('5!=6').result == True
 
-def test_f_string(ip):
+def test_string_handling(ip):
+    assert ip.run_cell('"2x"').result == '2x'
+    assert ip.run_cell('\'2x\'').result == '2x'
+    assert ip.run_cell('"""2x"""').result == '2x'
+    assert ip.run_cell('\'\'\'2x\'\'\'').result == '2x'
+    assert ip.run_cell('"2x \\"2x\\" 2x"').result == '2x "2x" 2x'
+    assert ip.run_cell('"2x \\\'2x\\\' 2x"').result == '2x \'2x\' 2x'
     assert ip.run_cell("f'{2x} {{2x}} {2^2}'").result == '2*x {2x} 4'
