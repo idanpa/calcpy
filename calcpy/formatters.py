@@ -79,14 +79,14 @@ def pretty_stack(str1, relation, str2, num_columns):
     sp1.baseline = sp1.height()//2
     sp2 = stringPict(str2)
     sp2.baseline = sp2.height()//2
-    sp2 = stringPict(*sp2.left(relation))
 
     if sp1.width() > .75*num_columns or \
-       sp2.width() > .75*num_columns  or \
-       sp1.width() + sp2.width() > num_columns:
-        return sp1.render(wrap_line=True, num_columns=num_columns) + '\n\n' + \
+       sp2.width() + len(relation) > .75*num_columns  or \
+       sp1.width() + len(relation) + sp2.width() > num_columns:
+        return sp1.render(wrap_line=True, num_columns=num_columns) + f'\n{relation}\n' + \
                sp2.render(wrap_line=True, num_columns=num_columns)
     else:
+        sp2 = stringPict(*sp2.left(relation))
         return stringPict(*sp1.right(sp2)).render(wrap_line=True, num_columns=num_columns)
 
 def evalf(expr:sympy.Expr):
@@ -140,7 +140,7 @@ def iterable_formatter(iterable, printer, cycle):
     out = pretty_s
 
     try:
-        evalu_s = pretty(evalf_iterable(iterable), n_col - len(" ≈ "), n_row)
+        evalu_s = pretty(evalf_iterable(iterable), n_col, n_row)
         if evalu_s != pretty_s:
             out = pretty_stack(out, " ≈ ", evalu_s, n_col)
     except Exception as e:
@@ -171,7 +171,7 @@ def sympy_dict_formatter(d, printer, cycle):
     out = pretty_s
 
     try:
-        evalf_dict_s = pretty(evalf_dict(d), n_col - len(" ≈ "), n_row)
+        evalf_dict_s = pretty(evalf_dict(d), n_col, n_row)
         if evalf_dict_s != pretty_s:
             out = pretty_stack(out, " ≈ ", evalf_dict_s, n_col)
     except Exception as e:
@@ -188,7 +188,7 @@ def sympy_expr_formatter(s, printer, cycle):
 
     try:
         if not isinstance(s, (sympy.Integer, sympy.Float)):
-            evalu_s = pretty(evalf(s), n_col - len(" ≈ "), n_row)
+            evalu_s = pretty(evalf(s), n_col, n_row)
             if evalu_s != pretty_s:
                 out = pretty_stack(out, " ≈ ", evalu_s, n_col)
     except Exception as e:
