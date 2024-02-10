@@ -1,6 +1,6 @@
 # CalcPy
 
-Calculator and advanced math solver in the comfort of your terminal by Python, IPython and SymPy.
+Terminal calculator and advanced math solver using Python, IPython and SymPy.
 
 ## Usage
 <p align="center">
@@ -11,7 +11,7 @@ Calculator and advanced math solver in the comfort of your terminal by Python, I
   </picture>
 </p>
 
-[Examples](docs/examples.md)&emsp;·&emsp;[Try online](https://replit.com/@idanp/CalcPy?embed=true)
+[Examples](docs/examples.md)&emsp;·&emsp;[Try online](https://replit.com/@idanp/CalcPy)
 
 ## Installation 
 Prerequisites - [Python](https://www.python.org/downloads/)
