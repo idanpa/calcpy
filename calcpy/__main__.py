@@ -21,6 +21,7 @@ def main():
         "--InteractiveShellApp.hide_initial_ns=False", # we partially hide them
         "--TerminalInteractiveShell.confirm_exit=False",
         "--TerminalInteractiveShell.term_title_format=CalcPy",
+        "--TerminalInteractiveShell.auto_match=True",
         f"--profile={calcpy.CALCPY_PROFILE_NAME}",
     ]
 
