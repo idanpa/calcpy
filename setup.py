@@ -26,7 +26,7 @@ setuptools.setup(
         'matplotlib',
         'sympy',
         'dateparser',
-        ## for parse_latex(): antlr4-python3-runtime (pip), antlr-python-runtime (conda)
+        'antlr4-python3-runtime==4.11', # todo: move to Lark when sympy supports it
     ],
     use_scm_version={'fallback_version':'0.0.0'},
     setup_requires=['setuptools_scm', 'ipython'], #TODO: move to pyproject.toml
