@@ -8,9 +8,11 @@ if mp.current_process().name == 'ipython_previewer':
 import threading
 import _thread
 import os
+import io
 import ast
 import sys
 import atexit
+import traceback
 import IPython
 from prompt_toolkit.styles import Style, merge_styles
 from traitlets.config.loader import Config
@@ -66,11 +68,19 @@ class IPythonProcess(mp.Process):
         self.stdout_path = stdout_path
         self.interactive = interactive
         self.ns_block_list = ['open', 'exit', 'quit', 'get_ipython']
+        self._open = io.open
         self.start()
 
     def sandbox_pre(self):
         for module_name in ['matplotlib', 'tkinter', 'pyperclip']:
             sys.modules[module_name] = None
+
+    def previewer_open(self, file, mode='r', buffering=-1, encoding=None, errors=None, newline=None, closefd=True, opener=None):
+        if any(['importlib' in fs.filename for fs in traceback.extract_stack()]) or \
+           file == os.devnull:
+            return self._open(file, mode=mode, buffering=buffering, encoding=encoding, errors=errors, newline=newline, closefd=closefd, opener=opener)
+        else:
+            raise IOError('open is not allowed in previewer')
 
     def sandbox_post(self):
         try:
@@ -79,12 +89,16 @@ class IPythonProcess(mp.Process):
             tzlocal.reload_localzone()
         except (ModuleNotFoundError, ImportError):
             pass
+        try:
+            # numpy util function need access to subprocess.run
+            from numpy.testing._private.utils import _SUPPORTS_SVE
+        except (ModuleNotFoundError, ImportError):
+            pass
         import subprocess
         subprocess.Popen = None
         import builtins
-        builtins.open = None
-        import io
-        io.open = None
+        builtins.open = self.previewer_open
+        io.open = self.previewer_open
         os.exit = None
         os.abort = None
         os.kill = None
