@@ -74,7 +74,7 @@ def raw_code_transformer(code):
         for m in re.finditer(latex_pattern, code):
             key = hash(m.group())
             code = code.replace(m.group(), f'({key})')
-            latex_matches[key] = f'parse_latex(r"""{m[1]}""").subs({{symbols("i"):i}})'
+            latex_matches[key] = f'parse_latex(r"""{m[1]}""").subs({{symbols("i"):sympy.I}})'
 
     code = code.replace('⋅','*')
     code = code.replace('ⅈ','i') # for auto product to detect it
