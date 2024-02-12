@@ -10,6 +10,7 @@ import _thread
 import os
 import ast
 import sys
+import atexit
 import IPython
 from prompt_toolkit.styles import Style, merge_styles
 from traitlets.config.loader import Config
@@ -91,31 +92,7 @@ class IPythonProcess(mp.Process):
         for key in self.ns_block_list:
             self.ip.user_ns.pop(key, None)
 
-    def ns_job(self):
-        while True:
-            try:
-                ns_msg = self.ns_conn.recv()
-                if ns_msg[0] in self.ns_block_list:
-                    continue
-                if len(ns_msg) == 2:
-                    self.ip.user_ns[ns_msg[0]] = ns_msg[1]
-                elif len(ns_msg) == 3:
-                    self.ip.user_ns[ns_msg[0]][ns_msg[1]] = ns_msg[2]
-            except (EOFError, OSError):
-                return # pipe closed
-            except Exception as e:
-                print(f'ns error: {repr(e)}')
-
-    def run(self):
-        if self.interactive:
-            sys.stdin = open(0)
-        else:
-            if self.debug and self.stdout_path:
-                sys.stdout = open(self.stdout_path, 'a')
-            else:
-                sys.stderr = sys.stdout = open(os.devnull, 'w')
-            sys.stdin = None
-
+    def initialize(self):
         self.sandbox_pre()
         # for execution to return result, but to not change _, __ etc.
         IPython.core.displayhook.DisplayHook.update_user_ns = lambda self, result: None
@@ -135,24 +112,57 @@ class IPythonProcess(mp.Process):
         self.sandbox_post()
         signal.signal(signal.SIGINT, signal.default_int_handler)
 
-        if self.interactive:
-            self.ipapp.start()
-            return
-
+    def ns_job(self):
         while True:
             try:
-                code, assign, do_preview = self.exec_conn.recv()
-                ctrl_c_timer = threading.Timer(CTRL_C_TIMEOUT, _thread.interrupt_main)
-                restart_timer = threading.Timer(RESTART_TIMEOUT, self.ctrl_conn.send, ['restart'])
-                ctrl_c_timer.start(),  restart_timer.start()
-                result = self.run_code(code, assign)
-                ctrl_c_timer.cancel(), restart_timer.cancel()
-                if do_preview:
-                    self.exec_conn.send(result)
+                ns_msg = self.ns_conn.recv()
+                if ns_msg[0] in self.ns_block_list:
+                    continue
+                if len(ns_msg) == 2:
+                    self.ip.user_ns[ns_msg[0]] = ns_msg[1]
+                elif len(ns_msg) == 3:
+                    self.ip.user_ns[ns_msg[0]][ns_msg[1]] = ns_msg[2]
             except (EOFError, OSError):
                 return # pipe closed
             except Exception as e:
-                print(f'previewer run cell error: {repr(e)}', file=sys.stderr)
+                print(f'ns error: {repr(e)}')
+
+    def run(self):
+        if self.interactive:
+            sys.stdin = open(0)
+            self.stdout = sys.stdout
+        else:
+            sys.stdin = None
+            if self.debug and self.stdout_path:
+                self.stdout = open(self.stdout_path, 'a')
+            else:
+                self.stdout = open(os.devnull, 'w')
+        sys.stderr = sys.stdout = self.stdout
+
+        try:
+            self.initialize()
+
+            if self.interactive:
+                self.ipapp.start()
+                return
+
+            while True:
+                try:
+                    code, assign, do_preview = self.exec_conn.recv()
+                    ctrl_c_timer = threading.Timer(CTRL_C_TIMEOUT, _thread.interrupt_main)
+                    restart_timer = threading.Timer(RESTART_TIMEOUT, self.ctrl_conn.send, ['restart'])
+                    ctrl_c_timer.start(),  restart_timer.start()
+                    result = self.run_code(code, assign)
+                    ctrl_c_timer.cancel(), restart_timer.cancel()
+                    if do_preview:
+                        self.exec_conn.send(result)
+                except (EOFError, OSError):
+                    return # pipe closed
+                except Exception as e:
+                    print(f'previewer run cell error: {repr(e)}', file=sys.stderr)
+        finally:
+            self.ip.exiter()
+            self.stdout.close()
 
     def run_code(self, code, assign):
         self.disable_assign.active = not assign
@@ -184,6 +194,7 @@ class Previewer():
         self.ctrl_thread = PipeListener(self.ctrl_conn, self.ctrl_cb)
         self.prev_ip_proc = IPythonProcess(exec_conn_c, ctrl_conn_c, ns_conn_c,
             config=self.config, formatter=self.formatter, debug=self.debug, stdout_path=self.stdout_path)
+        atexit.register(self.deinit)
         self.push(self.ip.user_ns)
         self.ip.events.register('pre_run_cell', self.pre_run_cell)
         self.ip.events.register('post_run_cell', self.post_run_cell)
@@ -191,6 +202,7 @@ class Previewer():
         self.ip.pt_app.bottom_toolbar = ''
 
     def deinit(self):
+        atexit.unregister(self.deinit)
         self.ip.events.unregister('pre_run_cell', self.pre_run_cell)
         self.ip.events.unregister('post_run_cell', self.post_run_cell)
         self.ip.pt_app.default_buffer.on_text_changed.remove_handler(self.text_changed_handler)
@@ -204,6 +216,7 @@ class Previewer():
         self.start()
 
     def pre_run_cell(self, info):
+        # run the code with assignments to align the namespace (no preview)
         self.exec_conn.send((info.raw_cell, True, False))
 
     def post_run_cell(self, result):
@@ -235,7 +248,7 @@ class Previewer():
 
     def push_kv(self, var_name, key, value):
         try:
-            self.ns_conn.send((var_name, key, val))
+            self.ns_conn.send((var_name, key, value))
         except Exception as e:
             pass
 
