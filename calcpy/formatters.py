@@ -62,8 +62,29 @@ def str_formatter(s, printer, cycle):
         s = repr(s)
     printer.text(s)
 
+def integer_to_unicode_power(integer):
+    s = ''
+    neg = ''
+    i2u = [0x2070,0x00b9,0x00b2,0x00b3,0x2074,0x2075,0x2076,0x2077,0x2078,0x2079]
+    if integer < 0:
+        neg = chr(0x207b)
+        integer = -integer
+    while integer > 0:
+        s += chr(i2u[integer%10])
+        integer //= 10
+    return neg + s[::-1]
+
 def ip_sympy_pretty_if_oneline_formatter(obj, printer, cycle):
-    obj_sympy_pretty = sympy.printing.pretty(obj)
+    pp = PrettyPrinter()
+    _print_Pow = pp._print_Pow
+    def _print_Pow_unicode(power):
+        b, e = power.as_base_exp()
+        if isinstance(e, sympy.Integer):
+            return prettyForm(pp.doprint(b) + integer_to_unicode_power(e))
+        return _print_Pow(power)
+    pp._print_Pow = _print_Pow_unicode
+
+    obj_sympy_pretty = pp.doprint(obj)
     if '\n' in obj_sympy_pretty:
         printer.text(repr(obj))
     else:

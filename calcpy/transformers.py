@@ -78,6 +78,16 @@ def raw_code_transformer(code):
 
     code = code.replace('⋅','*')
     code = code.replace('ⅈ','i') # for auto product to detect it
+    u2i = {'\u2070':'0','\u00b9':'1','\u00b2':'2','\u00b3':'3','\u2074':'4','\u2075':'5','\u2076':'6','\u2077':'7','\u2078':'8','\u2079':'9'}
+    def unicode_pow_replace(match):
+        s = '**'
+        if match[1]:
+            s += '-'
+        for c in match[2]:
+            s += u2i[c]
+        return s
+    unicode_pow_pat = f'(\u207b)?(({"|".join(u2i.keys())})+)'
+    code = re.sub(unicode_pow_pat, unicode_pow_replace, code)
 
     if ip.calcpy.caret_power:
         code = re.sub(r'(?<!\^)\^(?!\^)', '**', code)

@@ -26,6 +26,10 @@ def test_auto_product(ip):
     assert ip.run_cell('f\'{1.1:1.2f}\'').result == '1.10'
     assert ip.run_cell('\'%1.2f\' % 1.234').result == '1.23'
 
+def test_unicode_pow(ip):
+    x = ip.run_cell('x').result
+    assert ip.run_cell('x⁻¹³⁴').result == x**-134
+
 def test_caret_power(ip):
     ip.calcpy.caret_power = True
     assert ip.run_cell('3^3').result == 27
