@@ -15,8 +15,8 @@ class Autostore():
             var_name = os.path.basename(var_path)
             try:
                 var = self.shell.db[var_path]
-            except KeyError:
-                print(f'Autostore failed to restore "{var_path}": {sys.exc_info()[0]}, discarding')
+            except KeyError as e:
+                print(f'Autostore failed to restore "{var_name}": {repr(e)}')
                 del self.shell.db[var_path]
             else:
                 if var_name.startswith('_func_'):
@@ -25,7 +25,7 @@ class Autostore():
                     try:
                         self.shell.safe_execfile(file_path, shell.user_ns, shell_futures=True, raise_exceptions=True)
                     except Exception as e:
-                        print(f'Autostore - failed to restore function:\n{var}\n{repr(e)}\n\ndiscarding')
+                        print(f'Autostore - failed to restore function:\n{var}\n{repr(e)}')
                         del self.shell.db[var_path]
                 else:
                     self.shell.user_ns[var_name] = var

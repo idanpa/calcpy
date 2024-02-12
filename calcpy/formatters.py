@@ -4,7 +4,8 @@ import datetime
 import IPython
 import sympy
 import sympy.combinatorics
-from sympy.printing.pretty.stringpict import stringPict
+from sympy.printing.pretty.pretty import PrettyPrinter
+from sympy.printing.pretty.stringpict import stringPict, prettyForm
 from sympy.concrete.expr_with_limits import ExprWithLimits
 import IPython.lib.pretty
 
@@ -256,9 +257,6 @@ def init(ip: IPython.InteractiveShell):
     formatter.for_type(sympy.combinatorics.Cycle, sympy_pretty_formatter)
 
     # use IPython's float precision
-    from sympy.printing.pretty.pretty import PrettyPrinter
-    from sympy.printing.pretty.stringpict import prettyForm
-
     def print_float(self, e):
         ipython = IPython.get_ipython()
         form = ipython.display_formatter.formatters['text/plain']
