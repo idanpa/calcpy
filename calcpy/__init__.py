@@ -46,7 +46,7 @@ class CalcPy(IPython.core.magic.Magics):
     previewer = traitlets.Bool(True, config=True, help="enable previewer")
     bitwidth = traitlets.Int(0, config=True, help="bitwidth of displayed binary integers, if 0 adjusted accordingly")
     chop = traitlets.Bool(True, config=True, help="replace small numbers with zero")
-    eng_units_prefixes = traitlets.Bool(True, config=True, help="engineering units prefixes (e.g. 2k=2000)")
+    units_prefixes = traitlets.Bool(False, config=True, help="units prefixes (e.g. 2k=2000)")
     precision = property(
         lambda calcpy: calcpy.shell.run_line_magic('precision', ''),
         lambda calcpy, p: calcpy.shell.run_line_magic('precision', p))
@@ -57,7 +57,7 @@ class CalcPy(IPython.core.magic.Magics):
         ''''''
         super(CalcPy, self).__init__(shell, **kwargs)
 
-        self._eng_units_prefixes_dict = { 'G': transformers.IntegerUnitPrefix(1e9), 'M': transformers.IntegerUnitPrefix(1e6), 'k': transformers.IntegerUnitPrefix(1e3),
+        self._units_prefixes_dict = { 'G': transformers.IntegerUnitPrefix(1e9), 'M': transformers.IntegerUnitPrefix(1e6), 'k': transformers.IntegerUnitPrefix(1e3),
             'm': transformers.PowUnitPrefix(10, -3),  'u': transformers.PowUnitPrefix(10, -6),  'n': transformers.PowUnitPrefix(10, -9), 'p': transformers.PowUnitPrefix(10, -12) }
 
         self.user_startup_path = os.path.join(shell.profile_dir.location, 'user_startup.py')
@@ -92,14 +92,14 @@ class CalcPy(IPython.core.magic.Magics):
                 self.unload_previewer()
         self.observe(_previewer_changed, names='previewer')
 
-        def _eng_units_prefixes_changed(change):
+        def _units_prefixes_changed(change):
             if change.new == True:
-                self.push(self._eng_units_prefixes_dict, interactive=False)
+                self.push(self._units_prefixes_dict, interactive=False)
             if change.new == False:
-                for key in self._eng_units_prefixes_dict:
+                for key in self._units_prefixes_dict:
                     self.shell.user_ns.pop(key, None)
                     self.shell.user_ns_hidden.pop(key, None)
-        self.observe(_eng_units_prefixes_changed, names='eng_units_prefixes')
+        self.observe(_units_prefixes_changed, names='units_prefixes')
 
         CalcPy.__doc__ = "CalcPy\n"
         for trait_name, trait in sorted(self.traits(config=True).items()):
@@ -163,8 +163,8 @@ https://github.com/idanpa/calcpy''')
     ip.show_usage = show_usage
 
     ip.run_cell('from calcpy.user import *', store_history=False)
-    if ip.calcpy.eng_units_prefixes:
-        ip.push(ip.calcpy._eng_units_prefixes_dict, interactive=False)
+    if ip.calcpy.units_prefixes:
+        ip.push(ip.calcpy._units_prefixes_dict, interactive=False)
 
     formatters.init(ip)
     transformers.init(ip)

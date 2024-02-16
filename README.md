@@ -32,7 +32,8 @@ pip install git+https://github.com/idanpa/calcpy
 * Tuples are matrices `((1,2),(3,4))**2`        
 * All variables and functions are restored between sessions (delete using `del`)
 * Datetime calculations `d"yesterday at 9 am" - d"1990-1-30 9:20"` (using [dateparser](https://github.com/scrapinghub/dateparser))
-* Unit prefixes `G`, `M`, `k`, `m`, `u`, `n`, `p`, `KB`, `MB`, `GB`, `TB` (so `4MB-32KB` or `4G/3.2n` are valid)
+* Sizes `KB`, `MB`, `GB`, `TB` (e.g. `4MB-32KB`)
+* Unit prefixes `G`, `M`, `k`, `m`, `u`, `n`, `p` (`4G/3.2n`, enable by `calcpy.units_prefixes=True`)
 * Implicit lambda `f(a,b):=a**2+b**2`
 * Latex input `plot($\frac{1,x}$)` (latex output with `latex(1/x)`)
 * Copy to clipboard `copy(Out[12])`
