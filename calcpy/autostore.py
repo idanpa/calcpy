@@ -16,17 +16,21 @@ class Autostore():
             try:
                 var = self.shell.db[var_path]
             except KeyError as e:
-                print(f'Autostore failed to restore "{var_name}": {repr(e)}')
+                print(f'Autostore: failed to restore "{var_name}" {repr(e)}')
                 del self.shell.db[var_path]
+                continue
+            if var_name.startswith('_func_'):
+                # to allow %edit func_name, need to place function in file
+                file_path = self.shell.mktempfile(var, prefix='autostore' + var_name + '_')
+                try:
+                    self.shell.safe_execfile(file_path, shell.user_ns, shell_futures=True, raise_exceptions=True)
+                except Exception as e:
+                    print(f'Autostore: failed to restore function\n{var}\n{repr(e)}')
+                    del self.shell.db[var_path]
             else:
-                if var_name.startswith('_func_'):
-                    # to allow %edit func_name, need to place function in file
-                    file_path = self.shell.mktempfile(var, prefix='autostore' + var_name + '_')
-                    try:
-                        self.shell.safe_execfile(file_path, shell.user_ns, shell_futures=True, raise_exceptions=True)
-                    except Exception as e:
-                        print(f'Autostore - failed to restore function:\n{var}\n{repr(e)}')
-                        del self.shell.db[var_path]
+                if var_name in self.shell.user_ns:
+                    print(f'Autostore: attempt to restore existing variable "{var_name}"')
+                    del self.shell.db[var_path]
                 else:
                     self.shell.user_ns[var_name] = var
 
