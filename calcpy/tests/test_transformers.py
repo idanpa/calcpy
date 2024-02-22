@@ -66,3 +66,7 @@ def test_string_handling(ip):
     assert ip.run_cell('"2x \\"2x\\" 2x"').result == '2x "2x" 2x'
     assert ip.run_cell('"2x \\\'2x\\\' 2x"').result == '2x \'2x\' 2x'
     assert ip.run_cell("f'{2x} {{2x}} {2^2}'").result == '2*x {2x} 4'
+
+def test_unicode_power(ip):
+    assert ip.run_cell('x³').result == symbols('x') ** 3
+    assert ip.run_cell('x⁻¹').result == symbols('x') ** -1

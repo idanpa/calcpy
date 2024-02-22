@@ -80,7 +80,11 @@ def ip_sympy_pretty_if_oneline_formatter(obj, printer, cycle):
     def _print_Pow_unicode(power):
         b, e = power.as_base_exp()
         if isinstance(e, sympy.Integer):
-            return prettyForm(pp.doprint(b) + integer_to_unicode_power(e))
+            b = pp._print(b)
+            if b.height() == 1:
+                if b.binding > prettyForm.MUL and b.binding != prettyForm.NEG:
+                    b = stringPict(*b.parens())
+                return prettyForm(*b.right(stringPict(integer_to_unicode_power(e))))
         return _print_Pow(power)
     pp._print_Pow = _print_Pow_unicode
 
