@@ -11,7 +11,6 @@ import os
 import io
 import ast
 import sys
-import atexit
 import traceback
 import IPython
 from prompt_toolkit.styles import Style, merge_styles
@@ -153,30 +152,26 @@ class IPythonProcess(mp.Process):
                 self.stdout = open(os.devnull, 'w')
         sys.stderr = sys.stdout = self.stdout
 
-        try:
-            self.initialize()
+        self.initialize()
 
-            if self.interactive:
-                self.ipapp.start()
-                return
+        if self.interactive:
+            self.ipapp.start()
+            return
 
-            while True:
-                try:
-                    code, assign, do_preview = self.exec_conn.recv()
-                    ctrl_c_timer = threading.Timer(CTRL_C_TIMEOUT, _thread.interrupt_main)
-                    restart_timer = threading.Timer(RESTART_TIMEOUT, self.ctrl_conn.send, ['restart'])
-                    ctrl_c_timer.start(),  restart_timer.start()
-                    result = self.run_code(code, assign)
-                    ctrl_c_timer.cancel(), restart_timer.cancel()
-                    if do_preview:
-                        self.exec_conn.send(result)
-                except (EOFError, OSError):
-                    return # pipe closed
-                except Exception as e:
-                    print(f'previewer run cell error: {repr(e)}', file=sys.stderr)
-        finally:
-            self.ip.exiter()
-            self.stdout.close()
+        while True:
+            try:
+                code, assign, do_preview = self.exec_conn.recv()
+                ctrl_c_timer = threading.Timer(CTRL_C_TIMEOUT, _thread.interrupt_main)
+                restart_timer = threading.Timer(RESTART_TIMEOUT, self.ctrl_conn.send, ['restart'])
+                ctrl_c_timer.start(),  restart_timer.start()
+                result = self.run_code(code, assign)
+                ctrl_c_timer.cancel(), restart_timer.cancel()
+                if do_preview:
+                    self.exec_conn.send(result)
+            except (EOFError, OSError):
+                return # pipe closed
+            except Exception as e:
+                print(f'previewer run cell error: {repr(e)}')
 
     def run_code(self, code, assign):
         self.disable_assign.active = not assign
@@ -195,7 +190,13 @@ class Previewer():
         self.config.merge(config)
         self.formatter = formatter
         self.debug = debug
-        self.stdout_path = self.ip.mktempfile(prefix='previewer_stdout') if debug else None
+
+        if debug:
+            debug_path = os.path.join(ip.profile_dir.location, 'debug')
+            os.makedirs(debug_path, exist_ok=True)
+            self.stdout_path = os.path.join(debug_path, 'previewer_stdout.txt')
+        else:
+            self.stdout_path = None
         self.ip.pt_app.style = merge_styles([self.ip.pt_app.style,
             Style([('bottom-toolbar', 'noreverse')])])
         self.start()
@@ -208,7 +209,6 @@ class Previewer():
         self.ctrl_thread = PipeListener(self.ctrl_conn, self.ctrl_cb)
         self.prev_ip_proc = IPythonProcess(exec_conn_c, ctrl_conn_c, ns_conn_c,
             config=self.config, formatter=self.formatter, debug=self.debug, stdout_path=self.stdout_path)
-        atexit.register(self.deinit)
         self.push(self.ip.user_ns)
         self.ip.events.register('pre_run_cell', self.pre_run_cell)
         self.ip.events.register('post_run_cell', self.post_run_cell)
@@ -216,7 +216,6 @@ class Previewer():
         self.ip.pt_app.bottom_toolbar = ''
 
     def deinit(self):
-        atexit.unregister(self.deinit)
         self.ip.events.unregister('pre_run_cell', self.pre_run_cell)
         self.ip.events.unregister('post_run_cell', self.post_run_cell)
         self.ip.pt_app.default_buffer.on_text_changed.remove_handler(self.text_changed_handler)
