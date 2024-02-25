@@ -86,7 +86,7 @@ class IPythonProcess(mp.Process):
             # cache tz before removing access to it
             import tzlocal
             tzlocal.reload_localzone()
-        except (ModuleNotFoundError, ImportError):
+        except: # reload_localzone crashes on termux ModuleNotFoundError+ZoneInfoNotFoundError
             pass
         try:
             # numpy util function need access to subprocess.run
@@ -103,7 +103,7 @@ class IPythonProcess(mp.Process):
         os.kill = None
         os.system = None
         for key in self.ns_block_list:
-            self.ip.user_ns.pop(key, None)
+            self.previewer_ip.user_ns.pop(key, None)
 
     def initialize(self):
         self.sandbox_pre()
@@ -115,10 +115,10 @@ class IPythonProcess(mp.Process):
         self.config.HistoryAccessor.enabled = False
         self.ipapp = IPython.terminal.ipapp.TerminalIPythonApp.instance(config=self.config)
         self.ipapp.initialize()
-        self.ip = self.ipapp.shell
-        self.ip.inspector = None # inspector is calling expensive operations
+        self.previewer_ip = self.ipapp.shell
+        self.previewer_ip.inspector = None # inspector is calling expensive operations
         self.disable_assign = DisableAssignments(False)
-        self.ip.ast_transformers.append(self.disable_assign)
+        self.previewer_ip.ast_transformers.append(self.disable_assign)
         self.ns_thread = threading.Thread(target=self.ns_job, daemon=True, name='ns_job')
         self.ns_thread.start()
 
@@ -131,13 +131,21 @@ class IPythonProcess(mp.Process):
                 if ns_msg[0] in self.ns_block_list:
                     continue
                 if len(ns_msg) == 2:
-                    self.ip.user_ns[ns_msg[0]] = ns_msg[1]
+                    self.previewer_ip.user_ns[ns_msg[0]] = ns_msg[1]
                 elif len(ns_msg) == 3:
-                    self.ip.user_ns[ns_msg[0]][ns_msg[1]] = ns_msg[2]
+                    self.previewer_ip.user_ns[ns_msg[0]][ns_msg[1]] = ns_msg[2]
             except (EOFError, OSError):
                 return # pipe closed
             except Exception as e:
                 print(f'ns error: {repr(e)}')
+
+    def ask_restart(self):
+        print('asking restart')
+        self.ctrl_conn.send('restart')
+
+    def ctrl_c(self):
+        print('sending SIGINT')
+        _thread.interrupt_main()
 
     def run(self):
         if self.interactive:
@@ -151,6 +159,7 @@ class IPythonProcess(mp.Process):
                 self.stdout = open(os.devnull, 'w')
         sys.stderr = sys.stdout = self.stdout
 
+        print('previewer initialize')
         self.initialize()
 
         if self.interactive:
@@ -162,8 +171,8 @@ class IPythonProcess(mp.Process):
                 code, assign, do_preview = self.exec_conn.recv()
                 # unmask ctrl+c
                 signal.signal(signal.SIGINT, signal.default_int_handler)
-                ctrl_c_timer = threading.Timer(CTRL_C_TIMEOUT, _thread.interrupt_main)
-                restart_timer = threading.Timer(RESTART_TIMEOUT, self.ctrl_conn.send, ['restart'])
+                ctrl_c_timer = threading.Timer(CTRL_C_TIMEOUT, self.ctrl_c)
+                restart_timer = threading.Timer(RESTART_TIMEOUT, self.ask_restart)
                 ctrl_c_timer.start(),  restart_timer.start()
                 result = self.run_code(code, assign)
                 ctrl_c_timer.cancel(), restart_timer.cancel()
@@ -179,7 +188,7 @@ class IPythonProcess(mp.Process):
     def run_code(self, code, assign):
         self.disable_assign.active = not assign
         print(f'In [1]: {code}')
-        result = self.ip.run_cell(code, store_history=False)
+        result = self.previewer_ip.run_cell(code, store_history=False)
         if result.result is None:
             return ''
         return self.formatter(result.result)
