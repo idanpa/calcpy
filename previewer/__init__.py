@@ -123,7 +123,6 @@ class IPythonProcess(mp.Process):
         self.ns_thread.start()
 
         self.sandbox_post()
-        signal.signal(signal.SIGINT, signal.default_int_handler)
 
     def ns_job(self):
         while True:
@@ -161,6 +160,8 @@ class IPythonProcess(mp.Process):
         while True:
             try:
                 code, assign, do_preview = self.exec_conn.recv()
+                # unmask ctrl+c
+                signal.signal(signal.SIGINT, signal.default_int_handler)
                 ctrl_c_timer = threading.Timer(CTRL_C_TIMEOUT, _thread.interrupt_main)
                 restart_timer = threading.Timer(RESTART_TIMEOUT, self.ctrl_conn.send, ['restart'])
                 ctrl_c_timer.start(),  restart_timer.start()
@@ -172,6 +173,8 @@ class IPythonProcess(mp.Process):
                 return # pipe closed
             except Exception as e:
                 print(f'previewer run cell error: {repr(e)}')
+            finally:
+                signal.signal(signal.SIGINT, signal.SIG_IGN)
 
     def run_code(self, code, assign):
         self.disable_assign.active = not assign
