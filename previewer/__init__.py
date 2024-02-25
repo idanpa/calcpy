@@ -169,6 +169,8 @@ class IPythonProcess(mp.Process):
         while True:
             try:
                 code, assign, do_preview = self.exec_conn.recv()
+                while self.exec_conn.poll(): # take only latest
+                    code, assign, do_preview = self.exec_conn.recv()
                 # unmask ctrl+c
                 signal.signal(signal.SIGINT, signal.default_int_handler)
                 ctrl_c_timer = threading.Timer(CTRL_C_TIMEOUT, self.ctrl_c)
