@@ -117,6 +117,7 @@ def pretty_stack(str1, relation, str2, num_columns):
 
 def evalf(expr:sympy.Expr):
     calcpy = IPython.get_ipython().calcpy
+    expr = expr.doit()
     if expr.free_symbols:
         if expr.is_polynomial() and calcpy.auto_expand_factor_poly:
             expand = expr.expand()
