@@ -1,4 +1,5 @@
 from functools import partial
+import re
 import shutil
 import datetime
 import IPython
@@ -243,7 +244,7 @@ def previewer_formatter(obj):
     except:
         obj_str = ''
 
-    obj_str = obj_str.replace('\n', ' ')
+    obj_str = re.sub(r'\s+', ' ', obj_str)
     num_columns = shutil.get_terminal_size().columns
     if len(obj_str) > num_columns:
         obj_str = obj_str[:num_columns-4] + '...'
