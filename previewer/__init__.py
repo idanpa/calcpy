@@ -285,13 +285,15 @@ class Previewer():
         with open(self.stdout_path, 'r') as f:
             return f.read()
 
-def load_ipython_extension(ip:IPython.InteractiveShell, config=Config(), formatter=str, debug=False):
-    if ip.config.TerminalInteractiveShell.simple_prompt == True:
+def load_ipython_extension(ip:IPython.InteractiveShell, config=None, formatter=str, debug=False):
+    if config is None:
+        config = ip.config.copy()
+    if getattr(ip, 'pt_app', None) is None:
         return
     ip.previewer = Previewer(ip, config=config, formatter=formatter, debug=debug)
 
 def unload_ipython_extension(ip:IPython.InteractiveShell):
-    if ip.config.TerminalInteractiveShell.simple_prompt == True:
+    if getattr(ip, 'pt_app', None) is None:
         return
     ip.previewer.deinit()
     ip.pt_app.bottom_toolbar = None
