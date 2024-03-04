@@ -11,6 +11,7 @@ import os
 import io
 import ast
 import sys
+from types import ModuleType
 import traceback
 import IPython
 from prompt_toolkit.styles import Style, merge_styles
@@ -18,6 +19,7 @@ from traitlets.config.loader import Config
 
 CTRL_C_TIMEOUT = 2
 RESTART_TIMEOUT = 10
+NS_BLOCK_LIST = ['open', 'exit', 'quit', 'get_ipython', 'calcpy']
 
 class PipeListener(threading.Thread):
     def __init__(self, conn, cb):
@@ -66,7 +68,6 @@ class IPythonProcess(mp.Process):
         self.debug = debug
         self.stdout_path = stdout_path
         self.interactive = interactive
-        self.ns_block_list = ['open', 'exit', 'quit', 'get_ipython']
         self._open = io.open
         self.start()
 
@@ -102,7 +103,7 @@ class IPythonProcess(mp.Process):
         os.abort = None
         os.kill = None
         os.system = None
-        for key in self.ns_block_list:
+        for key in NS_BLOCK_LIST:
             self.previewer_ip.user_ns.pop(key, None)
 
     def initialize(self):
@@ -128,7 +129,7 @@ class IPythonProcess(mp.Process):
         while True:
             try:
                 ns_msg = self.ns_conn.recv()
-                if ns_msg[0] in self.ns_block_list:
+                if ns_msg[0] in NS_BLOCK_LIST:
                     continue
                 if len(ns_msg) == 2:
                     self.previewer_ip.user_ns[ns_msg[0]] = ns_msg[1]
@@ -268,16 +269,20 @@ class Previewer():
 
     def push(self, variables):
         for var_name, val in variables.copy().items():
+            if var_name in NS_BLOCK_LIST or isinstance(val, ModuleType):
+                continue
             try:
                 self.ns_conn.send((var_name, val))
             except Exception as e:
-                pass
+                if self.debug and var_name != 'Out':
+                    self.ns_conn.send((var_name, repr(e)))
 
     def push_kv(self, var_name, key, value):
         try:
             self.ns_conn.send((var_name, key, value))
         except Exception as e:
-            pass
+            if self.debug:
+                self.ns_conn.send((var_name, key, repr(e)))
 
     def get_stdout(self):
         if self.stdout_path == None:
