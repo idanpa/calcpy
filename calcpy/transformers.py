@@ -254,16 +254,7 @@ def init(ip: IPython.InteractiveShell):
 
     ip.set_custom_exc((SyntaxError,), syntax_error_handler)
 
-    def sympy_expr_getitem(self, args):
-        if not isinstance(args, tuple):
-            args = (args,)
-        sorted_symbols = sorted(self.free_symbols, key=lambda s: s.name)
-        if len(args) != len(sorted_symbols):
-            raise TypeError(f'Expected {len(sorted_symbols)} arguments {sorted_symbols}')
-        return self.subs(zip(sorted_symbols, args))
-
     # monkey patches
-    sympy.Expr.__getitem__ = sympy_expr_getitem
     # don't consider expressions as iterables: (see iterable() in sympy\utilities\iterables.py)
     sympy.Expr._iterable = False
     sympy.Expr.real = property(sympy.re)
