@@ -6,7 +6,6 @@ if mp.current_process().name == 'ipython_previewer':
     signal.signal(signal.SIGINT, signal.SIG_IGN)
 
 import threading
-import _thread
 import os
 import io
 import ast
@@ -146,7 +145,7 @@ class IPythonProcess(mp.Process):
 
     def ctrl_c(self):
         print('sending SIGINT')
-        _thread.interrupt_main()
+        signal.raise_signal(signal.SIGINT)
 
     def run(self):
         if self.interactive:
