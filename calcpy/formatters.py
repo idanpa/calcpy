@@ -131,8 +131,10 @@ def evalf(expr:sympy.Expr):
                 return factor
             return expand
         return expr
+    expr = expr.simplify()
     types = set(map(type, expr.atoms(sympy.Rational, sympy.Function, sympy.NumberSymbol, ExprWithLimits)))
     types -= {sympy.Integer, sympy.core.numbers.Zero, sympy.core.numbers.One, sympy.core.numbers.NegativeOne}
+    # call evalf only when needed - fractions, functions (e.g. trigonometric), constants (e.g. pi) or limits
     if calcpy.auto_evalf and types:
         return expr.evalf(chop=calcpy.chop, n=15)
     return expr
