@@ -10,6 +10,8 @@ from sympy.printing.pretty.stringpict import stringPict, prettyForm
 from sympy.concrete.expr_with_limits import ExprWithLimits
 import IPython.lib.pretty
 
+MAX_SEQ_LENGTH = 100
+
 def _bin_pad(bin_string, pad_every=4):
         return ' '.join(bin_string[i:i+pad_every] for i in range(0, len(bin_string), pad_every))
 
@@ -137,7 +139,10 @@ def evalf(expr:sympy.Expr):
 
 def evalf_iterable(iterable):
     evalu = []
-    for el in iterable:
+    for idx, el in enumerate(iterable):
+        if idx > MAX_SEQ_LENGTH:
+            evalu.append('...')
+            break
         if isinstance(el, sympy.Expr):
             evalu.append(evalf(el))
         elif isinstance(el, (list, tuple)):
@@ -158,11 +163,17 @@ def pretty(obj, n_col=None, n_row=None):
     except:
         sympy_pretty = str(obj)
     if sympy_pretty.count('\n') >= n_row*1.5:
-        return IPython.lib.pretty.pretty(obj, max_width=n_col)
+        ipython_pretty = IPython.lib.pretty.pretty(obj, max_width=n_col)
+        if ipython_pretty.count('\n') < n_row*1.5:
+            return ipython_pretty
     return sympy_pretty
 
 def iterable_formatter(iterable, printer, cycle):
     n_col, n_row = shutil.get_terminal_size()
+
+    if len(iterable) > MAX_SEQ_LENGTH+1:
+        iterable = iterable[:MAX_SEQ_LENGTH+1]
+        iterable[MAX_SEQ_LENGTH] = '...'
 
     pretty_s = pretty(iterable, n_col, n_row)
     out = pretty_s
