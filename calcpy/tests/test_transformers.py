@@ -1,4 +1,4 @@
-from sympy import symbols
+from sympy import symbols, I
 from datetime import datetime
 
 def test_autodate(ip):
@@ -47,8 +47,10 @@ def test_auto_latex(ip):
     assert ip.run_cell('$x+y$ == x+y').result == True
     ip.run_cell('a,b = 3,4')
     assert ip.run_cell('$a+b$').result == 7
+    assert ip.run_cell('$i$').result == I
     ip.calcpy.auto_latex_sub = False
     assert ip.run_cell('$a+b$').result == symbols('a') + symbols('b')
+    assert ip.run_cell('$i$').result == I
 
 def test_auto_symbols(ip):
     assert ip.run_cell('x+y_1+z2').result == symbols('x')+symbols('y_1')+symbols('z2')

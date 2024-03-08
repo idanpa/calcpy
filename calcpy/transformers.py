@@ -30,6 +30,7 @@ def dateparse(datetime_string):
 def parse_latex(s):
     ip = IPython.get_ipython()
     expr = sympy.parsing.latex.parse_latex(s)
+    expr = expr.subs({'i': sympy.I})
     if not ip.calcpy.auto_latex_sub:
         return expr
     subs = {sym.name : ip.user_ns.get(sym.name,sympy.symbols(sym.name)) for sym in expr.free_symbols}
@@ -74,7 +75,7 @@ def raw_code_transformer(code):
         for m in re.finditer(latex_pattern, code):
             key = hash(m.group())
             code = code.replace(m.group(), f'({key})')
-            latex_matches[key] = f'parse_latex(r"""{m[1]}""").subs({{symbols("i"):sympy.I}})'
+            latex_matches[key] = f'parse_latex(r"""{m[1]}""")'
 
     code = code.replace('⋅','*')
     code = code.replace('ⅈ','i') # for auto product to detect it
