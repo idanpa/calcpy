@@ -20,6 +20,8 @@ import re
 from sympy.stats import *
 from sympy.plotting import plot3d
 
+del beta, gamma, Beta, Gamma # avoid conflict with auto variables
+
 # aliases:
 choose = binomial
 π = pi
