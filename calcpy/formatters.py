@@ -118,10 +118,13 @@ def pretty_stack(str1, relation, str2, num_columns):
         sp2 = stringPict(*sp2.left(relation))
         return stringPict(*sp1.right(sp2)).render(wrap_line=True, num_columns=num_columns)
 
-def evalf(expr:sympy.Expr):
+def evalf(expr):
     calcpy = IPython.get_ipython().calcpy
-    expr = expr.doit()
-    if expr.free_symbols:
+    if calcpy.auto_evalf:
+        expr = expr.doit()
+    if isinstance(expr, sympy.matrices.MatrixBase):
+        return expr.applyfunc(evalf)
+    elif expr.free_symbols:
         if expr.is_polynomial() and calcpy.auto_expand_factor_poly:
             expand = expr.expand()
             if expand == expr:
@@ -130,8 +133,11 @@ def evalf(expr:sympy.Expr):
                     return expr.simplify()
                 return factor
             return expand
+        elif expr.is_rational_function():
+            return expr.simplify()
         return expr
-    expr = expr.simplify()
+    else:
+        expr = expr.simplify()
     types = set(map(type, expr.atoms(sympy.Rational, sympy.Function, sympy.NumberSymbol, ExprWithLimits)))
     types -= {sympy.Integer, sympy.core.numbers.Zero, sympy.core.numbers.One, sympy.core.numbers.NegativeOne}
     # call evalf only when needed - fractions, functions (e.g. trigonometric), constants (e.g. pi) or limits

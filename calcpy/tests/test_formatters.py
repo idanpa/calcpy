@@ -1,6 +1,6 @@
 from sympy.abc import x, y
 from sympy import I as i
-from sympy import Rational
+from sympy import Rational, Matrix
 from IPython.lib.pretty import pretty
 from calcpy.formatters import evalf
 
@@ -17,3 +17,5 @@ def test_evalf(ip):
     assert evalf((i+1)*(i-1)) == -2
     assert evalf((i+1)/(i-1)) == -i
     assert evalf(Rational(1,2)) == 0.5
+    assert evalf(Matrix(((x**2+2*x+1, Rational(1,2)),))) == Matrix((((x+1)**2, 0.5),))
+
