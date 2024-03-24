@@ -302,6 +302,7 @@ def load_ipython_extension(ip:IPython.InteractiveShell, config=None, formatter=s
 def unload_ipython_extension(ip:IPython.InteractiveShell):
     if getattr(ip, 'pt_app', None) is None:
         return
-    ip.previewer.deinit()
-    ip.pt_app.bottom_toolbar = None
-    del ip.previewer
+    if getattr(ip, 'previewer', None):
+        ip.previewer.deinit()
+        ip.pt_app.bottom_toolbar = None
+        del ip.previewer
