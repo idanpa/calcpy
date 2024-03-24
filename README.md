@@ -23,21 +23,21 @@ pip install git+https://github.com/idanpa/calcpy
 
 ## Features
 * Display both symbolic and numeric solutions
-* Integers displayed as decimal, hex and binary (control size with `calcpy.bitwidth`)
+* Integers displayed as decimal, hex and binary
 * Evaluation preview while typing
-* Currency conversion `10USD` (`calcpy.base_currency='EUR'` to change base currency)
-* `?` prefix would provide some basic analysis of expression (similar to [WolframAlpha](https://www.wolframalpha.com/))  
+* Currency conversion `10USD` (`calcpy.base_currency='EUR'` to change base currency) (by [ECB](https://www.ecb.europa.eu/))
+* `?` prefix provides some basic analysis of expression (similar to [WolframAlpha](https://www.wolframalpha.com/))  
 `?((1,2),(3,4))`, `?x**2+1`, `?234`
+* Automatic symbolic variables, anything like `x` `y_1` is a sympy symbol
 * Implicit multiplication (`2x`, `(x+1)(x-1)` are valid)
-* Tuples are matrices `((1,2),(3,4))**2`        
+* Nested tuples are matrices `((1,2),(3,4))**2`        
 * All variables and functions are restored between sessions (delete using `del`)
-* Datetime calculations `d"yesterday at 9 am" - d"1990-1-30 9:20"` (using [dateparser](https://github.com/scrapinghub/dateparser))
+* Datetime calculations `d"yesterday at 9 am" - d"1990-1-30 9:20"` (by [dateparser](https://github.com/scrapinghub/dateparser))
 * Sizes `KB`, `MB`, `GB`, `TB` (e.g. `4MB-32KB`)
 * Unit prefixes `G`, `M`, `k`, `m`, `u`, `n`, `p` (`4G/3.2n`, enable by `calcpy.units_prefixes=True`)
 * Implicit lambda `f(a,b):=a**2+b**2`
-* Latex input `plot($\frac{1,x}$)` (latex output with `latex(1/x)`)
-* Copy to clipboard `copy(Out[12])`
-* Automatic symbols, anything like `x` `y_1` would become sympy symbol
+* Latex input `diff($\frac{1,x}$)` (latex output with `latex(1/x)`)
+* Copy to clipboard `copy(_)` would copy last result
 * Custom user startup (for imports, etc.) `edit_user_startup()`
 * Persistent configuration, see options with `calcpy?`
 
@@ -55,8 +55,9 @@ pip install git+https://github.com/idanpa/calcpy
 
 [Python](https://www.python.org/):
 * All the basic arithmetic `+`,`-`,`*`,`/`,`**` or `^`
-* Complex numbers `1+2i`, binary `0b1101`, hex `0xafe1`, scientific notation `2.12e-6`
-* Programmer: `0b10` binary input, `0x1F` hexadecimal input, `//` integer division, `%` modulo, `&` bitwise AND, `|` bitwise OR, `^^` bitwise XOR (on calcpy `^` is exponentiation, disable with `calcpy.caret_power`), `~` bitwise not, `>>`/`<<` right/left shift. 
+* Binary and hex input `0b1101`, `0xafe1`
+* Scientific notation `2.12e-6`
+* Programmer operations `//` integer division, `%` modulo, `&` bitwise AND, `|` bitwise OR, `^^` bitwise XOR (on calcpy `^` is exponentiation, disable with `calcpy.caret_power`), `~` bitwise not, `>>`/`<<` right/left shift. 
 
 ## Contributing
 Feel free to open an issue for bugs/features,  send a pull request  or star.
