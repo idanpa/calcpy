@@ -14,6 +14,7 @@ import sympy
 import platform
 import json
 import os
+from time import perf_counter
 
 from . import currency
 from . import formatters
@@ -21,6 +22,8 @@ from . import transformers
 from . import info
 from . import autostore
 import previewer
+
+USER_STARTUP_TIME_WARNING_SEC = 2
 
 def get_calcpy():
     return IPython.get_ipython().calcpy
@@ -178,11 +181,14 @@ https://github.com/idanpa/calcpy''')
     if ip.calcpy.auto_store:
         autostore.load_ipython_extension(ip)
 
+    t = perf_counter()
     if os.path.isfile(ip.calcpy.user_startup_path):
         ip.safe_execfile(ip.calcpy.user_startup_path,
                          ip.user_ns,
                          raise_exceptions=False,
                          shell_futures=True)
+    if perf_counter() - t > USER_STARTUP_TIME_WARNING_SEC:
+        print(f'User startup script took {perf_counter() - t:.3f}s!')
 
 if __name__ == '__main__':
     load_ipython_extension(IPython.get_ipython())

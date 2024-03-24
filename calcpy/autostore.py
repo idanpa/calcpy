@@ -1,10 +1,13 @@
 import IPython
 import inspect
-import sys
+from time import perf_counter
 import os
+
+TIME_WARNING_SEC = 2
 
 class Autostore():
     def __init__(self, shell, verbose=False):
+        t = perf_counter()
         self.shell = shell
         self.verbose = verbose
         self.last_user_ns = []
@@ -33,6 +36,8 @@ class Autostore():
                     del self.shell.db[var_path]
                 else:
                     self.shell.user_ns[var_name] = var
+        if perf_counter() - t > TIME_WARNING_SEC:
+            print(f'Autostore took {perf_counter() - t:.3f}s! consider clearing unused vars')
 
     def unload(self):
         self.shell.events.unregister('post_run_cell', self.post_run_cell)
