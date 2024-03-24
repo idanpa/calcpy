@@ -242,9 +242,12 @@ class Previewer():
         self.deinit()
         self.start()
 
+    def run_cell(self, raw_cell, assign=True, preview=False):
+        self.exec_conn.send((raw_cell, assign, preview))
+
     def pre_run_cell(self, info):
         # run the code with assignments to align the namespace (no preview)
-        self.exec_conn.send((info.raw_cell, True, False))
+        self.run_cell(info.raw_cell, assign=True, preview=False)
 
     def post_run_cell(self, result):
         self.push(self.ip.user_ns)
@@ -264,7 +267,7 @@ class Previewer():
         self.ip.pt_app.app.invalidate()
 
     def text_changed_handler(self, buffer):
-        self.exec_conn.send((buffer.text, False, True))
+        self.run_cell(buffer.text, assign=False, preview=True)
 
     def push(self, variables):
         for var_name, val in variables.copy().items():

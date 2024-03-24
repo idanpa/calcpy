@@ -30,6 +30,10 @@ class Autostore():
                 except Exception as e:
                     print(f'Autostore: failed to restore function\n{var}\n{repr(e)}')
                     del self.shell.db[var_path]
+                try:
+                    self.shell.previewer.run_cell(var)
+                except AttributeError:
+                    pass
             else:
                 if var_name in self.shell.user_ns:
                     print(f'Autostore: attempt to restore existing variable "{var_name}"')
