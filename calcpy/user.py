@@ -4,10 +4,12 @@ try:
 except (ModuleNotFoundError, ImportError):
     pass
 try:
+    import matplotlib
     import matplotlib.pyplot as plt
 except (ModuleNotFoundError, ImportError):
     pass
 
+import IPython
 import sympy
 from sympy import *
 from sympy.combinatorics import *
@@ -18,7 +20,7 @@ Re.__name__ = 'Re'
 Im.__name__ = 'Im'
 import re
 from sympy.stats import *
-from sympy.plotting import plot3d
+from sympy.plotting import plot3d, plot_contour, plot3d_parametric_surface, plot3d_parametric_line
 
 del beta, gamma, Beta, Gamma # avoid conflict with auto variables
 
