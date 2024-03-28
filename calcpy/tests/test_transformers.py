@@ -1,7 +1,7 @@
 from sympy import symbols, I
 from datetime import datetime
 
-def test_autodate(ip):
+def test_auto_date(ip):
     dt = ip.run_cell('d"today"-d"yesterday"').result
     assert dt.days == 1 or 24*60*60-1 <= dt.seconds <= 24*60*60
     assert ip.run_cell('d\'1 January 1970\'').result == datetime(1970, 1, 1)
@@ -25,6 +25,10 @@ def test_auto_product(ip):
     assert ip.run_cell('5x^y').result == 5*x**y
     assert ip.run_cell('f\'{1.1:1.2f}\'').result == '1.10'
     assert ip.run_cell('\'%1.2f\' % 1.234').result == '1.23'
+
+    # check no false positives:
+    assert ip.run_cell('0b1010').result == 0b1010
+    assert ip.run_cell('0x10f').result == 0x10f
 
 def test_unicode_pow(ip):
     x = ip.run_cell('x').result
