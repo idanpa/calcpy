@@ -29,6 +29,7 @@ pip install git+https://github.com/idanpa/calcpy
 * `?` prefix provides some basic analysis of expression (similar to [WolframAlpha](https://www.wolframalpha.com/))  
 `?((1,2),(3,4))`, `?x**2+1`, `?234`
 * Automatic symbolic variables, anything like `x` `y_1` is a sympy symbol
+* Symbolic variables assumptions are uniform, `symbols(x, real=True)` would change all occurencase of `x` to be real
 * Implicit multiplication (`2x`, `(x+1)(x-1)` are valid)
 * Nested tuples are matrices `((1,2),(3,4))**2`        
 * All variables and functions are restored between sessions (delete using `del`)

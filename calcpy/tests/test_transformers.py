@@ -6,6 +6,26 @@ def test_auto_date(ip):
     assert dt.days == 1 or 24*60*60-1 <= dt.seconds <= 24*60*60
     assert ip.run_cell('d\'1 January 1970\'').result == datetime(1970, 1, 1)
 
+def test_auto_symbols(ip):
+    assert ip.run_cell('x').result == symbols('x')
+    ip.run_cell('symbols("x", real=True)')
+    assert ip.run_cell('x.is_real').result == True
+    ip.run_cell('del x')
+    assert ip.run_cell('x.is_real').result == None
+
+    ip.run_cell('symbols("x", real=True)')
+    ip.run_cell('f = x**2 + 1')
+    assert ip.run_cell('solve(x**2 + 1)').result == []
+    ip.run_cell('symbols("x", complex=True, real=None)')
+    assert ip.run_cell('solve(f)').result == [-I, I]
+    ip.run_cell('f = $a + b + c$')
+    assert ip.run_cell('f.is_integer').result == None
+    ip.run_cell('symbols("a b c", integer=True)')
+    assert ip.run_cell('f.is_integer').result == True
+
+    ip.run_cell('symbols("y", real=True)')
+    assert ip.run_cell('y.is_real').result == True
+
 def test_auto_product(ip):
     assert ip.run_cell('2(1+1)').result == 4
     assert ip.run_cell('(1+1)2').result == 4

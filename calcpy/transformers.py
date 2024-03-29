@@ -29,11 +29,16 @@ def dateparse(datetime_string):
 
 def parse_latex(s):
     ip = IPython.get_ipython()
-    expr = sympy.parsing.latex.parse_latex(s)
+    try:
+        # don't take the default assumptions of symbols created by parser:
+        sympy.Symbol._ignore_assumptions = True
+        expr = sympy.parsing.latex.parse_latex(s)
+    finally:
+        sympy.Symbol._ignore_assumptions = False
     expr = expr.subs({'i': sympy.I})
     if not ip.calcpy.auto_latex_sub:
         return expr
-    subs = {sym.name : ip.user_ns.get(sym.name,sympy.symbols(sym.name)) for sym in expr.free_symbols}
+    subs = {sym.name : ip.user_ns.get(sym.name, sym) for sym in expr.free_symbols}
     return expr.subs(subs)
 
 def is_auto_symbol(var_name):
@@ -214,7 +219,7 @@ class AutoSymbols(AstNodeTransformer):
     def visit_Name(self, node):
         if self.ip.calcpy.auto_symbols:
             if node.id not in self.ip.user_ns and is_auto_symbol(node.id):
-                self.ip.calcpy.push({node.id: sympy.symbols(node.id)}, interactive=False)
+                self.ip.calcpy.push({node.id: sympy.symbols(node.id, ignore_assumptions=True)}, interactive=False)
         return self.generic_visit(node)
 
 class AutoProduct(AstNodeTransformer):
@@ -273,4 +278,24 @@ def init(ip: IPython.InteractiveShell):
         sympy.Integer.__array__  = sympy_int_array
     except (ModuleNotFoundError, ImportError):
         pass
+
+    # unified assumptions for symbol name
+    sympy.Symbol._all_symbols = {}
+    sympy.Symbol._ignore_assumptions = False
+    sympy_symbol_xnew = sympy.Symbol.__xnew__
+    def unified_sympy_symbol_xnew(cls, name, ignore_assumptions=False, **assumptions):
+        new_symbol = sympy_symbol_xnew(cls, name, **assumptions)
+        if not ip.calcpy.uniform_assumptions or cls != sympy.Symbol:
+            return new_symbol
+        if name not in sympy.Symbol._all_symbols:
+            sympy.Symbol._all_symbols[name] = new_symbol
+        elif not ignore_assumptions and not sympy.Symbol._ignore_assumptions:
+            sympy.Symbol._all_symbols[name]._assumptions = new_symbol._assumptions
+            sympy.Symbol._all_symbols[name]._assumptions0 = new_symbol._assumptions0
+            sympy.Symbol._all_symbols[name]._assumptions_orig = new_symbol._assumptions_orig
+
+        return sympy.Symbol._all_symbols[name]
+    sympy.Symbol.__xnew__ = unified_sympy_symbol_xnew
+    # disable cache so assumptions could be changed multiple times
+    sympy.Symbol._Symbol__xnew_cached_ = unified_sympy_symbol_xnew
 
