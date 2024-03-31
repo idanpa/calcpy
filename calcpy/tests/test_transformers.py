@@ -41,10 +41,16 @@ def test_auto_product(ip):
     assert ip.run_cell('(x+1)x').result == (x+1)*x
     assert ip.run_cell('2(x+1)').result == 2*(x+1)
     assert ip.run_cell('(x+1)2').result == (x+1)*2
+    assert ip.run_cell('(x+1)2y').result == (x+1)*2*y
     assert ip.run_cell('5x^5 + 4x ^ 4 + 3x**3 + 2x ** 2').result == 5*x**5 + 4*x**4 + 3*x**3 + 2*x**2
     assert ip.run_cell('5x^y').result == 5*x**y
+    assert ip.run_cell('1/2x').result == x/2 # controversial
+
     assert ip.run_cell('f\'{1.1:1.2f}\'').result == '1.10'
     assert ip.run_cell('\'%1.2f\' % 1.234').result == '1.23'
+    assert ip.run_cell('\'%.3f\' % 1.234').result == '1.234'
+
+    assert ip.run_cell('10MB/1MB').result == 10
 
     # check no false positives:
     assert ip.run_cell('0b1010').result == 0b1010
