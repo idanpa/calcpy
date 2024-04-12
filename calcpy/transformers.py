@@ -130,14 +130,14 @@ def raw_code_transformer(code):
         return match[0]
 
     if ip.calcpy.auto_product:
-        # number - binary | hex | engineering number | number
-        num_pat = r'0[bB][01]*|0[xX][0-9a-fA-F]*|\d*\.?\d+e-?\d+|\d*\.?\d+'
+        # number - binary/octal/hex | engineering number | number
+        num_pat = r'0[bBoOxX][0-9a-fA-F]*|\d*\.?\d+e-?\d+|\d*\.?\d+'
         # prod - (format spec|middle of name detection)?(number)(var name)?
         prod_pat = rf'(: *|[^\d\W])?({num_pat})({var_pat})?'
         code = re.sub(prod_pat, auto_prod_replace, code)
 
-        # pattern is (right parentheses)(binary | hex | engineering number | number | var name)
-        prod_pat = rf'(\))(0[bB][01]*|0[xX][0-9a-fA-F]*|\d*\.?\d+e-?\d+|\d*\.?\d+|{var_pat})'
+        # pattern is (right parentheses)(binary/octal/hex | engineering number | number | var name)
+        prod_pat = rf'(\))(0[bBoOxX][0-9a-fA-F]*|\d*\.?\d+e-?\d+|\d*\.?\d+|{var_pat})'
         code = re.sub(prod_pat, r'\1*\2', code)
 
     for key, val in latex_matches.items():
