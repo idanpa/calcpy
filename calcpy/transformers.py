@@ -155,7 +155,7 @@ def raw_code_transformer(code):
         try:
             ip.compile.ast_parse(code)
         except Exception as e:
-            if isinstance(e, SyntaxError) and 'cannot assign to expression' in str(e):
+            if isinstance(e, SyntaxError) and 'cannot assign to ' in str(e):
                 code = re.sub(r'(.*[^=])=([^=].*)', r'solve(Eq(\1, \2))', code)
 
     if ip.calcpy._print_transformed_code:
