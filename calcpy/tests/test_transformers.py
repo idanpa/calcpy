@@ -104,3 +104,6 @@ def test_string_handling(ip):
 def test_unicode_power(ip):
     assert ip.run_cell('x³').result == symbols('x') ** 3
     assert ip.run_cell('x⁻¹').result == symbols('x') ** -1
+
+def test_auto_solve(ip):
+    assert ip.run_cell('x^2+2=11').result == [-3, 3]

@@ -151,6 +151,13 @@ def raw_code_transformer(code):
         lambda_replace = r'\1= lambda \2 : \3'
         code = re.sub(lambda_pattern, lambda_replace, code)
 
+    if ip.calcpy.auto_solve:
+        try:
+            ip.compile.ast_parse(code)
+        except Exception as e:
+            if isinstance(e, SyntaxError) and 'cannot assign to expression' in str(e):
+                code = re.sub(r'(.*[^=])=([^=].*)', r'solve(Eq(\1, \2))', code)
+
     if ip.calcpy._print_transformed_code:
         print(code)
     return code
@@ -234,20 +241,6 @@ class AutoProduct(AstNodeTransformer):
             return ast.BinOp(left=node.func, op=ast.Mult(), right=node.args[0])
         return self.generic_visit(node)
 
-def syntax_error_handler(ip: IPython.InteractiveShell, etype, value, tb, tb_offset=None):
-    if ip.calcpy.auto_solve and \
-       etype is SyntaxError and tb.tb_next and not tb.tb_next.tb_next:
-        if 'cannot assign to ' in str(value):
-            try:
-                code = ip.user_ns['In'][-1]
-            except (KeyError, IndexError):
-                pass
-            else:
-                code = re.sub(r'(.*[^=])=([^=].*)', r'solve(Eq(\1, \2))', code)
-                ip.run_cell(code, store_history=False)
-                return None
-    ip.showsyntaxerror()
-
 def init(ip: IPython.InteractiveShell):
     ip.calcpy.push({'_factorial_pow': FactorialPow()}, interactive=False)
 
@@ -261,8 +254,6 @@ def init(ip: IPython.InteractiveShell):
     ip.ast_transformers.append(ReplaceTupleWithMatrix(ip))
     ip.ast_transformers.append(AutoProduct(ip))
     ip.input_transformers_post.append(calcpy_input_transformer_post)
-
-    ip.set_custom_exc((SyntaxError,), syntax_error_handler)
 
     # monkey patches
     # don't consider expressions as iterables: (see iterable() in sympy\utilities\iterables.py)
