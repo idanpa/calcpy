@@ -38,8 +38,12 @@ def parse_latex(s):
     expr = expr.subs({'i': sympy.I})
     if not ip.calcpy.auto_latex_sub:
         return expr
-    subs = {sym.name : ip.user_ns.get(sym.name, sym) for sym in expr.free_symbols}
-    return expr.subs(subs)
+    for sym in expr.free_symbols.copy():
+        if sym.name in ip.user_ns:
+            expr = expr.subs(sym, ip.user_ns[sym.name])
+        else:
+            ip.push({sym.name: sym})
+    return expr
 
 def is_auto_symbol(var_name):
     var_name_no_idx = re.sub(r'_?\d+$', '', var_name)
@@ -219,7 +223,7 @@ class AutoSymbols(AstNodeTransformer):
     def visit_Name(self, node):
         if self.ip.calcpy.auto_symbols:
             if node.id not in self.ip.user_ns and is_auto_symbol(node.id):
-                self.ip.calcpy.push({node.id: sympy.symbols(node.id, ignore_assumptions=True)}, interactive=False)
+                self.ip.calcpy.push({node.id: sympy.symbols(node.id)}, interactive=False)
         return self.generic_visit(node)
 
 class AutoProduct(AstNodeTransformer):
