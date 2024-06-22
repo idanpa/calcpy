@@ -253,7 +253,8 @@ country_to_currency = {
 }
 
 # currencies supported by european central bank api:
-SUPPORTED_CURRENCIES = sorted(['EUR', 'USD', 'JPY', 'BGN', 'CZK', 'DKK', 'GBP', 'HUF', 'PLN', 'RON', 'SEK', 'CHF', 'ISK', 'NOK', 'HRK', 'TRY', 'AUD', 'BRL', 'CAD', 'CNY', 'HKD', 'IDR', 'ILS', 'INR', 'KRW', 'MXN', 'MYR', 'NZD', 'PHP', 'SGD', 'THB', 'ZAR'])
+CRYPTO_CURRENCIES = ['BTC', 'ETH', 'BNB', 'SOL', 'XRP', 'DOGE']
+SUPPORTED_CURRENCIES = sorted(['EUR', 'USD', 'JPY', 'BGN', 'CZK', 'DKK', 'GBP', 'HUF', 'PLN', 'RON', 'SEK', 'CHF', 'ISK', 'NOK', 'HRK', 'TRY', 'AUD', 'BRL', 'CAD', 'CNY', 'HKD', 'IDR', 'ILS', 'INR', 'KRW', 'MXN', 'MYR', 'NZD', 'PHP', 'SGD', 'THB', 'ZAR'] + CRYPTO_CURRENCIES)
 
 BASE_CURRENCY_VAR_PATH = 'calcpy/base_currency'
 COMMON_CURRENCIES_VAR_PATH = 'calcpy/common_currencies'
@@ -293,7 +294,7 @@ def get_common_currencies(calcpy):
     if COMMON_CURRENCIES_VAR_PATH in calcpy.shell.db:
         return calcpy.shell.db[COMMON_CURRENCIES_VAR_PATH]
 
-    comm_currs = ["USD", "EUR", "GBP", "CNY" , "JPY"]
+    comm_currs = ["USD", "EUR", "GBP", "CNY", "JPY"]
     set_common_currencies(calcpy, comm_currs, update=False)
 
     return comm_currs
@@ -301,13 +302,18 @@ def get_common_currencies(calcpy):
 def get_rates():
     ns_cube = '{http://www.ecb.int/vocabulary/2002-08-01/eurofxref}Cube'
     resp = requests.get('https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml')
-    element = ElementTree.fromstring(resp.content)
-    element = element.find(ns_cube)
-    element = element.find(ns_cube)
+    element = ElementTree.fromstring(resp.content).find(ns_cube).find(ns_cube)
     time = element.attrib['time']
     rates = {'EUR': 1.00}
     for child in element.findall(ns_cube):
         rates[child.attrib['currency']] = float(child.attrib['rate'])
+    try:
+        for cc in CRYPTO_CURRENCIES:
+            rates[cc] = 1/float(requests.get(f'https://api.binance.com/api/v3/ticker/price?symbol={cc}EUR')
+                .json()['price'])
+    except Exception as e:
+        if IPython.get_ipython().calcpy.debug:
+            print(f'Crypto currency fetch failed: {e}')
     return rates
 
 def update_currency(calcpy):
@@ -315,8 +321,9 @@ def update_currency(calcpy):
         base_curr = calcpy.base_currency
         comm_currs = list(filter(base_curr.__ne__, calcpy.common_currencies))
         rates = get_rates()
-    except requests.exceptions.ConnectionError:
-        print(f"Cannot update currency rates (connection error), retry by 'calcpy.update_currency()'")
+    except Exception as e:
+        if IPython.get_ipython().calcpy.debug:
+            print(f"Cannot update currency rates: {e}, retry by 'calcpy.update_currency()")
         return
 
     base_rate = rates[base_curr]
