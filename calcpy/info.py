@@ -1,15 +1,11 @@
 from functools import partial
 import IPython
+from IPython.core import inputtransformer2
 import shutil
 import sympy
 from contextlib import suppress
 from time import sleep
-
-def calcpy_info_input_transformer_cleanup(lines):
-    if (lines[0][0] == '?' and lines[0][1] not in '?\n'):
-        lines[0] = 'print_info(' + lines[0][1:]
-        lines[-1] += ')'
-    return lines
+import re
 
 def print_info_job(res):
     ip = IPython.get_ipython()
@@ -159,14 +155,24 @@ def print_info_job(res):
 
     except Exception as e:
         print(repr(e))
-        return e
-    return res
 
 def print_info(res):
     ip = IPython.get_ipython()
     ip.calcpy.jobs.new(print_info_job, res, daemon=True)
-    return res
 
 def init(ip:IPython.InteractiveShell):
-    ip.input_transformers_cleanup.append(calcpy_info_input_transformer_cleanup)
+    inputtransformer2._help_end_re = re.compile(r"""([^?]*)()(\?\??)$""")
 
+    old_make_help_call = inputtransformer2._make_help_call
+
+    def calcpy_info_make_help_call(target, esc):
+        return f'''
+if isinstance({target}, (float, sympy.Float, complex, sympy.Rational, int, sympy.Integer, sympy.Expr,
+                  sympy.integrals.integrals.Integral, sympy.matrices.MatrixBase)):
+    print_info({target})
+else:
+    {old_make_help_call(target, esc)}
+{target}
+'''
+
+    inputtransformer2._make_help_call = calcpy_info_make_help_call

@@ -26,8 +26,8 @@ pip install git+https://github.com/idanpa/calcpy
 * Integers displayed as decimal, hex and binary
 * Evaluation preview while typing
 * Currency conversion `10USD` (`calcpy.base_currency='EUR'` to change base currency) (by [ECB](https://www.ecb.europa.eu/))
-* `?` prefix provides some basic analysis of expression (similar to [WolframAlpha](https://www.wolframalpha.com/))  
-`?((1,2),(3,4))`, `?x**2+1`, `?234`
+* `?` suffix provides some basic analysis of expression (similar to [WolframAlpha](https://www.wolframalpha.com/))  
+`((1,2),(3,4))?`, `x**2+1?`, `234?`
 * Automatic symbolic variables, anything like `x` `y_1` is a sympy symbol
 * Symbolic variables assumptions are uniform, `symbols(x, real=True)` would change all occurencase of `x` to be real
 * Implicit multiplication (`2x`, `(x+1)(x-1)` are valid)

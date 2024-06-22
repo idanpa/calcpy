@@ -15,11 +15,11 @@ def run_flow(ip):
     run_cell('SymmetricGroup(3).conjugacy_classes()')
     run_cell(r'latex(diff($\frac{1}{x}$ * $\sin{x}$))')
     run_cell('8x**2+2x-10 = 0')
-    run_cell('?23232')
+    run_cell('23232?')
     sleep(1)
-    run_cell('?((1,2),(2,3))')
+    run_cell('((1,2),(2,3))?')
     sleep(1)
-    run_cell('?e**(-x**2)')
+    run_cell('e**(-x**2)?')
     sleep(2)
 
 def test_output(ip, capsys):
