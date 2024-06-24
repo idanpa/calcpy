@@ -58,6 +58,9 @@ def raw_code_transformer(code):
     ip = IPython.get_ipython()
     var_pat = r'[^\d\W]\w*' # match any valid variable name
 
+    if ip.calcpy.fix_lr_quotation_marks:
+        code = code.translate({ord(x): '"' for x in ['“', '”']})
+
     user_vars = ip.user_ns.copy()
     # consider also newly introduced variables:
     var_def_pattern = rf'^({var_pat})\s*=(.*)'

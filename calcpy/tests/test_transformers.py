@@ -68,6 +68,9 @@ def test_caret_power(ip):
     ip.calcpy.caret_power = True
     assert ip.run_cell('3^3').result == 27
 
+def test_lr_quotation_marks(ip):
+    assert ip.run_cell('“string”').result == 'string'
+
 def test_auto_lambda(ip):
     ip.run_cell('f(x,y):=x+y')
     assert ip.run_cell('f(1,2)').result == 3

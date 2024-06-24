@@ -32,6 +32,7 @@ def get_calcpy():
 class CalcPy(IPython.core.magic.Magics):
     debug = traitlets.Bool(False, config=True)
     caret_power = traitlets.Bool(True, config=True, help="convert '^' to '**' and '^^' to '^'")
+    fix_lr_quotation_marks = traitlets.Bool(True, config=False, help="allow usage of “ ”")
     auto_product = traitlets.Bool(True, config=True, help="implicit product, e.g. convert '2x' to '2*x'")
     auto_solve = traitlets.Bool(True, config=True, help="convert 'x+1=0' to solve(Eq(x+1,0))")
     auto_expand_factor_poly = traitlets.Bool(True, config=True, help="expand/factor polynomials")
@@ -57,7 +58,7 @@ class CalcPy(IPython.core.magic.Magics):
 
     _print_transformed_code = traitlets.Bool(False, config=False)
 
-    def __init__(self, shell=None, **kwargs):
+    def __init__(self, shell:IPython.InteractiveShell, **kwargs):
         ''''''
         super(CalcPy, self).__init__(shell, **kwargs)
 
