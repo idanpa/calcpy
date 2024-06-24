@@ -3,12 +3,13 @@ import re
 import shutil
 import datetime
 import IPython
+import IPython.lib.pretty
+import numpy
 import sympy
 import sympy.combinatorics
 from sympy.printing.pretty.pretty import PrettyPrinter
 from sympy.printing.pretty.stringpict import stringPict, prettyForm
 from sympy.concrete.expr_with_limits import ExprWithLimits
-import IPython.lib.pretty
 
 MAX_SEQ_LENGTH = 100
 
@@ -248,10 +249,17 @@ def sympy_pretty_formatter(obj, printer, cycle):
     n_col, n_row = shutil.get_terminal_size()
     printer.text(sympy.printing.pretty(obj, num_columns=n_col))
 
+def numpy_array_formatter(obj, printer, cycle):
+    return sympy_expr_formatter(sympy.Matrix(obj), printer, cycle)
+
 def previewer_formatter(obj):
     try:
         if isinstance(obj, sympy.Expr):
-            obj_str = IPython.lib.pretty.pretty(evalf(obj))
+            obj_str = IPython.lib.pretty.pretty(obj)
+            if not isinstance(obj, (sympy.Integer, sympy.Float)):
+                evalu_obj = IPython.lib.pretty.pretty(evalf(obj))
+                if obj_str != evalu_obj:
+                    obj_str += " ≈ " + evalu_obj
         elif isinstance(obj, sympy.combinatorics.Cycle):
             obj_str = IPython.lib.pretty.pretty(obj)
         elif isinstance(obj, (list, tuple)):
@@ -301,6 +309,7 @@ def init(ip: IPython.InteractiveShell):
     formatter.for_type(sympy.core.function.FunctionClass, IPython.lib.pretty._function_pprint)
     formatter.for_type(sympy.combinatorics.Permutation, sympy_pretty_formatter)
     formatter.for_type(sympy.combinatorics.Cycle, sympy_pretty_formatter)
+    formatter.for_type(numpy.ndarray, numpy_array_formatter)
 
     # use IPython's float precision
     def print_float(self, e):

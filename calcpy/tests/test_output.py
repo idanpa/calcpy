@@ -21,6 +21,9 @@ def run_flow(ip):
     sleep(1)
     run_cell('e**(-x**2)?')
     sleep(2)
+    run_cell('np.arange(4)')
+    run_cell('np.zeros((2,2))')
+    run_cell('np.array([[alpha, gamma, x_1]])')
 
 def test_output(ip, capsys):
     run_flow(ip)
