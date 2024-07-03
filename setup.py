@@ -2,7 +2,6 @@
 
 import setuptools
 from pathlib import Path
-import os
 
 setuptools.setup(
     name='calcpy',
@@ -28,8 +27,8 @@ setuptools.setup(
         'dateparser',
         'antlr4-python3-runtime==4.11', # todo: move to Lark when sympy supports it
     ],
-    use_scm_version={'fallback_version':'0.0.0'},
-    setup_requires=['setuptools_scm', 'ipython'], #TODO: move to pyproject.toml
+    use_scm_version={'fallback_version':'0.0'},
+    setup_requires=['setuptools_scm'],
     license='MIT License',
     zip_safe=False,
     keywords=['calculator',],

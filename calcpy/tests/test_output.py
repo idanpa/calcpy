@@ -29,9 +29,9 @@ def test_output(ip, capsys):
     run_flow(ip)
     captured = capsys.readouterr()
     with open(OUTPUT_FILE_PATH, 'r', encoding='utf-8') as f:
-        assert f.read() == captured.out, \
+        assert captured.out == f.read(), \
             r'output mismatch, regenerate output by `python calcpy\tests\test_output.py`'
-        assert '' == captured.err
+        assert captured.err == ''
 
 if __name__ == '__main__':
     import os
