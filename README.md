@@ -3,15 +3,15 @@
 Terminal calculator and advanced math solver using Python, IPython and SymPy.
 
 ## Usage
-<p align="center">
+<p align="left">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/demo/demo_dark.svg">
     <source media="(prefers-color-scheme: light)" srcset="docs/demo/demo_light.svg">
-    <img alt="demo" width="640" height="340" src="docs/demo/demo_light.svg">
+    <img src="docs/demo/demo_light.svg">
   </picture>
 </p>
 
-[Examples](docs/examples.md)&emsp;·&emsp;[Try online](http://calcpy.duckdns.org)
+[Try online](http://calcpy.duckdns.org)  
 
 ## Installation 
 Prerequisites - [Python](https://www.python.org/downloads/)

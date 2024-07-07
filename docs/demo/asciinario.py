@@ -49,7 +49,7 @@ class Play:
                 time.sleep(self.type_wait)
 
     def do_type(self, match):
-        need_escape = "^"
+        need_escape = "^\\"
         flags = set(match[1])
         message = match[2]
         for c in message:
@@ -118,14 +118,21 @@ def play_inscript(text, screen_id):
         player.do(line)
 
 parser = ArgumentParser()
+parser.add_argument('-t', '--type', default='asciinema', help="type of recorder")
+parser.add_argument("--keep", action="store_true", help="don't kill session")
 parser.add_argument("scenario")
 parser.add_argument("output")
 args, args_reminder = parser.parse_known_args()
 instructions = Path(args.scenario).read_text()
 
 screen_id = str(uuid4())
-cmd = f"screen -S {screen_id}"
-recorder_proc = subprocess.Popen(["asciinema", "rec", "--overwrite", "--cols", "80", "--rows", "20", "-c", cmd, args.output])
+if args.type == 'asciinema':
+    cmd = f"screen -S {screen_id}"
+    recorder_proc = subprocess.Popen(["asciinema", "rec", "--overwrite", "--cols", "80", "--rows", "25", "-c", cmd, args.output])
+elif args.type == 'screen':
+    recorder_proc = subprocess.Popen(["screen", "-L", "-Logfile", args.output, "-S", screen_id])
+elif args.type == 'script':
+    recorder_proc = subprocess.Popen(["screen", "-S", screen_id])
 
 # give some time for screen to start
 for _ in range(10):
@@ -140,6 +147,11 @@ for _ in range(10):
 else:
     sys.exit(f"screen session {screen_id} could not be found")
 
+if args.type == 'script':
+    subprocess.check_output(["screen", "-S", screen_id, "-X", "stuff", rf"script {args.output}\n"])
+    time.sleep(.5)
+
 play_inscript(instructions, screen_id)
-subprocess.check_output(["screen", "-S", screen_id, "-X", "quit"])
+if not args.keep:
+    subprocess.check_output(["screen", "-S", screen_id, "-X", "quit"])
 recorder_proc.wait()
