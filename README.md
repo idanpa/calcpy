@@ -11,7 +11,7 @@ Terminal calculator and advanced math solver using Python, IPython and SymPy.
   </picture>
 </p>
 
-[Try online](http://calcpy.duckdns.org)  
+[Try online](https://calcpy.duckdns.org)  
 
 ## Installation 
 Prerequisites - [Python](https://www.python.org/downloads/)
