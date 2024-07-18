@@ -52,6 +52,7 @@ class CalcPy(IPython.core.magic.Magics):
     bitwidth = traitlets.Int(0, config=True, help="bitwidth of displayed binary integers, if 0 adjusted accordingly")
     chop = traitlets.Bool(True, config=True, help="replace small numbers with zero")
     units_prefixes = traitlets.Bool(False, config=True, help="units prefixes (e.g. 2k=2000)")
+    gui = traitlets.Unicode('auto', config=True, allow_none=True, help="matplotlib gui backend, set None to skip")
     precision = property(
         lambda calcpy: calcpy.shell.run_line_magic('precision', ''),
         lambda calcpy, p: calcpy.shell.run_line_magic('precision', p))
@@ -106,6 +107,11 @@ class CalcPy(IPython.core.magic.Magics):
                     self.shell.user_ns_hidden.pop(key, None)
         self.observe(_units_prefixes_changed, names='units_prefixes')
 
+        def _gui_changed(change):
+            if change.old != change.new:
+                shell.enable_matplotlib(shell.calcpy.gui)
+        self.observe(_gui_changed, names='gui')
+
         CalcPy.__doc__ = "CalcPy\n"
         for trait_name, trait in sorted(self.traits(config=True).items()):
             CalcPy.__doc__ += self.class_get_trait_help(trait, None).replace('--CalcPy.', '') + '\n'
@@ -142,6 +148,7 @@ class CalcPy(IPython.core.magic.Magics):
         previewer_config = self.shell.config.copy()
         previewer_config.CalcPy.previewer = False
         previewer_config.CalcPy.auto_store = False
+        previewer_config.CalcPy.gui = None
         previewer.load_ipython_extension(self.shell, config=previewer_config, formatter=formatters.previewer_formatter, debug=self.debug)
 
     def unload_previewer(self):
@@ -182,6 +189,10 @@ https://github.com/idanpa/calcpy''')
 
     if ip.calcpy.auto_store:
         autostore.load_ipython_extension(ip)
+
+    # enable matplotlib after autostore, so restored plots won't be viewed:
+    if ip.calcpy.gui is not None and ip.simple_prompt != True:
+        ip.enable_matplotlib(ip.calcpy.gui)
 
     t = perf_counter()
     if os.path.isfile(ip.calcpy.user_startup_path):
