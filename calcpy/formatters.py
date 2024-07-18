@@ -134,7 +134,7 @@ def evalf(expr):
                     return expr.simplify()
                 return factor
             return expand
-        elif expr.is_rational_function():
+        elif expr.is_algebraic_expr():
             return expr.simplify()
         return expr
     else:
