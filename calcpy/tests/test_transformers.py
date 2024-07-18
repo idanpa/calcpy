@@ -97,6 +97,10 @@ def test_auto_factorial(ip):
     assert ip.run_cell('5!+1').result == 121
     assert ip.run_cell('5!=6').result == True
 
+def test_auto_sqrt(ip):
+    assert ip.run_cell('√4').result == 2
+    assert ip.run_cell('√9+1').result == 4
+
 def test_string_handling(ip):
     assert ip.run_cell('"2x"').result == '2x'
     assert ip.run_cell('\'2x\'').result == '2x'

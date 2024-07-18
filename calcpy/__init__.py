@@ -44,6 +44,7 @@ class CalcPy(IPython.core.magic.Magics):
     auto_date = traitlets.Bool(True, config=True, help="convert 'd\"today\"' to datetime object")
     auto_symbols = traitlets.Bool(True, config=True, help="automatically consider single letter variables as symbols ('x','x_2','alpha')")
     auto_factorial = traitlets.Bool(True, config=True, help="convert '5!' to 'factorial(5)'")
+    auto_sqrt = traitlets.Bool(True, config=True, help="convert '√x' to 'sqrt(x)'")
     auto_permutation = traitlets.Bool(False, config=True, help="convert '(0 1)(3 4)' to 'Permutation(0, 1)(3, 4)'")
     auto_latex = traitlets.Bool(True, config=True, help="convert $1+1$ to parse_latex('1+1')")
     auto_latex_sub = traitlets.Bool(True, config=True, help="substitute local variables in parsed latex")

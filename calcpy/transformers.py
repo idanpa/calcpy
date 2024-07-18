@@ -20,6 +20,11 @@ class FactorialPow():
     def __rpow__(self, other):
         return sympy.factorial(other)
 
+class SqrtMul():
+    # using left multiplication as sqrt
+    def __mul__(self, other):
+        return sympy.sqrt(other)
+
 def dateparse(datetime_string):
     import dateparser
     d = dateparser.parse(datetime_string)
@@ -108,6 +113,9 @@ def raw_code_transformer(code):
 
     if ip.calcpy.auto_factorial:
         code = re.sub(r'!(?!=)', r'**_factorial_pow', code)
+
+    if ip.calcpy.auto_sqrt:
+        code = code.replace('√','_sqrt_mul*')
 
     if ip.calcpy.auto_permutation:
         def cycle_replace(match):
@@ -245,7 +253,8 @@ class AutoProduct(AstNodeTransformer):
         return self.generic_visit(node)
 
 def init(ip: IPython.InteractiveShell):
-    ip.calcpy.push({'_factorial_pow': FactorialPow()}, interactive=False)
+    ip.calcpy.push({'_factorial_pow': FactorialPow(),
+                    '_sqrt_mul': SqrtMul()}, interactive=False)
 
     # python might warn about the syntax hacks (on user's code)
     warnings.filterwarnings("ignore", category=SyntaxWarning)
