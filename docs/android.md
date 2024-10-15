@@ -4,7 +4,7 @@
 ```
 pkg install build-essential libandroid-spawn libjpeg-turbo git
 pkg install python python-pip python-numpy
-pip install ipython sympy requests dateparser tzdata
+pip install ipython sympy requests dateparser tzdata pickleshare
 ```
 2. Install CalcPy (ignore dependencies)
 ```
