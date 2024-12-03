@@ -36,12 +36,12 @@ class Autostore():
                     pass
             else:
                 if var_name in self.shell.user_ns:
-                    print(f'Autostore: attempt to restore existing variable "{var_name}"')
+                    print(f'Autostore: attempt to restore existing variable {var_name}={var}, discarded')
                     del self.shell.db[var_path]
                 else:
                     self.shell.user_ns[var_name] = var
         if perf_counter() - t > TIME_WARNING_SEC:
-            print(f'Autostore took {perf_counter() - t:.3f}s! consider clearing unused vars')
+            print(f'Autostore took {perf_counter() - t:.3f}s! consider removing unused variables (by `del`, see variables with `who`)')
 
     def unload(self):
         self.shell.events.unregister('post_run_cell', self.post_run_cell)
