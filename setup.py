@@ -5,6 +5,7 @@ from pathlib import Path
 
 setuptools.setup(
     name='calcpy',
+    version='0.0.1',
     author='Idan Pazi',
     author_email='idan.kp@gmail.com',
     url='https://github.com/idanp/calcpy',
@@ -27,8 +28,6 @@ setuptools.setup(
         'dateparser',
         'antlr4-python3-runtime==4.11', # todo: move to Lark when sympy supports it
     ],
-    use_scm_version={'fallback_version':'0.0'},
-    setup_requires=['setuptools_scm'],
     license='MIT License',
     zip_safe=False,
     keywords=['calculator',],
