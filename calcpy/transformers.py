@@ -95,6 +95,8 @@ def raw_code_transformer(code):
             latex_matches[key] = f'parse_latex(r"""{m[1]}""")'
 
     code = code.replace('⋅','*')
+    code = code.replace('∙','*')
+    code = code.replace('•','*')
     code = code.replace('ⅈ','i') # for auto product to detect it
     u2i = {'\u2070':'0','\u00b9':'1','\u00b2':'2','\u00b3':'3','\u2074':'4','\u2075':'5','\u2076':'6','\u2077':'7','\u2078':'8','\u2079':'9'}
     def unicode_pow_replace(match):
@@ -181,7 +183,7 @@ class AstNodeTransformer(ast.NodeTransformer):
 class ReplaceIntegerDivisionWithRational(AstNodeTransformer):
     def visit_BinOp(self, node):
         def is_integer(x):
-            if isinstance(x, ast.Num) and isinstance(x.n, int):
+            if isinstance(x, ast.Constant) and isinstance(x.n, int):
                 return True
             if isinstance(x, ast.Name) and isinstance(self.ip.user_ns.get(x.id, None), int):
                 return True
@@ -200,7 +202,7 @@ class ReplaceIntegerDivisionWithRational(AstNodeTransformer):
 '''
 class ReplaceIntWithInteger(AstNodeTransformer):
     def visit_Constant(self, node):
-        if isinstance(node, ast.Num) and isinstance(node.n, int):
+        if isinstance(node.n, int):
             return ast.Call(func=ast.Name(id='Integer', ctx=ast.Load()),
                             args=[node], keywords=[])
         return self.generic_visit(node)
@@ -209,10 +211,10 @@ class ReplaceIntWithInteger(AstNodeTransformer):
 class ReplaceFloatWithRational(AstNodeTransformer):
     def visit_Constant(self, node):
         if self.ip.calcpy.auto_rational:
-            if isinstance(node, ast.Num) and isinstance(node.n, float):
+            if isinstance(node.n, float):
                 return ast.Call(func=ast.Name(id='Rational', ctx=ast.Load()),
                                 args=[ast.Call(func=ast.Name(id='str', ctx=ast.Load()),
-                                            args=[node], keywords=[])],
+                                               args=[node], keywords=[])],
                                 keywords=[])
         return self.generic_visit(node)
 
