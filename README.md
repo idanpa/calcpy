@@ -1,8 +1,12 @@
-# CalcPy
+<h1 align="center">
+  CalcPy
+</h1>
 
-Terminal calculator and advanced math solver using Python, IPython and SymPy.
+Terminal programmer calculator and advanced math solver using Python, IPython and SymPy.  
+The missing tweaks for using Python as a calculator.
 
-## Usage
+## 🖥 Usage
+
 <p align="left">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/demo/demo_dark.svg">
@@ -11,17 +15,17 @@ Terminal calculator and advanced math solver using Python, IPython and SymPy.
   </picture>
 </p>
 
-[Try online](https://calcpy.duckdns.org)  
+**[🚀 Try online](https://calcpy.duckdns.org)**
 
-## Installation 
-Prerequisites - [Python](https://www.python.org/downloads/)
+## 📦 Installation
+
 ```
-pip install git+https://github.com/idanpa/calcpy
+pip install https://github.com/idanpa/calcpy/archive/main.zip
 ```
-(no git? use `pip install https://github.com/idanpa/calcpy/archive/main.zip`)  
 [Android installation](docs/android.md)  
 
-## Features
+## ✨ Features
+
 * Display both symbolic and numeric solutions
 * Integers displayed as decimal, hex and binary
 * Evaluation preview while typing
@@ -42,11 +46,13 @@ pip install git+https://github.com/idanpa/calcpy
 * Custom user startup (for imports, etc.) `edit_user_startup()`
 * Persistent configuration, see options with `calcpy?`
 
-[SymPy](https://www.sympy.org):
+#### [SymPy](https://www.sympy.org)
+
 * All the elementary (and non-elementry) math functions and constants - `ln`, `sin`, `e`, `pi` etc. 
 * Calculus, algebra, plotting - `diff`, `integrate`, `limit`, `Sum`, `solve`, `plot`, `plot_implicit` etc.
 
-[IPython](https://ipython.org):
+#### [IPython](https://ipython.org)
+
 * Get last result with `_`, get specific cell `_12` (`Out[12]` works too) 
 * `func_name?` show docs for func_name
 * `who`/`who_ls` see all defined variables
@@ -54,11 +60,13 @@ pip install git+https://github.com/idanpa/calcpy
 * Autocomplete with `tab`
 * Edit code on editor with `%edit func_name`
 
-[Python](https://www.python.org/):
+#### [Python](https://www.python.org/)
+
 * All the basic arithmetic `+`,`-`,`*`,`/`,`**` or `^`
 * Binary and hex input `0b1101`, `0xafe1`
 * Scientific notation `2.12e-6`
 * Programmer operations `//` integer division, `%` modulo, `&` bitwise AND, `|` bitwise OR, `^^` bitwise XOR (on calcpy `^` is exponentiation, disable with `calcpy.caret_power`), `~` bitwise not, `>>`/`<<` right/left shift. 
 
-## Contributing
+## 🤝 Contributing
+
 Feel free to open an issue for bugs/features,  send a pull request  or star.

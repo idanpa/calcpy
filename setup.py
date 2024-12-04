@@ -10,7 +10,7 @@ setuptools.setup(
     author_email='idan.kp@gmail.com',
     url='https://github.com/idanp/calcpy',
     description='Terminal calculator and advanced math solver using Python, IPython and SymPy',
-    long_description=Path('README.md').read_text(),
+    long_description=Path('README.md').read_text(encoding='utf8'),
     long_description_content_type='text/markdown',
     packages=['calcpy','previewer'],
     classifiers=[
