@@ -213,7 +213,7 @@ class ReplaceFloatWithRational(AstNodeTransformer):
         if self.ip.calcpy.auto_rational:
             if isinstance(node.value, float):
                 return ast.Call(func=ast.Name(id='Rational', ctx=ast.Load()),
-                                args=[ast.Call(func=ast.Name(id='str', ctx=ast.Load()),
+                                args=[ast.Call(func=ast.Name(id='repr', ctx=ast.Load()),
                                                args=[node], keywords=[])],
                                 keywords=[])
         return self.generic_visit(node)
