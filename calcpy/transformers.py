@@ -183,7 +183,7 @@ class AstNodeTransformer(ast.NodeTransformer):
 class ReplaceIntegerDivisionWithRational(AstNodeTransformer):
     def visit_BinOp(self, node):
         def is_integer(x):
-            if isinstance(x, ast.Constant) and isinstance(x.n, int):
+            if isinstance(x, ast.Constant) and isinstance(x.value, int):
                 return True
             if isinstance(x, ast.Name) and isinstance(self.ip.user_ns.get(x.id, None), int):
                 return True
@@ -202,7 +202,7 @@ class ReplaceIntegerDivisionWithRational(AstNodeTransformer):
 '''
 class ReplaceIntWithInteger(AstNodeTransformer):
     def visit_Constant(self, node):
-        if isinstance(node.n, int):
+        if isinstance(node.value, int):
             return ast.Call(func=ast.Name(id='Integer', ctx=ast.Load()),
                             args=[node], keywords=[])
         return self.generic_visit(node)
@@ -211,7 +211,7 @@ class ReplaceIntWithInteger(AstNodeTransformer):
 class ReplaceFloatWithRational(AstNodeTransformer):
     def visit_Constant(self, node):
         if self.ip.calcpy.auto_rational:
-            if isinstance(node.n, float):
+            if isinstance(node.value, float):
                 return ast.Call(func=ast.Name(id='Rational', ctx=ast.Load()),
                                 args=[ast.Call(func=ast.Name(id='str', ctx=ast.Load()),
                                                args=[node], keywords=[])],
