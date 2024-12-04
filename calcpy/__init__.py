@@ -192,8 +192,11 @@ https://github.com/idanpa/calcpy''')
         autostore.load_ipython_extension(ip)
 
     # enable matplotlib after autostore, so restored plots won't be viewed:
-    if ip.calcpy.gui is not None and ip.simple_prompt != True:
-        ip.enable_matplotlib(ip.calcpy.gui)
+    if ip.calcpy.gui is not None and ip.config.TerminalInteractiveShell.simple_prompt != True:
+        try:
+            ip.enable_matplotlib(ip.calcpy.gui)
+        except (ModuleNotFoundError, ImportError):
+            pass
 
     t = perf_counter()
     if os.path.isfile(ip.calcpy.user_startup_path):
