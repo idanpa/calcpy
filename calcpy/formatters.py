@@ -281,6 +281,7 @@ def init(ip: IPython.InteractiveShell):
     sympy.interactive.printing.init_printing(
         pretty_print=True,
         use_latex='mathjax',
+        latex_mode='inline',
         use_unicode=not (ip.config.TerminalInteractiveShell.simple_prompt==True),
         num_columns=shutil.get_terminal_size().columns,
         ip=ip)
