@@ -66,6 +66,9 @@ def str_formatter(s, printer, cycle):
         s = repr(s)
     printer.text(s)
 
+def bytes_formatter(bs, printer, cycle):
+    printer.text(str(bs) + ' = ' + ','.join(f'0x{b:02x}' for b in bs))
+
 def integer_to_unicode_power(integer):
     s = ''
     neg = ''
@@ -297,6 +300,7 @@ def init(ip: IPython.InteractiveShell):
 
     formatter = ip.display_formatter.formatters['text/plain']
     formatter.for_type(str, str_formatter)
+    formatter.for_type(bytes, bytes_formatter)
     formatter.for_type(int, int_formatter)
     formatter.for_type(sympy.Integer, int_formatter)
     formatter.for_type(complex, complex_formatter)
