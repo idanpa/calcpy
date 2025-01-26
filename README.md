@@ -1,6 +1,6 @@
-<h1 align="center">
-  CalcPy
-</h1>
+<img src="docs/icon.svg" width="70" align="left">
+
+# CalcPy
 
 Terminal programmer calculator and advanced math solver using Python, IPython and SymPy.  
 The missing tweaks for using Python as a calculator.
