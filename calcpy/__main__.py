@@ -22,6 +22,7 @@ def main():
         "--TerminalInteractiveShell.confirm_exit=False",
         "--TerminalInteractiveShell.term_title_format=CalcPy",
         "--TerminalInteractiveShell.auto_match=True",
+        "--InteractiveShell.ast_node_interactivity=last_expr_or_assign",
         f"--profile={calcpy.CALCPY_PROFILE_NAME}",
     ]
 
