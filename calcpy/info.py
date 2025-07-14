@@ -56,7 +56,8 @@ def print_info_job(res):
                 if factored != res:
                     print(f'\n{pretty(factored)} = factor(_, gaussian=True)')
             elif len(res.free_symbols) == 1:
-                print(f'\n{pretty(sympy.series(res))} = series(_)')
+                with suppress(sympy.PoleError):
+                    print(f'\n{pretty(sympy.series(res))} = series(_)')
 
             # takes forever sometimes
             # try:
