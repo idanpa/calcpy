@@ -285,6 +285,9 @@ def init(ip: IPython.InteractiveShell):
         sympy.Float.__array__  = sympy_float_array
         sympy.NumberSymbol.__array__  = sympy_float_array
         sympy.Integer.__array__  = sympy_int_array
+        sympy.Mul.__array__ = sympy_float_array
+        sympy.Add.__array__ = sympy_float_array
+        sympy.Pow.__array__ = sympy_float_array
     except (ModuleNotFoundError, ImportError):
         pass
 
