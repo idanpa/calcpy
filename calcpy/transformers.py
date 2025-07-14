@@ -94,6 +94,7 @@ def raw_code_transformer(code):
             code = code.replace(m.group(), f'({key})')
             latex_matches[key] = f'parse_latex(r"""{m[1]}""")'
 
+    code = code.replace('°','deg')
     code = code.replace('⋅','*')
     code = code.replace('∙','*')
     code = code.replace('•','*')
