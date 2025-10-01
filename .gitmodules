@@ -1,0 +1,3 @@
+[submodule "docAider-gemini"]
+	path = docAider-gemini
+	url = https://github.com/ssrin72/docAider-gemini/
