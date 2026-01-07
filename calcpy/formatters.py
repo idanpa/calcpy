@@ -6,6 +6,8 @@ import IPython
 import IPython.lib.pretty
 import numpy
 import sympy
+import sympy.core
+import sympy.matrices
 import sympy.combinatorics
 from sympy.printing.pretty.pretty import PrettyPrinter
 from sympy.printing.pretty.stringpict import stringPict, prettyForm
@@ -122,10 +124,12 @@ def pretty_stack(str1, relation, str2, num_columns):
         sp2 = stringPict(*sp2.left(relation))
         return stringPict(*sp1.right(sp2)).render(wrap_line=True, num_columns=num_columns)
 
-def evalf(expr):
+def evalf(expr: sympy.Expr):
     calcpy = IPython.get_ipython().calcpy
     if calcpy.auto_evalf:
         expr = expr.doit()
+        if hasattr(expr, 'as_explicit'):
+            return expr.as_explicit()
     if isinstance(expr, sympy.matrices.MatrixBase):
         return expr.applyfunc(evalf)
     elif expr.free_symbols:
