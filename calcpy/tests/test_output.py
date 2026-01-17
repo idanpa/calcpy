@@ -6,7 +6,7 @@ OUTPUT_FILE_PATH = os.path.join(os.path.dirname(__file__), 'output.txt')
 
 def run_flow(ip):
     def run_cell(raw_cell):
-        print('In [1]: ' + raw_cell)
+        print('In [0]: ' + raw_cell)
         ip.run_cell(raw_cell)
 
     run_cell('12')
@@ -33,15 +33,27 @@ def test_output(ip, capsys):
             r'output mismatch, regenerate output by `python calcpy\tests\test_output.py`'
         assert captured.err == ''
 
+class Tee:
+    def __init__(self, *streams):
+        self.streams = streams
+
+    def write(self, data):
+        for s in self.streams:
+            s.write(data)
+
+    def flush(self):
+        for s in self.streams:
+            s.flush()
+
 if __name__ == '__main__':
-    import os
-    from contextlib import redirect_stdout
+    import sys
     from IPython.testing.globalipapp import start_ipython
 
     ip = start_ipython()
+    print(f'profile: {ip.profile_dir.location}')
     ip.run_line_magic('load_ext', 'calcpy')
     print(f'writing output to {OUTPUT_FILE_PATH}')
-    with open(OUTPUT_FILE_PATH, 'w', encoding='utf-8') as f:
-        with redirect_stdout(f):
-            run_flow(ip)
+    f = open(OUTPUT_FILE_PATH, 'w', encoding='utf-8')
+    sys.stdout = Tee(sys.stdout, f)
+    run_flow(ip)
 
