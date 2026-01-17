@@ -51,6 +51,8 @@ def test_auto_product(ip):
     assert ip.run_cell('5x^y').result == 5*x**y
     assert ip.run_cell('1/2x').result == x/2 # controversial
 
+    assert ip.run_cell('Re(2+i)Re(1+i)').result == 2
+
     assert ip.run_cell('f\'{1.1:1.2f}\'').result == '1.10'
     assert ip.run_cell('\'%1.2f\' % 1.234').result == '1.23'
     assert ip.run_cell('\'%.3f\' % 1.234').result == '1.234'
